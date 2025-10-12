@@ -1,0 +1,9 @@
+functionalAnalysis/
+
+exe/*.spec
+exe/*/
+
+backend/*/
+
+*.log
+*.exe

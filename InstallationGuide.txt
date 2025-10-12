@@ -1,0 +1,57 @@
+# ISTRUZIONI CREAZIONE BACKEND:
+## 1: Installare MySql Server e configurare l'utenza
+
+## 2: Creare la cartella di backend
+mkdir backend
+
+## 3: Installare le estensioni per far funzionare il server
+cd backend
+pip install fastapi uvicorn mysql-connector-python
+
+## 4: Incollare il main.py dentro la cartella
+        Modificare i parametri affinche combacino con l'utente configurato in ## 1
+
+##: Lanciare il Server Backend
+uvicorn main:app --reload
+
+
+
+
+# ISTRUZIONI CREAZIONE FRONTEND:
+## 1: Creare il sito React (installa automaticamente delle estensioni)
+npx create-react-app frontend
+
+cd frontend
+
+## 2: Istallazione libreria React dom v18 in locale 
+        (Anche se ## 1 installa già react abbiamo bisogno di questa versione in particolare, 
+        perchè il router non gestisce ancora l'ultima versione)
+npm install react@18 react-dom@18
+
+## 3: Istallazione libreria React router v7.0.4 in locale (Libreria React per la gestione della navigazione tra pagine)
+npm install react-router-dom@7.9.4
+
+## 4: Istallazione libreria React bootstrap in locale (Libreria con una serie di componenti grafici utili)
+npm install react-bootstrap bootstrap
+
+## 5: Istallazione libreria axios in locale (Libreria React per fare richiest HTTP e comunicazione con API)
+npm install axios
+
+##: Lanciare il Server Frontend
+npm start
+
+
+# ISTRUZIONI CREAZIONE SCRIPT PER LANCIARE I SERVER ASSIEME:
+## 1: Creare la cartella degli eseguibili
+mkdir exe
+cd exe
+
+## 2:
+pip install pyinstaller
+
+## 3: Incollare il start_servers.py dentro la cartella (!!! BISOGNA INSERIRE IL Base_Path CORRETTO)
+
+## 4: Crea l'eseguibile
+pyinstaller --onefile start_servers.py
+
+## 5: L'eseguibile è salvato dentro la folder dist
