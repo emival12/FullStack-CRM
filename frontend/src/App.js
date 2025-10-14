@@ -1,23 +1,19 @@
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import NavBar from "./components/NavBar";
+import SelectionSidebar from "./features/TableSelection/SelectionSidebar";
+
 import "./App.css";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src="" className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter>
+      <NavBar />
+      <Routes>
+        <Route path="/" element={<div>Pagina Database</div>} />
+        <Route path="/Database" element={<SelectionSidebar />} />
+        <Route path="/TOBE" element={<div>Pagina TOBE</div>} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
