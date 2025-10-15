@@ -5,9 +5,9 @@ import TableSelectionList from "./SelectionList";
  * Shows a series of accordion, continues to shows accordion until it reach the deepes level
  * On the deepest level there is a list of record
  *
- * @param {Object[]} props.data
- * @param {Object} props.selectedElement - Element currently selected
- * @param {Function} props.onSelectElement - Function to update the selected element
+ * @param {Object[]} props.data             - Contains the data retrieved from the query
+ * @param {Object} props.selectedElement    - Element currently selected
+ * @param {Function} props.onSelectElement  - Function to update the selected element
  */
 export default function AccordionList({
   data,

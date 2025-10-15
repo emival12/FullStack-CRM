@@ -1,16 +1,28 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import NavBar from "./components/NavBar";
-import SelectionSidebar from "./features/TableSelection/SelectionSidebar";
 
 import "./App.css";
+import MainScreen from "./features/MainScreen/MainScreen";
+import TableRecords from "./features/TableRecords/TableRecords";
+import { PATH_DATABASE } from "./config/K";
 
 function App() {
   return (
     <BrowserRouter>
       <NavBar />
       <Routes>
-        <Route path="/" element={<div>Pagina Database</div>} />
-        <Route path="/Database" element={<SelectionSidebar />} />
+        {/* Automatic redirect from "/" to "/Database" */}
+        <Route path="/" element={<Navigate to={PATH_DATABASE} replace />} />
+
+        {/* When the path is: 
+            /Database is rendered the index
+            /Database/XXXX is rendered the second path
+        */}
+        <Route path={PATH_DATABASE} element={<MainScreen />}>
+          {/*TODO Improv */}
+          <Route index element={<p>Seleziona una tabella dalla sidebar</p>} />
+          <Route path=":tableName" element={<TableRecords />} />
+        </Route>
         <Route path="/TOBE" element={<div>Pagina TOBE</div>} />
       </Routes>
     </BrowserRouter>

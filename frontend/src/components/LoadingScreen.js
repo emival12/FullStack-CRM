@@ -1,11 +1,12 @@
-import "./LoadingScreen.css";
 import Spinner from "react-bootstrap/Spinner";
+import { LOADING_LABEL } from "../config/IT";
+import "./LoadingScreen.css";
 
 export default function LoadingScreen() {
   return (
-    <div className="LoadingPage">
+    <div className="CenteredPageVertical">
       <Spinner animation="border" variant="light" />
-      <p className="LoadingPage-text">Caricamento...</p>
+      <span className="CenteredPage-text">{LOADING_LABEL}</span>
     </div>
   );
 }
