@@ -1,32 +1,32 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { useOutletContext } from "react-router-dom";
-import MissingPage from "../../components/MissingPage";
-import LoadingScreen from "../../components/LoadingScreen";
-import { MISSING_TABLE_LABEL } from "../../config/IT";
-import { API_BASE_URL } from "../../config/K";
+import { Table } from "react-bootstrap";
+import "./TableRecords.css";
 
-export default function TableRecords() {
-  const { selectedTable } = useOutletContext();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!selectedTable) return; // Blocks execution if the selected tabel is not correct
-
-    setLoading(true);
-    axios
-      .get(API_BASE_URL + "/table/" + selectedTable?.key)
-      .then((res) => {
-        console.log("Record List Received:", res.data);
-        //setTables(res.data);
-      })
-      .catch((err) => console.error("Error:", err))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (!selectedTable) return <MissingPage MissingText={MISSING_TABLE_LABEL} />;
-
-  if (loading) return <LoadingScreen />;
-
-  return <p>Table Selected: {selectedTable?.label}</p>;
+/**
+ * Shows a table of record
+ *
+ * @param {Object[]} props.records       - List of the record to show
+ */
+export default function TableRecords({ records }) {
+  return (
+    <div className="tableWrapper">
+      <Table bordered hover>
+        <thead className="headerCellColor">
+          <tr>
+            {Object.keys(records[0]).map((key) => (
+              <th key={key}>{key.toUpperCase().replace("_", " ")}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="bodyCellColor">
+          {records.map((record, index) => (
+            <tr key={index}>
+              {Object.values(record).map((value, i) => (
+                <td key={i}>{value}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    </div>
+  );
 }

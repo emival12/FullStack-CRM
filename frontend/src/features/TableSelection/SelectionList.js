@@ -22,7 +22,7 @@ export default function SelectionList({
         <ListGroup.Item
           action
           as={Link}
-          to={PATH_DATABASE + "/" + element.key}
+          to={PATH_DATABASE + "/" + element.label}
           key={element.key}
           active={element === selectedElement}
           onClick={() => onSelectElement(element)}

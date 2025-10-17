@@ -1,0 +1,21 @@
+@media (prefers-color-scheme: dark) {
+  .bodyCellColor td {
+    background-color: rgba(48, 52, 56) !important;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .headerCellColor th {
+    background-color: rgba(220, 220, 220) !important;
+  }
+}
+
+.tableWrapper {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #495057;
+}
+
+.tableWrapper Table {
+  margin: 0px;
+}
