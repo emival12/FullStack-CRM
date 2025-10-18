@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import "bootstrap-icons/font/bootstrap-icons.css";
+import { useState } from "react";
 import { Col, Button, Offcanvas } from "react-bootstrap";
+
 import TablesSidebar from "./TablesSidebar";
 import { TABLES_LABEL } from "../../config/IT";
 
@@ -24,8 +26,12 @@ export default function ScreenSizeAdaptiveTablesSidebar({
         className="d-md-none d-flex justify-content-center align-items-center"
       >
         <div className="p-3 w-100">
-          <Button className="w-100" onClick={toggleSidebar}>
-            ☰ {TABLES_LABEL}
+          <Button
+            className="w-100 d-flex align-items-center justify-content-center"
+            onClick={toggleSidebar}
+          >
+            <i className="bi bi-list fs-5 pe-1"></i>
+            {TABLES_LABEL}
           </Button>
         </div>
       </Col>

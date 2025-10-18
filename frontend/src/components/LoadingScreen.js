@@ -1,12 +1,12 @@
 import Spinner from "react-bootstrap/Spinner";
 import { LOADING_LABEL } from "../config/IT";
-import "./LoadingScreen.css";
+import "../App.css";
 
 export default function LoadingScreen() {
   return (
-    <div className="CenteredPageVertical">
+    <div className="CenteredPage flex-column">
       <Spinner animation="border" variant="light" />
-      <span className="CenteredPage-text">{LOADING_LABEL}</span>
+      <span className="fw-bold">{LOADING_LABEL}</span>
     </div>
   );
 }

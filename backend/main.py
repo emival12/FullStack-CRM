@@ -102,7 +102,6 @@ def get_table_records(table_name: str, db = Depends(get_db)):
     cursor.close()
     return records
 
-
 def check_allowed_tables(cursor, table_name):
     query = """
     SELECT od.object_name, rtd.record_type_name, od.is_single_record_type 
