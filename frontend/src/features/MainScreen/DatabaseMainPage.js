@@ -3,7 +3,7 @@ import { Container, Row, Col, Button, Offcanvas } from "react-bootstrap";
 import { Outlet, useParams } from "react-router-dom";
 import ScreenSizeAdaptiveTablesSidebar from "../TablesSidebar/ScreenSizeAdaptiveTablesSidebar";
 
-export default function MainScreen() {
+export default function DatabaseMainPage() {
   const { tableName } = useParams();
   const [selectedTable, setSelectedTable] = useState(null);
 

@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import NavBar from "./components/NavBar";
 
 import "./App.css";
-import MainScreen from "./features/MainScreen/MainScreen";
+import DatabaseMainPage from "./features/MainScreen/DatabaseMainPage";
 import RecordsListView from "./features/TableRecords/RecordsListView";
 import { PATH_DATABASE } from "./config/K";
 
@@ -20,7 +20,7 @@ function App() {
               /Database/XXXX is rendered the second path
           */}
 
-        <Route path={PATH_DATABASE} element={<MainScreen />}>
+        <Route path={PATH_DATABASE} element={<DatabaseMainPage />}>
           {/*TODO Improv */}
           <Route index element={<p>Seleziona una tabella dalla sidebar</p>} />
           <Route path=":tableName" element={<RecordsListView />} />
