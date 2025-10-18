@@ -25,7 +25,7 @@ export default function ScreenSizeAdaptiveTablesSidebar({
       >
         <div className="p-3 w-100">
           <Button className="w-100" onClick={toggleSidebar}>
-            ☰ Tables
+            ☰ {TABLES_LABEL}
           </Button>
         </div>
       </Col>

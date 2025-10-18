@@ -1,12 +1,12 @@
 import { Table } from "react-bootstrap";
-import "./TableRecords.css";
+import "./RecordsList.css";
 
 /**
  * Shows a table of record
  *
  * @param {Object[]} props.records       - List of the record to show
  */
-export default function TableRecords({ records }) {
+export default function RecordsList({ records }) {
   return (
     <div className="tableWrapper">
       <Table bordered hover>

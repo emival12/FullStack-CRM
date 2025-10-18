@@ -6,9 +6,9 @@ import { MISSING_TABLE_LABEL, MISSING_RECORD_LABEL } from "../../config/IT";
 import { API_BASE_URL } from "../../config/K";
 import MissingPage from "../../components/MissingPage";
 import LoadingScreen from "../../components/LoadingScreen";
-import TableRecords from "./TableRecords";
+import RecordsList from "./RecordsList";
 
-export default function TableRecordsView() {
+export default function RecordsListView() {
   const { selectedTable } = useOutletContext();
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState([]);
@@ -34,7 +34,7 @@ export default function TableRecordsView() {
 
   return (
     <div>
-      <TableRecords records={records} />
+      <RecordsList records={records} />
     </div>
   );
 }

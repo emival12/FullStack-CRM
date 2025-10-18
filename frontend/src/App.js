@@ -3,7 +3,7 @@ import NavBar from "./components/NavBar";
 
 import "./App.css";
 import MainScreen from "./features/MainScreen/MainScreen";
-import TableRecordsView from "./features/TableRecords/TableRecordsView";
+import RecordsListView from "./features/TableRecords/RecordsListView";
 import { PATH_DATABASE } from "./config/K";
 
 function App() {
@@ -23,7 +23,7 @@ function App() {
         <Route path={PATH_DATABASE} element={<MainScreen />}>
           {/*TODO Improv */}
           <Route index element={<p>Seleziona una tabella dalla sidebar</p>} />
-          <Route path=":tableName" element={<TableRecordsView />} />
+          <Route path=":tableName" element={<RecordsListView />} />
         </Route>
         <Route path="/TOBE" element={<div>Pagina TOBE</div>} />
       </Routes>
