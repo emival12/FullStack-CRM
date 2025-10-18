@@ -9,7 +9,8 @@
 @media (prefers-color-scheme: light) {
   th,
   .navbar.bg-body-tertiary {
-    background-color: rgba(220, 220, 220) !important;
+    /*rgba(220, 220, 220) grigio*/
+    background-color: rgba(215, 230, 250) !important;
   }
 }
 
