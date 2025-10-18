@@ -10,7 +10,7 @@ import { PATH_DATABASE } from "../../config/K";
  * @param {Function} props.onSelectElement  - Function to update the selected element
  * @param {string} props.displayField       - Field to show in the frontend
  */
-export default function SelectionList({
+export default function TablesSidebarList({
   objectList,
   selectedElement,
   onSelectElement,

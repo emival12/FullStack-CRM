@@ -1,5 +1,5 @@
 import { Accordion } from "react-bootstrap";
-import TableSelectionList from "./SelectionList";
+import TablesSidebarList from "./TablesSidebarList";
 
 /**
  * Shows a series of accordion, continues to shows accordion until it reach the deepes level
@@ -9,7 +9,7 @@ import TableSelectionList from "./SelectionList";
  * @param {Object} props.selectedElement    - Element currently selected
  * @param {Function} props.onSelectElement  - Function to update the selected element
  */
-export default function AccordionList({
+export default function TablesSidebarAccordion({
   data,
   selectedElement,
   onSelectElement,
@@ -21,13 +21,13 @@ export default function AccordionList({
           <Accordion.Header>{key}</Accordion.Header>
           <Accordion.Body>
             {Array.isArray(value) ? (
-              <TableSelectionList
+              <TablesSidebarList
                 objectList={Object.values(value)}
                 selectedElement={selectedElement}
                 onSelectElement={onSelectElement}
               />
             ) : (
-              <AccordionList
+              <TablesSidebarAccordion
                 data={value}
                 selectedElement={selectedElement}
                 onSelectElement={onSelectElement}

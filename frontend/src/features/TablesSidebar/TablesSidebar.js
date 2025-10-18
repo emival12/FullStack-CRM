@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "../../config/K";
-import AccordionList from "./AccordionList";
+import TablesSidebarAccordion from "./TablesSidebarAccordion";
 import LoadingScreen from "../../components/LoadingScreen";
 
 /**
@@ -10,7 +10,7 @@ import LoadingScreen from "../../components/LoadingScreen";
  * @param {Object} props.selectedTable      - Table currently selected
  * @param {Function} props.onSelectedTable  - Function to update the selected table
  */
-export default function SelectionSidebar({ selectedTable, onSelectedTable }) {
+export default function TablesSidebar({ selectedTable, onSelectedTable }) {
   const [loading, setLoading] = useState(true);
   const [tables, setTables] = useState([]);
 
@@ -29,7 +29,7 @@ export default function SelectionSidebar({ selectedTable, onSelectedTable }) {
   if (loading) return <LoadingScreen />;
 
   return (
-    <AccordionList
+    <TablesSidebarAccordion
       data={tables}
       selectedElement={selectedTable}
       onSelectElement={onSelectedTable}
