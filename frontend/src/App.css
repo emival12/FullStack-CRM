@@ -5,3 +5,16 @@
   height: 100vh;
   font-size: 1.5rem;
 }
+
+@media (prefers-color-scheme: light) {
+  th,
+  .navbar.bg-body-tertiary {
+    background-color: rgba(220, 220, 220) !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  td {
+    background-color: rgba(48, 52, 56) !important;
+  }
+}

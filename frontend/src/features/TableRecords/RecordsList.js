@@ -1,5 +1,5 @@
 import { Table } from "react-bootstrap";
-import "./RecordsList.css";
+import "../../App.css";
 
 /**
  * Shows a table of record
@@ -8,25 +8,23 @@ import "./RecordsList.css";
  */
 export default function RecordsList({ records }) {
   return (
-    <div className="tableWrapper">
-      <Table bordered hover>
-        <thead className="headerCellColor">
-          <tr>
-            {Object.keys(records[0]).map((key) => (
-              <th key={key}>{key.toUpperCase().replace("_", " ")}</th>
+    <Table bordered hover className="m-0">
+      <thead>
+        <tr>
+          {Object.keys(records[0]).map((key) => (
+            <th key={key}>{key.toUpperCase().replace("_", " ")}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {records.map((record, index) => (
+          <tr key={index}>
+            {Object.values(record).map((value, i) => (
+              <td key={i}>{value}</td>
             ))}
           </tr>
-        </thead>
-        <tbody className="bodyCellColor">
-          {records.map((record, index) => (
-            <tr key={index}>
-              {Object.values(record).map((value, i) => (
-                <td key={i}>{value}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </div>
+        ))}
+      </tbody>
+    </Table>
   );
 }

@@ -21,8 +21,8 @@ export default function DatabaseMainPage() {
           setSelectedTable={setSelectedTable}
         />
 
-        <Col xs={12} md={10} className="ps-0">
-          <div className="h-100 pt-3 pb-3 ps-2 pe-3">
+        <Col xs={12} md={10} className="ps-md-0">
+          <div className="h-100 pt-3 pb-3 ps-3 ps-md-2 pe-3">
             <Outlet context={{ selectedTable }} />
           </div>
         </Col>

@@ -2,6 +2,7 @@ import { Navbar, Nav, Container } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { PATH_DATABASE } from "../config/K";
 import { DATABASE_LABEL } from "../config/IT";
+import "../App.css";
 
 export default function NavBar() {
   return (
