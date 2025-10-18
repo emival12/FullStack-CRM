@@ -141,19 +141,3 @@ VALUES
     ('zone', 'master', 'record_type_name', 'picklist', 255, null, null, 'record_type_definition', 1, 0, 0, 1);
 
 
-
-
-
-      <Row>
-        <Col xs={2}>
-          <SelectionSidebar
-            selectedTable={selectedTable}
-            onSelectedTable={setSelectedTable}
-          />
-        </Col>
-        <Col>
-          <div style={{ height: "100vh" }}>
-            <Outlet context={{ selectedTable }} />
-          </div>
-        </Col>
-      </Row>

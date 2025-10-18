@@ -99,8 +99,17 @@ def get_table_records(table_name: str, db = Depends(get_db)):
     cursor.execute(query, (record_type_name,))
     records = cursor.fetchall()
 
+    # get records (take only the active fields)
+    query = "DESCRIBE " + table_name + ";"
+    cursor.execute(query)
+    description_table = cursor.fetchall()
+
     cursor.close()
-    return records
+    return {
+        "fields": [field["field_name"].replace("_", " ") for field in fields],
+        "primary_key_name": next((col['Field'] for col in description_table if col['Key'] == 'PRI'), None),
+        "records": records
+    }
 
 def check_allowed_tables(cursor, table_name):
     query = """

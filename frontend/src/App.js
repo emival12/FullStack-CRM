@@ -4,6 +4,7 @@ import NavBar from "./components/NavBar";
 import "./App.css";
 import DatabaseMainPage from "./features/MainScreen/DatabaseMainPage";
 import RecordsListView from "./features/TableRecords/RecordsListView";
+import RecordDetail from "./features/TableRecordDetails/RecordDetail";
 import { PATH_DATABASE } from "./config/K";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
           {/*TODO Improv */}
           <Route index element={<p>Seleziona una tabella dalla sidebar</p>} />
           <Route path=":tableName" element={<RecordsListView />} />
+          <Route path=":tableName/:recordId" element={<RecordDetail />} />
         </Route>
         <Route path="/TOBE" element={<div>Pagina TOBE</div>} />
       </Routes>

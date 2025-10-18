@@ -9,5 +9,8 @@ export const MISSING_RECORD_LABEL = "Nessun record trovato";
 //NavBar
 export const DATABASE_LABEL = "Database";
 
-//Main Screen
+//Database Main Page
 export const TABLES_LABEL = "Tabelle";
+
+//Record List View
+export const NEW_LABEL = "Nuovo";
