@@ -8,7 +8,7 @@ USE MarkotexDB;
 #   La tabella contiene la definizione di tutti le tabelle del database con alcune informazioni chiave: 
 #   la categoria di appartenenza, l'rdinamento, se è una tabella di sistema o se possiede molteplici record type
 CREATE TABLE object_definition (
-    object_name VARCHAR(255) NOT NULL,
+    object_name VARCHAR(100) NOT NULL,
     category VARCHAR(50) NOT NULL,
     sort_order SMALLINT,
     is_system_object BOOL DEFAULT 0,
@@ -22,28 +22,43 @@ CREATE TABLE object_definition (
 #   Questa tabella è fondamentale per le lookup, in modo da conoscere a quale oggetto puntano
 #   Il campo field_type avrà dei valori attesi di questo tipo: text, int, float, rollup_summary, lookup, picklist
 CREATE TABLE field_definition (
-    object_name VARCHAR(255),
-    record_type_name VARCHAR(255),
+    object_name VARCHAR(100),
+    record_type_name VARCHAR(100),
     field_name VARCHAR(255),
     field_type VARCHAR(20) NOT NULL,
     length INT,
     numeric_precision TINYINT,
     numeric_scale TINYINT,
-    reference_object VARCHAR(255),
+    reference_object VARCHAR(100),
+    reference_field VARCHAR(255),
     is_active BOOL DEFAULT 1,
     is_visible BOOL DEFAULT 1,
     is_editable BOOL DEFAULT 1,
     is_required BOOL DEFAULT 0,
+    is_primary_key BOOL DEFAULT 0,
     PRIMARY KEY (object_name, record_type_name, field_name),
     FOREIGN KEY (object_name) REFERENCES object_definition(object_name) ON DELETE CASCADE,
     INDEX idx_reference_object(reference_object)
 );
 
+
+# Creazione Tabella list_view_definition
+#   La tabella contiene la definizione dei field mostrati nelle list view degli oggetti
+CREATE TABLE list_view_definition (
+    object_name VARCHAR(100),
+    record_type_name VARCHAR(100),
+    field_name VARCHAR(255),
+    PRIMARY KEY (object_name, record_type_name, field_name),
+    FOREIGN KEY (object_name, record_type_name, field_name) 
+        REFERENCES field_definition(object_name, record_type_name, field_name) ON DELETE CASCADE
+);
+
+
 # Creazione Tabella record_type_definition
 #   La tabella contiene la definizione dei record type degli oggetti
 CREATE TABLE record_type_definition (
-    object_name VARCHAR(255),
-    record_type_name VARCHAR(255),
+    object_name VARCHAR(100),
+    record_type_name VARCHAR(100),
     is_active BOOL DEFAULT 1,
     PRIMARY KEY (object_name, record_type_name),
     FOREIGN KEY (object_name) REFERENCES object_definition(object_name) ON DELETE CASCADE
@@ -58,10 +73,10 @@ CREATE TABLE aggregation_function (
 # Creazione Tabella rollup_definition
 #   La tabella descrive la struttura di un campo rollup, la funzione da applicare e gli eventuali filtri
 CREATE TABLE rollup_definition (
-    master_object_name VARCHAR(255),
-    master_record_type_name VARCHAR(150),
+    master_object_name VARCHAR(100),
+    master_record_type_name VARCHAR(100),
     master_field_name VARCHAR(255),
-    detail_object_name VARCHAR(255) NOT NULL,
+    detail_object_name VARCHAR(100) NOT NULL,
     detail_field_name VARCHAR(255) NOT NULL,
     aggregation_function VARCHAR(15),
     filter_condition VARCHAR(1000),
@@ -122,22 +137,30 @@ VALUES
     ('account', 'Fornitore', 1),
     ('zone', 'master', 1);
 
-
 INSERT INTO field_definition(object_name, record_type_name, field_name, field_type, length, numeric_precision, 
-    numeric_scale, reference_object, is_active, is_visible, is_editable, is_required)
+    numeric_scale, reference_object, reference_field, is_active, is_visible, is_editable, is_required, is_primary_key)
 VALUES 
-    ('account', 'Cliente', 'id', 'int', null, null, null, null, 1, 1, 1, 1),
-    ('account', 'Cliente', 'record_type_name', 'picklist', 255, null, null, 'record_type_definition', 1, 0, 0, 1),
-    ('account', 'Cliente', 'ragione_sociale', 'text', 255, null, null, null, 1, 1, 1, 1),
-    ('account', 'Cliente', 'zone', 'lookup', 5, null, null, 'zone', 1, 1, 1, 0),
-    ('account', 'Cliente', 'nome_fornitore', 'text', 50, null, null, null, 0, 1, 1, 0),
-    ('account', 'Fornitore', 'id', 'int', null, null, null, null, 1, 1, 1, 1),
-    ('account', 'Fornitore', 'record_type_name', 'picklist', 255, null, null, 'record_type_definition', 1, 0, 0, 1),
-    ('account', 'Fornitore', 'ragione_sociale', 'text', 255, null, null, null, 1, 1, 1, 1),
-    ('account', 'Fornitore', 'zone', 'lookup', 5, null, null, 'zone', 1, 1, 1, 0),
-    ('account', 'Fornitore', 'nome_fornitore', 'text', 50, null, null, null, 1, 1, 1, 0),
-    ('zone', 'master', 'id', 'text', 5, null, null, null, 1, 1, 1, 1),
-    ('zone', 'master', 'nome', 'text', 255, null, null, null, 1, 1, 1, 1),
-    ('zone', 'master', 'record_type_name', 'picklist', 255, null, null, 'record_type_definition', 1, 0, 0, 1);
+    ('account', 'Cliente',      'id',               'int',      null,   null, null, null,                       null,               1, 1, 1, 1, 1),
+    ('account', 'Cliente',      'record_type_name', 'picklist', 255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0),
+    ('account', 'Cliente',      'ragione_sociale',  'text',     255,    null, null, null,                       null,               1, 1, 1, 1, 0),
+    ('account', 'Cliente',      'zone',             'lookup',   5,      null, null, 'zone',                     'nome',             1, 1, 1, 0, 0),
+    ('account', 'Cliente',      'nome_fornitore',   'text',     50,     null, null, null,                       null,               0, 1, 1, 0, 0),
+    ('account', 'Fornitore',    'id',               'int',      null,   null, null, null,                       null,               1, 1, 1, 1, 1),
+    ('account', 'Fornitore',    'record_type_name', 'picklist', 255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0),
+    ('account', 'Fornitore',    'ragione_sociale',  'text',     255,    null, null, null,                       null,               1, 1, 1, 1, 0),
+    ('account', 'Fornitore',    'zone',             'lookup',   5,      null, null, 'zone',                     'nome',             1, 1, 1, 0, 0),
+    ('account', 'Fornitore',    'nome_fornitore',   'text',     50,     null, null, null,                       null,               1, 1, 1, 0, 0),
+    ('zone',    'master',       'id',               'text',     5,      null, null, null,                       null,               1, 1, 1, 1, 1),
+    ('zone',    'master',       'nome',             'text',     255,    null, null, null,                       null,               1, 1, 1, 1, 0),
+    ('zone',    'master',       'record_type_name', 'picklist', 255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0);
 
-
+INSERT INTO list_view_definition(object_name, record_type_name, field_name)
+VALUES 
+    ('account', 'Cliente', 'id'),
+    ('account', 'Cliente', 'ragione_sociale'),
+    ('account', 'Cliente', 'zone'),
+    ('account', 'Fornitore', 'id'),
+    ('account', 'Fornitore', 'ragione_sociale'),
+    ('account', 'Fornitore', 'nome_fornitore'),
+    ('zone', 'master', 'id'),
+    ('zone', 'master', 'nome');

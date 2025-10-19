@@ -86,30 +86,34 @@ def get_table_records(table_name: str, db = Depends(get_db)):
 
     # get the list of the field active for that specific object and record type
     query = """
-    SELECT object_name, field_name, field_type, reference_object
-    FROM field_definition
-    WHERE object_name = %s AND record_type_name = %s AND is_active = 1 AND is_visible = 1;
+    SELECT fd.object_name, fd.field_name, fd.field_type, fd.reference_object, fd.reference_field, fd.is_primary_key
+    FROM list_view_definition lvd
+    JOIN field_definition fd ON 
+        lvd.object_name = fd.object_name AND 
+        lvd.record_type_name = fd.record_type_name AND 
+        lvd.field_name = fd.field_name
+    WHERE fd.object_name = %s AND fd.record_type_name = %s AND fd.is_active = 1 AND fd.is_visible = 1;
     """
     cursor.execute(query, (table_name, record_type_name))
     fields = cursor.fetchall()
-    fields_text = ",".join(row["field_name"] for row in fields)
 
-    # get records (take only the active fields)
-    query = "SELECT " + fields_text + " FROM " + table_name + " WHERE record_type_name = %s;"
+    # get the list of fields name and the join clauses
+    alias_table_name = table_name[0]
+    (joins, fields_text) = get_fields_text(cursor, fields, alias_table_name)
+            
+    # get records
+    query = "SELECT " + fields_text + " FROM " + table_name + ' ' + alias_table_name
+    query += (" " + " ".join(joins) if joins else "") + " WHERE " + alias_table_name + "." + "record_type_name = %s;"
     cursor.execute(query, (record_type_name,))
     records = cursor.fetchall()
-
-    # get records (take only the active fields)
-    query = "DESCRIBE " + table_name + ";"
-    cursor.execute(query)
-    description_table = cursor.fetchall()
 
     cursor.close()
     return {
         "fields": [field["field_name"].replace("_", " ") for field in fields],
-        "primary_key_name": next((col['Field'] for col in description_table if col['Key'] == 'PRI'), None),
+        "primary_key_name": next((field["field_name"] for field in fields if field["is_primary_key"]), None),
         "records": records
     }
+
 
 def check_allowed_tables(cursor, table_name):
     query = """
@@ -126,3 +130,50 @@ def check_allowed_tables(cursor, table_name):
     
     if table_name not in set(allowed_tables):
         raise HTTPException(status_code=404, detail="Table not found")
+
+
+# Starting from a list of field the method create 2 output:
+#   - A text with all the field needed to be extracted 
+#   - A list with all the joins clause to add to a query
+def get_fields_text(cursor, fields, alias_table_name):
+    # Get the list of the object linked through a lookup/picklist
+    object_names = [row["reference_object"] for row in fields if row["reference_object"]]
+
+    if len(object_names) > 0:
+        # Generate N strings %s to add in the query
+        placeholders = ", ".join(["%s"] * len(object_names))
+        query = """
+        SELECT object_name, field_name
+        FROM field_definition
+        WHERE object_name IN (""" + placeholders + ") AND is_active = 1 AND is_primary_key = 1;"
+        cursor.execute(query, tuple(object_names))
+
+        # Create a dictionary with the structure { "tableName": "keyName" } 
+        #In this way we can access directly the key name without loop
+        object_primary_key_names = {row["object_name"]: row["field_name"] for row in cursor.fetchall()}
+
+
+    joins = []
+    fields_text = ""
+    for idx, row in enumerate(fields):
+        fieldSyntax = ""
+        if row["reference_object"]:
+            # If is a linked fields we have to:
+            #   - insert a JOIN clause and match the current FK saved in field name with the actual PK saved in the map created before
+            #   - add to the list of the field to retrieve the field reference field located in the other object
+            alias_join_table = row["reference_object"][0]
+            join_table_name = row["reference_object"]
+
+            table_field = alias_table_name + "." + row["field_name"]
+            join_field = alias_join_table + "." + object_primary_key_names.get(join_table_name)
+
+            join_clause = "JOIN " + join_table_name + " " + alias_join_table + " ON " + table_field + " = " + join_field
+            joins.append(join_clause)
+            fieldSyntax = alias_join_table + "." + row["reference_field"] + ' ' + row["field_name"]
+        else:
+            # If is a normal field we have to add it to the list of the field to retrive
+            fieldSyntax = alias_table_name + "." + row["field_name"]
+
+        fields_text += (", " if idx != 0 else "") + fieldSyntax
+    
+    return (joins, fields_text)
