@@ -55,16 +55,16 @@ def get_tables(db = Depends(get_db)):
 
         # if doesn't exist create the Category 
         if cat not in structure:
-            structure[cat] = [] if is_single_rt else dict()
+            structure[cat] = []
 
         if is_single_rt:
             structure[cat].append(table) # if is single RT append the tables inside the Category 
         else:
             # if doesn't exist create the object container of the RTs 
-            if obj_name not in structure[cat]:
-                structure[cat][obj_name] = []
+            if len(structure[cat]) == 0 or obj_name not in structure[cat][len(structure[cat])-1]:
+                structure[cat].append({obj_name: []})
 
-            structure[cat][obj_name].append(table) # if is multi RT append the tables inside the object container 
+            structure[cat][len(structure[cat])-1][obj_name].append(table) # if is multi RT append the tables inside the object container 
 
     cursor.close()
     return structure

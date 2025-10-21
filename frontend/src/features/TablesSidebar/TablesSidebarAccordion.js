@@ -20,19 +20,28 @@ export default function TablesSidebarAccordion({
         <Accordion.Item eventKey={key} key={key}>
           <Accordion.Header>{key}</Accordion.Header>
           <Accordion.Body>
-            {Array.isArray(value) ? (
-              <TablesSidebarList
-                objectList={Object.values(value)}
-                selectedElement={selectedElement}
-                onSelectElement={onSelectElement}
-              />
-            ) : (
-              <TablesSidebarAccordion
-                data={value}
-                selectedElement={selectedElement}
-                onSelectElement={onSelectElement}
-              />
-            )}
+            {Object.entries(value).map(([idx, item]) => {
+              const keys = Object.keys(item);
+              if (keys.length === 1) {
+                return (
+                  <TablesSidebarAccordion
+                    key={idx}
+                    data={item}
+                    selectedElement={selectedElement}
+                    onSelectElement={onSelectElement}
+                  />
+                );
+              }
+
+              return (
+                <TablesSidebarList
+                  key={idx}
+                  objectElem={item}
+                  selectedElement={selectedElement}
+                  onSelectElement={onSelectElement}
+                />
+              );
+            })}
           </Accordion.Body>
         </Accordion.Item>
       ))}
