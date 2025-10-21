@@ -140,12 +140,12 @@ VALUES
 INSERT INTO field_definition(object_name, record_type_name, field_name, field_type, length, numeric_precision, 
     numeric_scale, reference_object, reference_field, is_active, is_visible, is_editable, is_required, is_primary_key)
 VALUES 
-    ('account', 'Cliente',      'id',               'int',      null,   null, null, null,                       null,               1, 1, 1, 1, 1),
+    ('account', 'Cliente',      'id',               'number',   null,   null, null, null,                       null,               1, 1, 1, 1, 1),
     ('account', 'Cliente',      'record_type_name', 'picklist', 255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0),
     ('account', 'Cliente',      'ragione_sociale',  'text',     255,    null, null, null,                       null,               1, 1, 1, 1, 0),
     ('account', 'Cliente',      'zone',             'lookup',   5,      null, null, 'zone',                     'nome',             1, 1, 1, 0, 0),
     ('account', 'Cliente',      'nome_fornitore',   'text',     50,     null, null, null,                       null,               0, 1, 1, 0, 0),
-    ('account', 'Fornitore',    'id',               'int',      null,   null, null, null,                       null,               1, 1, 1, 1, 1),
+    ('account', 'Fornitore',    'id',               'number',   null,   null, null, null,                       null,               1, 1, 1, 1, 1),
     ('account', 'Fornitore',    'record_type_name', 'picklist', 255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0),
     ('account', 'Fornitore',    'ragione_sociale',  'text',     255,    null, null, null,                       null,               1, 1, 1, 1, 0),
     ('account', 'Fornitore',    'zone',             'lookup',   5,      null, null, 'zone',                     'nome',             1, 1, 1, 0, 0),
@@ -164,3 +164,11 @@ VALUES
     ('account', 'Fornitore', 'nome_fornitore'),
     ('zone', 'master', 'id'),
     ('zone', 'master', 'nome');
+
+
+
+
+
+INSERT INTO account (record_type_name, ragione_sociale, zone, nome_fornitore)
+VALUES 
+    ('Fornitore', 'Aldo Srl', 'CE', 'Aldo');

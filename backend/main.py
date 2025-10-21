@@ -1,5 +1,5 @@
 import mysql.connector
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -73,8 +73,9 @@ def get_table_key(row):
     return row["object_name"] + '_' + row["record_type_name"]
 
 
+
 # Get all the records of an object
-@app.get("/table/{table_name}")
+@app.get("/{table_name}")
 def get_table_records(table_name: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
     
@@ -84,7 +85,7 @@ def get_table_records(table_name: str, db = Depends(get_db)):
     # table_name is ObjectName_RecordTypeName
     (table_name, record_type_name) = table_name.split("_")
 
-    # get the list of the field active for that specific object and record type
+    # get the list of the LIST VIEW fields active for that specific object and record type
     query = """
     SELECT fd.object_name, fd.field_name, fd.field_type, fd.reference_object, fd.reference_field, fd.is_primary_key
     FROM list_view_definition lvd
@@ -114,7 +115,6 @@ def get_table_records(table_name: str, db = Depends(get_db)):
         "records": records
     }
 
-
 def check_allowed_tables(cursor, table_name):
     query = """
     SELECT od.object_name, rtd.record_type_name, od.is_single_record_type 
@@ -131,27 +131,15 @@ def check_allowed_tables(cursor, table_name):
     if table_name not in set(allowed_tables):
         raise HTTPException(status_code=404, detail="Table not found")
 
-
 # Starting from a list of field the method create 2 output:
 #   - A text with all the field needed to be extracted 
 #   - A list with all the joins clause to add to a query
 def get_fields_text(cursor, fields, alias_table_name):
-    # Get the list of the object linked through a lookup/picklist
-    object_names = [row["reference_object"] for row in fields if row["reference_object"]]
-
-    if len(object_names) > 0:
-        # Generate N strings %s to add in the query
-        placeholders = ", ".join(["%s"] * len(object_names))
-        query = """
-        SELECT object_name, field_name
-        FROM field_definition
-        WHERE object_name IN (""" + placeholders + ") AND is_active = 1 AND is_primary_key = 1;"
-        cursor.execute(query, tuple(object_names))
-
-        # Create a dictionary with the structure { "tableName": "keyName" } 
-        #In this way we can access directly the key name without loop
-        object_primary_key_names = {row["object_name"]: row["field_name"] for row in cursor.fetchall()}
-
+    object_primary_key_names = get_object_primary_keys(
+        cursor,
+        fields,
+        lambda row: row["reference_object"] is not None
+    )
 
     joins = []
     fields_text = ""
@@ -177,3 +165,162 @@ def get_fields_text(cursor, fields, alias_table_name):
         fields_text += (", " if idx != 0 else "") + fieldSyntax
     
     return (joins, fields_text)
+
+# Get a map with the primary key for each object that respect the condition
+def get_object_primary_keys(cursor, fields, object_condition):
+    # Get the list of the object linked through a lookup/picklist
+    object_names = [row["reference_object"] for row in fields if object_condition(row)]
+
+    if len(object_names) == 0:
+        return {}
+
+    # Generate N strings %s to add in the query
+    placeholders = ", ".join(["%s"] * len(object_names))
+    query = """
+    SELECT object_name, field_name
+    FROM field_definition
+    WHERE object_name IN (""" + placeholders + ") AND is_active = 1 AND is_primary_key = 1;"
+    cursor.execute(query, tuple(object_names))
+
+    # Create a dictionary with the structure { "tableName": "keyName" } 
+    #In this way we can access directly the key name without loop
+    return {row["object_name"]: row["field_name"] for row in cursor.fetchall()}
+
+
+
+# Get all the fields with their structure
+@app.get("/{table_name}/{record_id}")
+def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
+    cursor = db.cursor(dictionary=True)
+
+    # Check if the table in input is a correct table (Avoid SQLInjection, corner case quasi inutile)
+    check_allowed_tables(cursor, table_name)
+
+    # table_name is ObjectName_RecordTypeName
+    (table_name, record_type_name) = table_name.split("_")
+
+    # get the list of the fields active for that specific object and record type
+    query = """
+    SELECT field_name, field_type, length, numeric_precision, numeric_scale, 
+        reference_object, reference_field, is_editable, is_required, is_primary_key
+    FROM field_definition
+    WHERE object_name = %s AND record_type_name = %s AND is_active = 1 AND is_visible = 1;
+    """
+    cursor.execute(query, (table_name, record_type_name))
+    fields = cursor.fetchall()
+
+    ### SECTION: Retrieve records
+    # get the list of fields name
+    fields_text = ", ".join(row["field_name"] for row in fields)
+    
+    # get records
+    primary_key_field = next((field["field_name"] for field in fields if field["is_primary_key"]), None)
+    query = "SELECT " + fields_text + " FROM " + table_name + " WHERE record_type_name = %s AND " + primary_key_field + " = %s;"
+    cursor.execute(query, (record_type_name, record_id))
+    record = cursor.fetchall()[0]
+    print(record)
+
+    ### SECTION: Retrieve Field Structure. For the picklist/lookup take also the pair (key, value) to show the picklist choice
+    object_primary_key_names = get_object_primary_keys(
+        cursor,
+        fields,
+        lambda row: row["field_type"] == "picklist" or row["field_type"] == "lookup"
+    )
+
+    field_structure = {}
+    for row in fields:
+        copy_row = row.copy()
+        copy_row.pop("field_name")
+        if row["field_type"] == "picklist" or row["field_type"] == "lookup":
+            fields_to_retrieve = row["reference_field"] + ", " + object_primary_key_names.get(row["reference_object"])
+            query = "SELECT " + fields_to_retrieve + " FROM " + row["reference_object"] + ";"
+            cursor.execute(query)
+            nested_records = cursor.fetchall()
+            copy_row["options"] = nested_records
+
+        copy_row["value"] = record[row["field_name"]]
+        field_structure[row["field_name"].capitalize()] = copy_row
+
+    cursor.close()
+    return field_structure
+
+
+
+# Delete a single record
+@app.post("/Delete")
+async def delete_record(request: Request, db = Depends(get_db)):
+    # Read the data from the body
+    data = await request.json() 
+    table_name = data.get("table")
+    record_id = data.get("id")
+
+    cursor = db.cursor(dictionary=True)
+
+    # Check if the table in input is a correct table (Avoid SQLInjection, corner case quasi inutile)
+    check_allowed_tables(cursor, table_name)
+
+    # table_name is ObjectName_RecordTypeName
+    (table_name, record_type_name) = table_name.split("_")
+
+    # get primary field name
+    query = """
+    SELECT field_name, is_primary_key
+    FROM field_definition
+    WHERE object_name = %s AND record_type_name = %s AND is_active = 1 AND is_primary_key = 1;
+    """
+    cursor.execute(query, (table_name, record_type_name))
+    fields = cursor.fetchall()
+    primary_key_field = next((field["field_name"] for field in fields if field["is_primary_key"]), None)
+
+    query="DELETE FROM " + table_name + " WHERE record_type_name = %s AND " + primary_key_field + " = %s;"
+    try:
+        cursor.execute(query, (record_type_name, record_id))
+        db.commit() 
+        return {"result": cursor.rowcount}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Update a single record
+@app.post("/Update")
+async def update_record(request: Request, db = Depends(get_db)):
+    # Read the data from the body
+    data = await request.json() 
+    table_name = data.get("table")
+    record_id = data.get("id")
+    field_structure = data.get("field")
+
+    cursor = db.cursor(dictionary=True)
+
+    # Check if the table in input is a correct table (Avoid SQLInjection, corner case quasi inutile)
+    check_allowed_tables(cursor, table_name)
+
+    # table_name is ObjectName_RecordTypeName
+    (table_name, record_type_name) = table_name.split("_")
+
+    # get primary field name
+    query = """
+    SELECT field_name, is_primary_key
+    FROM field_definition
+    WHERE object_name = %s AND record_type_name = %s AND is_active = 1 AND is_primary_key = 1;
+    """
+    cursor.execute(query, (table_name, record_type_name))
+    fields = cursor.fetchall()
+    primary_key_field = next((field["field_name"] for field in fields if field["is_primary_key"]), None)
+
+
+    columnList = ", ".join(key + " = '" + str(value) + "'" if value != 'NULL' else key + " = " + str(value) for key, value in field_structure.items())
+    query = (
+        "UPDATE " + table_name +
+        " SET " + columnList +
+        " WHERE record_type_name = %s AND " + primary_key_field + " = %s;"
+    )
+    try:
+        cursor.execute(query, (record_type_name, record_id))
+        db.commit() 
+        return {"result": cursor.rowcount}
+    except Exception as e:
+        db.rollback()
+        print(str(e))
+        raise HTTPException(status_code=500, detail=str(e))

@@ -6,6 +6,10 @@ export const MISSING_DEFAULT_LABEL = "Pagina non trovata";
 export const MISSING_TABLE_LABEL = "Tabella non trovata";
 export const MISSING_RECORD_LABEL = "Nessun record trovato";
 
+//ModalScreen
+export const CONFIRM_LABEL = "Conferma";
+export const CANCEL_LABEL = "Annulla";
+
 //NavBar
 export const DATABASE_LABEL = "Database";
 
@@ -14,3 +18,14 @@ export const TABLES_LABEL = "Tabelle";
 
 //Record List View
 export const NEW_LABEL = "Nuovo";
+export const MANDATORY_FIELD_LABEL = "Campo obbligatorio";
+export const MAX_FIELD_LABEL = "Massimo X caratteri";
+
+//Record Buttons
+export const DELETE_LABEL = "Elimina";
+export const EDIT_LABEL = "Modifica";
+export const SAVE_LABEL = "Salva";
+
+export const TITLE_MODAL_DELETE_LABEL = "Conferma Cancellazione";
+export const BODY_MODAL_DELETE_LABEL =
+  "Sei sicuro di voler cancellare il record?";

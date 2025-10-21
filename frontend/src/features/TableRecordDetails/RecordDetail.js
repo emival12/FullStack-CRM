@@ -1,3 +1,168 @@
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useOutletContext } from "react-router-dom";
+import { Form, FloatingLabel } from "react-bootstrap";
+
+import {
+  MANDATORY_FIELD_LABEL,
+  MAX_FIELD_LABEL,
+  MISSING_RECORD_LABEL,
+} from "../../config/IT";
+import { API_BASE_URL, PATH_UPDATE } from "../../config/K";
+import MissingPage from "../../components/MissingPage";
+import LoadingScreen from "../../components/LoadingScreen";
+import RecordButtons from "./RecordButtons";
+
 export default function RecordDetail() {
-  return <p>record detail</p>;
+  const { selectedTable, selectedRecord, setSelectedRecord } =
+    useOutletContext();
+  const [loading, setLoading] = useState(true);
+  const [fields, setFields] = useState([]);
+  const [isEdit, setIsEdit] = useState(false);
+  const [validated, setValidated] = useState(false);
+  const [refreshRecord, setRefreshRecord] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm();
+
+  useEffect(() => {
+    if (!selectedRecord) return; // Blocks execution if the selected tabel is not correct
+
+    setLoading(true);
+    setIsEdit(false);
+    setValidated(false);
+    axios
+      .get(API_BASE_URL + "/" + selectedTable?.key + "/" + selectedRecord?.id)
+      .then((res) => {
+        console.log("Field List Received:", res.data);
+        setFields(res.data);
+
+        //use to handle the values and redraw it
+        const formValues = Object.fromEntries(
+          Object.entries(res.data).map(([key, info]) => [key, info.value])
+        );
+        reset(formValues);
+      })
+      .catch((err) => console.error("Error:", err))
+      .finally(() => setLoading(false));
+  }, [selectedRecord, refreshRecord]); //rerun everything when one of those fields change
+
+  //Method fired when the button Save is pressed
+  const onSubmit = (data) => {
+    const formPointer = document.getElementById("recordDetailForm");
+    if (formPointer.checkValidity()) {
+      setLoading(true);
+      axios
+        .post(API_BASE_URL + PATH_UPDATE, {
+          table: selectedTable?.key,
+          id: selectedRecord?.id,
+          field: data,
+        })
+        .then((res) => {
+          console.log("Updated record results:", res.data);
+          setRefreshRecord(!refreshRecord);
+          setIsEdit(false);
+        })
+        .catch((err) => console.error("Error:", err))
+        .finally(() => setLoading(false));
+    }
+
+    setValidated(true);
+  };
+
+  if (!selectedRecord)
+    return <MissingPage MissingText={MISSING_RECORD_LABEL} />;
+  if (loading) return <LoadingScreen />;
+
+  const get_selection_entry = (info) => {
+    return (
+      <>
+        <Form.Select
+          defaultValue={info.value}
+          disabled={!info.is_editable || !isEdit}
+          isInvalid={errors[key]}
+          {...register(key, {
+            validate: (value) =>
+              !info.is_required || value !== "NULL" || MANDATORY_FIELD_LABEL,
+          })}
+        >
+          <option value="NULL"></option>
+          {info.options.map((opt) => (
+            <option key={opt.id} value={opt.id}>
+              {opt.nome}
+            </option>
+          ))}
+        </Form.Select>
+        <Form.Control.Feedback type="invalid">
+          {errors[key]?.message}
+        </Form.Control.Feedback>
+      </>
+    );
+  };
+
+  const get_entry = (info) => {
+    return (
+      <>
+        <Form.Control
+          type={info.field_type}
+          defaultValue={info.value}
+          disabled={!info.is_editable || !isEdit}
+          required={info.is_required}
+          isInvalid={errors[key]}
+          step="0.01"
+          {...register(key, {
+            required: {
+              value: info.is_required,
+              message: MANDATORY_FIELD_LABEL,
+            },
+            maxLength: {
+              value: info.length,
+              message: MAX_FIELD_LABEL.replace("X", info.length),
+            },
+          })}
+        />
+        <Form.Control.Feedback type="invalid">
+          {errors[key]?.message}
+        </Form.Control.Feedback>
+      </>
+    );
+  };
+
+  return (
+    <div>
+      <RecordButtons
+        setLoading={setLoading}
+        selectedRecord={selectedRecord}
+        selectedTable={selectedTable}
+        isEdit={isEdit}
+        onEditClick={setIsEdit}
+        refreshRecord={refreshRecord}
+        setRefreshRecord={setRefreshRecord}
+      ></RecordButtons>
+      <Form
+        id="recordDetailForm"
+        noValidate
+        validated={validated}
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        {Object.entries(fields).map(([key, info]) => (
+          <FloatingLabel
+            key={key}
+            controlId="floatingInput"
+            label={key.replace("_", " ") + (info.is_required ? " *" : "")}
+            className="mb-3"
+          >
+            {info.field_type === "picklist" || info.field_type === "lookup"
+              ? get_selection_entry(info)
+              : get_entry(info)}
+          </FloatingLabel>
+        ))}
+      </Form>
+    </div>
+  );
 }

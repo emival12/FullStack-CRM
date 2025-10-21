@@ -34,10 +34,13 @@ npm install react-router-dom@7.9.4
 ## 4: Istallazione libreria React bootstrap in locale (Libreria con una serie di componenti grafici utili)
 npm install react-bootstrap bootstrap
 
-## 5: Istallazione libreria bootstrap icon in locale (Libreria con icone)
+## 5: Istallazione libreria React Hook Form in locale (Libreria per la gestione dei form)
+npm install react-hook-form
+
+## 6: Istallazione libreria bootstrap icon in locale (Libreria con icone)
 npm install bootstrap-icons
 
-## 6: Istallazione libreria axios in locale (Libreria React per fare richiest HTTP e comunicazione con API)
+## 7: Istallazione libreria axios in locale (Libreria React per fare richiest HTTP e comunicazione con API)
 npm install axios
 
 ##: Lanciare il Server Frontend

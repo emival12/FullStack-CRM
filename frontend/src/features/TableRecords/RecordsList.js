@@ -52,8 +52,8 @@ export default function RecordsList({
       <Table bordered hover className="m-0">
         <thead>
           <tr>
-            {Object.values(records.fields).map((fielName, i) => (
-              <th key={i}>{fielName.toUpperCase()}</th>
+            {Object.values(records.fields).map((fieldName, i) => (
+              <th key={i}>{fieldName.toUpperCase()}</th>
             ))}
           </tr>
         </thead>

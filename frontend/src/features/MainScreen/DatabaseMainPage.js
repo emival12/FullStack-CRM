@@ -25,7 +25,9 @@ export default function DatabaseMainPage() {
 
         <Col xs={12} md={10} className="ps-md-0">
           <div className="h-100 pt-3 pb-3 ps-3 ps-md-2 pe-3">
-            <Outlet context={{ selectedTable, setSelectedRecord }} />
+            <Outlet
+              context={{ selectedTable, selectedRecord, setSelectedRecord }}
+            />
           </div>
         </Col>
       </Row>

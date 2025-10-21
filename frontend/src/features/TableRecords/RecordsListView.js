@@ -10,7 +10,8 @@ import LoadingScreen from "../../components/LoadingScreen";
 import RecordsList from "./RecordsList";
 
 export default function RecordsListView() {
-  const { selectedTable, setSelectedRecord } = useOutletContext();
+  const { selectedTable, selectedRecord, setSelectedRecord } =
+    useOutletContext();
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState([]);
 
@@ -19,7 +20,7 @@ export default function RecordsListView() {
 
     setLoading(true);
     axios
-      .get(API_BASE_URL + "/table/" + selectedTable?.key)
+      .get(API_BASE_URL + "/" + selectedTable?.key)
       .then((res) => {
         console.log("Record List Received:", res.data);
         setRecords(res.data);
