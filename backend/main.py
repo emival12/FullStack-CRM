@@ -279,6 +279,7 @@ async def delete_record(request: Request, db = Depends(get_db)):
         return {"result": cursor.rowcount}
     except Exception as e:
         db.rollback()
+        print('Error: ' + str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -322,5 +323,5 @@ async def update_record(request: Request, db = Depends(get_db)):
         return {"result": cursor.rowcount}
     except Exception as e:
         db.rollback()
-        print(str(e))
+        print('Error: ' + str(e))
         raise HTTPException(status_code=500, detail=str(e))
