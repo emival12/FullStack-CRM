@@ -13,6 +13,17 @@ import {
 import { API_BASE_URL, PATH_DELETE } from "../../config/K";
 import ModalScreen from "../../components/ModalScreen";
 
+/**
+ * Shows a table of record
+ *
+ * @param {Object[]} props.setLoading         - Function to update the loading variable
+ * @param {Object[]} props.selectedRecord     - Record currently selected
+ * @param {Object[]} props.selectedTable      - Table currently selected
+ * @param {Object[]} props.isEdit             - Variable to understand if is in edit or in view
+ * @param {Object[]} props.onEditClick        - Function to update the isEdit variable
+ * @param {Object[]} props.refreshRecord      - Variable to understand if is needed a refresh in the view
+ * @param {Object[]} props.setRefreshRecord   - Function to update the refreshRecord variable
+ */
 export default function RecordButtons({
   setLoading,
   selectedRecord,
