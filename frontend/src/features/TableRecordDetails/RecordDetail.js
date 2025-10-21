@@ -79,7 +79,7 @@ export default function RecordDetail() {
     return <MissingPage MissingText={MISSING_RECORD_LABEL} />;
   if (loading) return <LoadingScreen />;
 
-  const get_selection_entry = (info) => {
+  const get_selection_entry = (key, info) => {
     return (
       <>
         <Form.Select
@@ -105,7 +105,7 @@ export default function RecordDetail() {
     );
   };
 
-  const get_entry = (info) => {
+  const get_entry = (key, info) => {
     return (
       <>
         <Form.Control
@@ -158,8 +158,8 @@ export default function RecordDetail() {
             className="mb-3"
           >
             {info.field_type === "picklist" || info.field_type === "lookup"
-              ? get_selection_entry(info)
-              : get_entry(info)}
+              ? get_selection_entry(key, info)
+              : get_entry(key, info)}
           </FloatingLabel>
         ))}
       </Form>
