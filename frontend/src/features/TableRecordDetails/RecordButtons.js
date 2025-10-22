@@ -7,6 +7,8 @@ import {
   CANCEL_LABEL,
   DELETE_LABEL,
   EDIT_LABEL,
+  ERROR_TOAST_BODY_LABEL,
+  ERROR_TOAST_TITLE_LABEL,
   SAVE_LABEL,
   TITLE_MODAL_DELETE_LABEL,
 } from "../../config/IT";
@@ -23,6 +25,9 @@ import ModalScreen from "../../components/ModalScreen";
  * @param {Object[]} props.onEditClick        - Function to update the isEdit variable
  * @param {Object[]} props.refreshRecord      - Variable to understand if is needed a refresh in the view
  * @param {Object[]} props.setRefreshRecord   - Function to update the refreshRecord variable
+ * @param {Object[]} props.setShowToast       - Function to update the showToast variable
+ * @param {Object[]} props.setToastTitle      - Function to update the toastTitle variable
+ * @param {Object[]} props.setToastBody       - Function to update the toastBody variable
  */
 export default function RecordButtons({
   setLoading,
@@ -32,6 +37,9 @@ export default function RecordButtons({
   onEditClick,
   refreshRecord,
   setRefreshRecord,
+  setShowToast,
+  setToastTitle,
+  setToastBody,
 }) {
   const [showModal, setShowModal] = useState(false);
   const [titleModal, setTitleModal] = useState();
@@ -42,12 +50,23 @@ export default function RecordButtons({
     axios
       .post(API_BASE_URL + PATH_DELETE, {
         table: selectedTable?.key,
-        id: selectedRecord?.id,
+        id: selectedRecord?.record[selectedRecord?.primary_key],
       })
       .then((res) => {
         console.log("Deletion record results:", res.data);
+        if (res.data.result == 0) {
+          setShowToast(true);
+          setToastTitle(ERROR_TOAST_TITLE_LABEL);
+          setToastBody(ERROR_TOAST_BODY_LABEL);
+        }
       })
-      .catch((err) => console.error("Error:", err))
+      .catch((err) => {
+        console.error("Error:", err);
+
+        setShowToast(true);
+        setToastTitle(ERROR_TOAST_TITLE_LABEL);
+        setToastBody(err.response.data.detail);
+      })
       .finally(() => setLoading(false));
   };
 

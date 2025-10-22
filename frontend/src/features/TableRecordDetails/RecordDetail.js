@@ -5,6 +5,8 @@ import { useOutletContext } from "react-router-dom";
 import { Form, FloatingLabel } from "react-bootstrap";
 
 import {
+  ERROR_TOAST_BODY_LABEL,
+  ERROR_TOAST_TITLE_LABEL,
   MANDATORY_FIELD_LABEL,
   MAX_FIELD_LABEL,
   MISSING_RECORD_LABEL,
@@ -13,6 +15,7 @@ import { API_BASE_URL, PATH_UPDATE } from "../../config/K";
 import MissingPage from "../../components/MissingPage";
 import LoadingScreen from "../../components/LoadingScreen";
 import RecordButtons from "./RecordButtons";
+import ToastMsg from "../../components/ToastMsg";
 
 export default function RecordDetail() {
   const { selectedTable, selectedRecord, setSelectedRecord } =
@@ -22,6 +25,10 @@ export default function RecordDetail() {
   const [isEdit, setIsEdit] = useState(false);
   const [validated, setValidated] = useState(false);
   const [refreshRecord, setRefreshRecord] = useState(false);
+
+  const [showToast, setShowToast] = useState(false);
+  const [toastTitle, setToastTitle] = useState();
+  const [toastBody, setToastBody] = useState();
 
   const {
     register,
@@ -60,25 +67,46 @@ export default function RecordDetail() {
 
   //Method fired when the button Save is pressed
   const onSubmit = (data) => {
-    const formPointer = document.getElementById("recordDetailForm");
-    if (formPointer.checkValidity()) {
-      setLoading(true);
-      axios
-        .post(API_BASE_URL + PATH_UPDATE, {
-          table: selectedTable?.key,
-          id: selectedRecord?.id,
-          field: data,
-        })
-        .then((res) => {
-          console.log("Updated record results:", res.data);
-          setRefreshRecord(!refreshRecord);
-          setIsEdit(false);
-        })
-        .catch((err) => console.error("Error:", err))
-        .finally(() => setLoading(false));
+    var modified_data = {};
+    for (const key in fields) {
+      if (fields[key].value != data[key]) {
+        modified_data[key] = data[key];
+      }
     }
 
-    setValidated(true);
+    if (Object.keys(modified_data).length > 0) {
+      const formPointer = document.getElementById("recordDetailForm");
+      if (formPointer.checkValidity()) {
+        setLoading(true);
+        axios
+          .post(API_BASE_URL + PATH_UPDATE, {
+            table: selectedTable?.key,
+            id: selectedRecord?.record[selectedRecord?.primary_key],
+            field: modified_data,
+          })
+          .then((res) => {
+            console.log("Updated record results:", res.data);
+            if (res.data.result == 0) {
+              setShowToast(true);
+              setToastTitle(ERROR_TOAST_TITLE_LABEL);
+              setToastBody(ERROR_TOAST_BODY_LABEL);
+            } else {
+              setRefreshRecord(!refreshRecord);
+              setIsEdit(false);
+            }
+          })
+          .catch((err) => {
+            console.error("Error:", err);
+
+            setShowToast(true);
+            setToastTitle(ERROR_TOAST_TITLE_LABEL);
+            setToastBody(err.response.data.detail);
+          })
+          .finally(() => setLoading(false));
+      }
+
+      setValidated(true);
+    }
   };
 
   if (!selectedRecord)
@@ -149,6 +177,9 @@ export default function RecordDetail() {
         onEditClick={setIsEdit}
         refreshRecord={refreshRecord}
         setRefreshRecord={setRefreshRecord}
+        setShowToast={setShowToast}
+        setToastTitle={setToastTitle}
+        setToastBody={setToastBody}
       ></RecordButtons>
       <Form
         id="recordDetailForm"
@@ -169,6 +200,13 @@ export default function RecordDetail() {
           </FloatingLabel>
         ))}
       </Form>
+      <ToastMsg
+        showToast={showToast}
+        setShowToast={setShowToast}
+        color="danger"
+        title={toastTitle}
+        body={toastBody}
+      ></ToastMsg>
     </div>
   );
 }

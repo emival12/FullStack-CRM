@@ -179,7 +179,7 @@ def get_fields_text(cursor, fields, alias_table_name):
 
             table_field = alias_table_name + "." + rollup_definition["master_primary_key"]
             join_field = alias_join_table + "." + rollup_definition["detail_join_key"]
-            join_clause = "JOIN " + join_table_name + " " + alias_join_table + " ON " + table_field + " = " + join_field
+            join_clause = "LEFT JOIN " + join_table_name + " " + alias_join_table + " ON " + table_field + " = " + join_field
             joins.append(join_clause)
 
             fieldSyntax = rollup_definition["aggregation_function"] + "(" + alias_join_table + "." + rollup_definition["detail_field_name"] + ") " + rollup_definition["master_field_name"]

@@ -149,7 +149,6 @@ VALUES
     ('Cliente',     'Giacomo Srl',  'BT',   null,   null),
     ('Fornitore',   'Aldo Srl',     'CE',   'Aldo', null);
 
-
 INSERT INTO contatto (telefono, descrizione, costo, account)
 VALUES 
     ('111111111',   'Mobile',   30,     1),
