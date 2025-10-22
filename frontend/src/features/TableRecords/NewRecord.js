@@ -23,7 +23,7 @@ import ToastMsg from "../../components/ToastMsg";
  * @param {Object[]} props.setRefreshList       - Function to run the refresh on the record list
  */
 export default function NewRecord({
-  selectedTable,
+  selectedTableKey,
   showNewModal,
   setShowNewModal,
   setRefreshList,
@@ -43,10 +43,10 @@ export default function NewRecord({
   } = useForm();
 
   useEffect(() => {
-    if (!selectedTable) return; // Blocks execution if the selected tabel is not correct
+    if (!selectedTableKey) return; // Blocks execution if the selected tabel is not correct
 
     axios
-      .get(API_BASE_URL + "/" + selectedTable?.key + "/new-record")
+      .get(API_BASE_URL + "/" + selectedTableKey + "/new-record")
       .then((res) => {
         console.log("Structure Record Received:", res.data);
         setFields(res.data);
@@ -61,7 +61,7 @@ export default function NewRecord({
     if (formPointer.checkValidity()) {
       axios
         .post(API_BASE_URL + PATH_INSERT, {
-          table: selectedTable?.key,
+          table: selectedTableKey,
           record: data,
         })
         .then((res) => {

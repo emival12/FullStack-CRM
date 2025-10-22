@@ -39,7 +39,7 @@ export default function RecordsList({
               record: record,
               primary_key: records.primary_key_name,
             });
-            navigate(PATH_DATABASE + "/" + selectedTable.label + "/" + value);
+            navigate(PATH_DATABASE + "/" + selectedTable.key + "/" + value);
           }}
         >
           {value}

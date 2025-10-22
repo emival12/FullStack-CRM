@@ -21,7 +21,7 @@ export default function TablesSidebarList({
       <ListGroup.Item
         action
         as={Link}
-        to={PATH_DATABASE + "/" + objectElem.label}
+        to={PATH_DATABASE + "/" + objectElem.key}
         key={objectElem.key}
         active={objectElem === selectedElement}
         onClick={() => onSelectElement(objectElem)}

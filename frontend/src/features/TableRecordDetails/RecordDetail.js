@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useParams } from "react-router-dom";
 import { Form, FloatingLabel } from "react-bootstrap";
 
 import {
@@ -18,6 +18,7 @@ import RecordButtons from "./RecordButtons";
 import ToastMsg from "../../components/ToastMsg";
 
 export default function RecordDetail() {
+  const { tableName, recordId } = useParams();
   const { selectedTable, selectedRecord, setSelectedRecord } =
     useOutletContext();
   const [loading, setLoading] = useState(true);
@@ -38,19 +39,17 @@ export default function RecordDetail() {
   } = useForm();
 
   useEffect(() => {
-    if (!selectedRecord) return; // Blocks execution if the selected tabel is not correct
+    if (!selectedTable && !tableName && !selectedRecord && !recordId) return; // Blocks execution if the selected tabel is not correct
+
+    const tableKey = selectedTable?.key || tableName;
+    const recordKey =
+      selectedRecord?.record[selectedRecord?.primary_key] || recordId;
 
     setLoading(true);
     setIsEdit(false);
     setValidated(false);
     axios
-      .get(
-        API_BASE_URL +
-          "/" +
-          selectedTable?.key +
-          "/record/" +
-          selectedRecord?.record[selectedRecord?.primary_key]
-      )
+      .get(API_BASE_URL + "/" + tableKey + "/record/" + recordKey)
       .then((res) => {
         console.log("Field List Received:", res.data);
         setFields(res.data);
@@ -109,8 +108,10 @@ export default function RecordDetail() {
     }
   };
 
-  if (!selectedRecord)
+  if (!selectedTable && !tableName && !selectedRecord && !recordId) {
     return <MissingPage MissingText={MISSING_RECORD_LABEL} />;
+  }
+
   if (loading) return <LoadingScreen />;
 
   const get_selection_entry = (key, info) => {
