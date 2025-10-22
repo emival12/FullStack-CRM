@@ -37,7 +37,13 @@ export default function RecordDetail() {
     setIsEdit(false);
     setValidated(false);
     axios
-      .get(API_BASE_URL + "/" + selectedTable?.key + "/" + selectedRecord?.id)
+      .get(
+        API_BASE_URL +
+          "/" +
+          selectedTable?.key +
+          "/" +
+          selectedRecord?.record[selectedRecord?.primary_key]
+      )
       .then((res) => {
         console.log("Field List Received:", res.data);
         setFields(res.data);
@@ -94,7 +100,7 @@ export default function RecordDetail() {
           <option value="NULL"></option>
           {info.options.map((opt) => (
             <option key={opt.id} value={opt.id}>
-              {opt.nome}
+              {opt.reference_field}
             </option>
           ))}
         </Form.Select>

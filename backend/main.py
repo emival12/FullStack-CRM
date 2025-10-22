@@ -87,24 +87,26 @@ def get_table_records(table_name: str, db = Depends(get_db)):
 
     # get the list of the LIST VIEW fields active for that specific object and record type
     query = """
-    SELECT fd.object_name, fd.field_name, fd.field_type, fd.reference_object, fd.reference_field, fd.is_primary_key
+    SELECT fd.object_name, fd.record_type_name, fd.field_name, fd.field_type, fd.reference_object, fd.reference_field, fd.is_primary_key
     FROM list_view_definition lvd
     JOIN field_definition fd ON 
         lvd.object_name = fd.object_name AND 
         lvd.record_type_name = fd.record_type_name AND 
         lvd.field_name = fd.field_name
-    WHERE fd.object_name = %s AND fd.record_type_name = %s AND fd.is_active = 1 AND fd.is_visible = 1;
+    WHERE fd.object_name = %s AND fd.record_type_name = %s AND fd.is_active = 1 AND fd.is_visible = 1
+    ORDER BY lvd.sort_order ASC;
     """
     cursor.execute(query, (table_name, record_type_name))
     fields = cursor.fetchall()
 
-    # get the list of fields name and the join clauses
+    # get the list of fields name, join clauses and group clause
     alias_table_name = table_name[0]
-    (joins, fields_text) = get_fields_text(cursor, fields, alias_table_name)
-            
+    (fields_text, joins, group) = get_fields_text(cursor, fields, alias_table_name)
+
     # get records
     query = "SELECT " + fields_text + " FROM " + table_name + ' ' + alias_table_name
-    query += (" " + " ".join(joins) if joins else "") + " WHERE " + alias_table_name + "." + "record_type_name = %s;"
+    query += (" " + " ".join(joins) if joins else "") + " WHERE " + alias_table_name + "." + "record_type_name = %s"
+    query += (group + ";" if group else ";")
     cursor.execute(query, (record_type_name,))
     records = cursor.fetchall()
 
@@ -134,6 +136,7 @@ def check_allowed_tables(cursor, table_name):
 # Starting from a list of field the method create 2 output:
 #   - A text with all the field needed to be extracted 
 #   - A list with all the joins clause to add to a query
+#   - A text with all the field to add in the GROUP BY clause 
 def get_fields_text(cursor, fields, alias_table_name):
     object_primary_key_names = get_object_primary_keys(
         cursor,
@@ -142,10 +145,12 @@ def get_fields_text(cursor, fields, alias_table_name):
     )
 
     joins = []
+    group = ""
+    remove_from_group = []
     fields_text = ""
     for idx, row in enumerate(fields):
         fieldSyntax = ""
-        if row["reference_object"]:
+        if row["reference_object"] and (row["field_type"] == "picklist" or row["field_type"] == "lookup"):
             # If is a linked fields we have to:
             #   - insert a JOIN clause and match the current FK saved in field name with the actual PK saved in the map created before
             #   - add to the list of the field to retrieve the field reference field located in the other object
@@ -154,17 +159,57 @@ def get_fields_text(cursor, fields, alias_table_name):
 
             table_field = alias_table_name + "." + row["field_name"]
             join_field = alias_join_table + "." + object_primary_key_names.get(join_table_name)
-
             join_clause = "JOIN " + join_table_name + " " + alias_join_table + " ON " + table_field + " = " + join_field
             joins.append(join_clause)
-            fieldSyntax = alias_join_table + "." + row["reference_field"] + ' ' + row["field_name"]
+
+            fieldSyntax = alias_join_table + "." + row["reference_field"] + " " + row["field_name"]
+        elif row["reference_object"] and row["field_type"] == "rollup":
+            query = """
+            SELECT master_object_name, master_record_type_name, master_primary_key, master_field_name, 
+                detail_object_name, detail_join_key, detail_field_name, aggregation_function, filter_condition
+            FROM rollup_definition
+            WHERE master_object_name = %s AND master_record_type_name = %s AND master_field_name = %s 
+                AND detail_object_name = %s
+            """
+            cursor.execute(query, (row["object_name"], row["record_type_name"], row["field_name"], row["reference_object"]))
+            rollup_definition = cursor.fetchall()[0]
+            
+            alias_join_table = row["reference_object"][0]
+            join_table_name = row["reference_object"]
+
+            table_field = alias_table_name + "." + rollup_definition["master_primary_key"]
+            join_field = alias_join_table + "." + rollup_definition["detail_join_key"]
+            join_clause = "JOIN " + join_table_name + " " + alias_join_table + " ON " + table_field + " = " + join_field
+            joins.append(join_clause)
+
+            fieldSyntax = rollup_definition["aggregation_function"] + "(" + alias_join_table + "." + rollup_definition["detail_field_name"] + ") " + rollup_definition["master_field_name"]
+            group = " GROUP BY "
+            remove_from_group.append(fieldSyntax)
         else:
             # If is a normal field we have to add it to the list of the field to retrive
             fieldSyntax = alias_table_name + "." + row["field_name"]
 
         fields_text += (", " if idx != 0 else "") + fieldSyntax
-    
-    return (joins, fields_text)
+
+
+    # If there is a group clause create the list of field to group
+    if group:
+        fields = [f.strip() for f in fields_text.split(",")]
+        group_fields = []
+        for f in fields:
+            if f in remove_from_group:
+                continue
+
+            parts = f.split() #if contains an alia take only the first part
+            if len(parts) > 1:
+                f = parts[0]
+            group_fields.append(f)
+
+        group += ", ".join(group_fields)
+
+    return (fields_text, joins, group)
+
+
 
 # Get a map with the primary key for each object that respect the condition
 def get_object_primary_keys(cursor, fields, object_condition):
@@ -194,17 +239,22 @@ def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
     # Check if the table in input is a correct table (Avoid SQLInjection, corner case quasi inutile)
-    check_allowed_tables(cursor, table_name)
+    #check_allowed_tables(cursor, table_name)
 
     # table_name is ObjectName_RecordTypeName
     (table_name, record_type_name) = table_name.split("_")
 
     # get the list of the fields active for that specific object and record type
     query = """
-    SELECT field_name, field_type, length, numeric_precision, numeric_scale, 
-        reference_object, reference_field, is_editable, is_required, is_primary_key
-    FROM field_definition
-    WHERE object_name = %s AND record_type_name = %s AND is_active = 1 AND is_visible = 1;
+    SELECT fd.object_name, fd.record_type_name,  fd.field_name, fd.field_type, fd.length, fd.numeric_precision, fd.numeric_scale, fd.reference_object, fd.reference_field, 
+        fd.is_editable, fd.is_required, fd.is_primary_key
+    FROM record_layout_definition rvd
+    JOIN field_definition fd ON 
+        rvd.object_name = fd.object_name AND 
+        rvd.record_type_name = fd.record_type_name AND 
+        rvd.field_name = fd.field_name
+    WHERE fd.object_name = %s AND fd.record_type_name = %s AND fd.is_active = 1 AND fd.is_visible = 1
+    ORDER BY rvd.sort_order ASC;
     """
     cursor.execute(query, (table_name, record_type_name))
     fields = cursor.fetchall()
@@ -218,7 +268,6 @@ def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
     query = "SELECT " + fields_text + " FROM " + table_name + " WHERE record_type_name = %s AND " + primary_key_field + " = %s;"
     cursor.execute(query, (record_type_name, record_id))
     record = cursor.fetchall()[0]
-    print(record)
 
     ### SECTION: Retrieve Field Structure. For the picklist/lookup take also the pair (key, value) to show the picklist choice
     object_primary_key_names = get_object_primary_keys(
@@ -232,11 +281,36 @@ def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
         copy_row = row.copy()
         copy_row.pop("field_name")
         if row["field_type"] == "picklist" or row["field_type"] == "lookup":
-            fields_to_retrieve = row["reference_field"] + ", " + object_primary_key_names.get(row["reference_object"])
+            fields_to_retrieve = row["reference_field"]  + " reference_field, " + object_primary_key_names.get(row["reference_object"]) + ' id'
             query = "SELECT " + fields_to_retrieve + " FROM " + row["reference_object"] + ";"
             cursor.execute(query)
             nested_records = cursor.fetchall()
             copy_row["options"] = nested_records
+        elif row["field_type"] == "rollup":
+            query = """
+            SELECT master_object_name, master_record_type_name, master_primary_key, master_field_name, 
+                detail_object_name, detail_join_key, detail_field_name, aggregation_function, filter_condition
+            FROM rollup_definition
+            WHERE master_object_name = %s AND master_record_type_name = %s AND master_field_name = %s 
+                AND detail_object_name = %s
+            """
+            cursor.execute(query, (row["object_name"], row["record_type_name"], row["field_name"], row["reference_object"]))
+            rollup_definition = cursor.fetchall()[0]
+            
+            alias_table_name = table_name[0]
+            alias_join_table = row["reference_object"][0]
+            join_table_name = row["reference_object"]
+
+            table_field = alias_table_name + "." + rollup_definition["master_primary_key"]
+            join_field = alias_join_table + "." + rollup_definition["detail_join_key"]
+            join_clause = " JOIN " + join_table_name + " " + alias_join_table + " ON " + table_field + " = " + join_field
+
+            rollup_field = rollup_definition["aggregation_function"] + "(" + alias_join_table + "." + rollup_definition["detail_field_name"] + ") " + rollup_definition["master_field_name"]
+            query = "SELECT " + rollup_field + " FROM " + table_name + ' ' + alias_table_name + join_clause + " WHERE " + primary_key_field + " = %s;"
+
+            cursor.execute(query, (record_id,))
+            rollup_record = cursor.fetchall()[0]
+            record[row["field_name"]] = rollup_record[rollup_definition["master_field_name"]]
 
         copy_row["value"] = record[row["field_name"]]
         field_structure[row["field_name"].capitalize()] = copy_row

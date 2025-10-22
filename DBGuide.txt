@@ -41,13 +41,25 @@ CREATE TABLE field_definition (
     INDEX idx_reference_object(reference_object)
 );
 
-
 # Creazione Tabella list_view_definition
 #   La tabella contiene la definizione dei field mostrati nelle list view degli oggetti
 CREATE TABLE list_view_definition (
     object_name VARCHAR(100),
     record_type_name VARCHAR(100),
     field_name VARCHAR(255),
+    sort_order SMALLINT,
+    PRIMARY KEY (object_name, record_type_name, field_name),
+    FOREIGN KEY (object_name, record_type_name, field_name) 
+        REFERENCES field_definition(object_name, record_type_name, field_name) ON DELETE CASCADE
+);
+
+# Creazione Tabella record_layout_definition
+#   La tabella contiene la definizione dei layout mostrati nei record degli oggetti
+CREATE TABLE record_layout_definition (
+    object_name VARCHAR(100),
+    record_type_name VARCHAR(100),
+    field_name VARCHAR(255),
+    sort_order SMALLINT,
     PRIMARY KEY (object_name, record_type_name, field_name),
     FOREIGN KEY (object_name, record_type_name, field_name) 
         REFERENCES field_definition(object_name, record_type_name, field_name) ON DELETE CASCADE
@@ -75,8 +87,10 @@ CREATE TABLE aggregation_function (
 CREATE TABLE rollup_definition (
     master_object_name VARCHAR(100),
     master_record_type_name VARCHAR(100),
+    master_primary_key VARCHAR(255),
     master_field_name VARCHAR(255),
     detail_object_name VARCHAR(100) NOT NULL,
+    detail_join_key VARCHAR(255) NOT NULL,
     detail_field_name VARCHAR(255) NOT NULL,
     aggregation_function VARCHAR(15),
     filter_condition VARCHAR(1000),
@@ -85,7 +99,6 @@ CREATE TABLE rollup_definition (
         REFERENCES field_definition(object_name, record_type_name, field_name) ON DELETE CASCADE,
     FOREIGN KEY (aggregation_function) REFERENCES aggregation_function(name)
 );
-
 
 
 ######################################
@@ -185,20 +198,39 @@ VALUES
     ('zone',    'master',       'record_type_name',         'picklist', 255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0);
 
 
-INSERT INTO list_view_definition(object_name, record_type_name, field_name)
+INSERT INTO list_view_definition(object_name, record_type_name, field_name, sort_order)
 VALUES 
-    ('account', 'Cliente',      'id'),
-    ('account', 'Cliente',      'ragione_sociale'),
-    ('account', 'Cliente',      'zone'),
-    ('account', 'Cliente',      'costo_totale_contatti'),
-    ('account', 'Fornitore',    'id'),
-    ('account', 'Fornitore',    'ragione_sociale'),
-    ('account', 'Fornitore',    'nome_fornitore'),
-    ('contatto','master',       'telefono'),
-    ('contatto','master',       'account'),
-    ('contatto','master',       'costo'),
-    ('zone',    'master',       'id'),
-    ('zone',    'master',       'nome');
+    ('account', 'Cliente',      'id',                   1),
+    ('account', 'Cliente',      'ragione_sociale',      2),
+    ('account', 'Cliente',      'zone',                 3),
+    ('account', 'Cliente',      'costo_totale_contatti',4),
+    ('account', 'Fornitore',    'id',                   1),
+    ('account', 'Fornitore',    'ragione_sociale',      2),
+    ('account', 'Fornitore',    'nome_fornitore',       3),
+    ('contatto','master',       'telefono',             1),
+    ('contatto','master',       'account',              2),
+    ('contatto','master',       'costo',                3),
+    ('zone',    'master',       'id',                   1),
+    ('zone',    'master',       'nome',                 2);
+
+
+INSERT INTO record_layout_definition(object_name, record_type_name, field_name, sort_order)
+VALUES 
+    ('account', 'Cliente',      'id',                       1),
+    ('account', 'Cliente',      'ragione_sociale',          2),
+    ('account', 'Cliente',      'zone',                     3),
+    ('account', 'Cliente',      'costo_totale_contatti',    4),
+    ('account', 'Fornitore',    'id',                       1),
+    ('account', 'Fornitore',    'ragione_sociale',          2),
+    ('account', 'Fornitore',    'zone',                     3),
+    ('account', 'Fornitore',    'nome_fornitore',           4),
+    ('account', 'Fornitore',    'costo_totale_contatti',    5),
+    ('contatto','master',       'telefono',                 1),
+    ('contatto','master',       'descrizione',              2),
+    ('contatto','master',       'costo',                    3),
+    ('contatto','master',       'account',                  4),
+    ('zone',    'master',       'id',                       1),
+    ('zone',    'master',       'nome',                     2);
 
 
 INSERT INTO aggregation_function (name)
@@ -208,9 +240,12 @@ VALUES
     ('MAX');
 
 
-INSERT INTO rollup_definition (master_object_name, master_record_type_name, master_field_name, detail_object_name, detail_field_name, aggregation_function, filter_condition)
+INSERT INTO rollup_definition (master_object_name, master_record_type_name, master_primary_key, master_field_name, 
+    detail_object_name, detail_join_key, detail_field_name, aggregation_function, filter_condition)
 VALUES 
-    ('account', 'Cliente', 'costo_totale_contatti', 'contatto', 'costo', 'SUM', null),
-    ('account', 'Fornitore', 'costo_totale_contatti', 'contatto', 'costo', 'SUM', null);
+    ('account', 'Cliente',  'Id',   'costo_totale_contatti', 'contatto', 'account', 'costo', 'SUM', null),
+    ('account', 'Fornitore','Id',   'costo_totale_contatti', 'contatto', 'account', 'costo', 'SUM', null);
+
+
 
 

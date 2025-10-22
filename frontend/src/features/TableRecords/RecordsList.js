@@ -35,7 +35,10 @@ export default function RecordsList({
           key={key}
           className="cursor-pointer text-primary"
           onClick={() => {
-            onSelectedRecord(record);
+            onSelectedRecord({
+              record: record,
+              primary_key: records.primary_key_name,
+            });
             navigate(PATH_DATABASE + "/" + selectedTable.label + "/" + value);
           }}
         >
