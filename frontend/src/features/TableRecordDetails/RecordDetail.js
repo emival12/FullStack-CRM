@@ -48,7 +48,7 @@ export default function RecordDetail() {
         API_BASE_URL +
           "/" +
           selectedTable?.key +
-          "/" +
+          "/record/" +
           selectedRecord?.record[selectedRecord?.primary_key]
       )
       .then((res) => {

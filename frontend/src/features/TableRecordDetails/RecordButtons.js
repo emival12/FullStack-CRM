@@ -21,6 +21,7 @@ import ModalScreen from "../../components/ModalScreen";
  *
  * @param {Object[]} props.setLoading         - Function to update the loading variable
  * @param {Object[]} props.selectedRecord     - Record currently selected
+ * @param {Object[]} props.setSelectedRecord  - Function to update the selectedRecord variable
  * @param {Object[]} props.selectedTable      - Table currently selected
  * @param {Object[]} props.isEdit             - Variable to understand if is in edit or in view
  * @param {Object[]} props.onEditClick        - Function to update the isEdit variable

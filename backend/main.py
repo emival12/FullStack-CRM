@@ -234,12 +234,12 @@ def get_object_primary_keys(cursor, fields, object_condition):
 
 
 # Get all the fields with their structure
-@app.get("/{table_name}/{record_id}")
+@app.get("/{table_name}/record/{record_id}")
 def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
     # Check if the table in input is a correct table (Avoid SQLInjection, corner case quasi inutile)
-    #check_allowed_tables(cursor, table_name)
+    check_allowed_tables(cursor, table_name)
 
     # table_name is ObjectName_RecordTypeName
     (table_name, record_type_name) = table_name.split("_")
@@ -247,7 +247,7 @@ def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
     # get the list of the fields active for that specific object and record type
     query = """
     SELECT fd.object_name, fd.record_type_name,  fd.field_name, fd.field_type, fd.length, fd.numeric_precision, fd.numeric_scale, fd.reference_object, fd.reference_field, 
-        fd.is_editable, fd.is_required, fd.is_primary_key
+        fd.is_editable, fd.is_required, fd.is_primary_key, fd.lookup_filter
     FROM record_layout_definition rvd
     JOIN field_definition fd ON 
         rvd.object_name = fd.object_name AND 
@@ -282,7 +282,8 @@ def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
         copy_row.pop("field_name")
         if row["field_type"] == "picklist" or row["field_type"] == "lookup":
             fields_to_retrieve = row["reference_field"]  + " reference_field, " + object_primary_key_names.get(row["reference_object"]) + ' id'
-            query = "SELECT " + fields_to_retrieve + " FROM " + row["reference_object"] + ";"
+            query = "SELECT " + fields_to_retrieve + " FROM " + row["reference_object"] + (" WHERE " + row["lookup_filter"] if row["field_type"] == "lookup" else "") + ";"
+            print(query)
             cursor.execute(query)
             nested_records = cursor.fetchall()
             copy_row["options"] = nested_records
@@ -393,6 +394,88 @@ async def update_record(request: Request, db = Depends(get_db)):
     )
     try:
         cursor.execute(query, (record_type_name, record_id))
+        db.commit() 
+        return {"result": cursor.rowcount}
+    except Exception as e:
+        db.rollback()
+        print('Error: ' + str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Get all the fields structure
+@app.get("/{table_name}/new-record")
+def get_table_records(table_name: str, db = Depends(get_db)):
+    cursor = db.cursor(dictionary=True)
+
+    # Check if the table in input is a correct table (Avoid SQLInjection, corner case quasi inutile)
+    check_allowed_tables(cursor, table_name)
+
+    # table_name is ObjectName_RecordTypeName
+    (table_name, record_type_name) = table_name.split("_")
+
+    # get the list of the fields active for that specific object and record type
+    query = """
+    SELECT fd.object_name, fd.record_type_name,  fd.field_name, fd.field_type, fd.length, fd.numeric_precision, fd.numeric_scale, fd.reference_object, fd.reference_field, 
+        fd.is_editable, fd.is_required, fd.is_primary_key, fd.lookup_filter
+    FROM record_layout_definition rvd
+    RIGHT JOIN field_definition fd ON 
+        rvd.object_name = fd.object_name AND 
+        rvd.record_type_name = fd.record_type_name AND 
+        rvd.field_name = fd.field_name
+    WHERE fd.object_name = %s AND fd.record_type_name = %s AND fd.is_active = 1 AND ((fd.is_visible = 1 AND fd.is_editable = 1)  OR fd.field_name = 'record_type_name') 
+    ORDER BY rvd.sort_order ASC;
+    """
+    cursor.execute(query, (table_name, record_type_name))
+    fields = cursor.fetchall()
+
+    ### SECTION: Retrieve Field Structure. For the picklist/lookup take also the pair (key, value) to show the picklist choice
+    object_primary_key_names = get_object_primary_keys(
+        cursor,
+        fields,
+        lambda row: row["field_type"] == "picklist" or row["field_type"] == "lookup"
+    )
+    object_primary_key_names['record_type_definition'] = 'record_type_name'
+
+    field_structure = {}
+    for row in fields:
+        copy_row = row.copy()
+        copy_row.pop("field_name")
+        if row["field_type"] == "picklist" or row["field_type"] == "lookup":
+            fields_to_retrieve = row["reference_field"]  + " reference_field, " + object_primary_key_names.get(row["reference_object"]) + ' id'
+            query = "SELECT " + fields_to_retrieve + " FROM " + row["reference_object"] + (" WHERE " + row["lookup_filter"] if row["field_type"] == "lookup" else "") + ";"
+            cursor.execute(query)
+            nested_records = cursor.fetchall()
+            copy_row["options"] = nested_records
+        #elif row["field_type"] == "rollup":    The rollup is always readOnly is not needed in the creation
+
+        field_structure[row["field_name"].capitalize()] = copy_row
+
+    cursor.close()
+    return field_structure
+
+
+# Insert a new record
+@app.post("/Insert")
+async def update_record(request: Request, db = Depends(get_db)):
+    # Read the data from the body
+    data = await request.json() 
+    table_name = data.get("table")
+    record = data.get("record")
+
+    cursor = db.cursor(dictionary=True)
+
+    # Check if the table in input is a correct table (Avoid SQLInjection, corner case quasi inutile)
+    check_allowed_tables(cursor, table_name)
+
+    # table_name is ObjectName_RecordTypeName
+    (table_name, record_type_name) = table_name.split("_")
+
+    field_list = ', '.join(record.keys())
+    new_record = "(" + ",".join("'" + v + "'" for v in record.values()) + ")"
+    query = "INSERT INTO " + table_name + "(" + field_list + ")" + " VALUES " + new_record + ";"
+
+    try:
+        cursor.execute(query)
         db.commit() 
         return {"result": cursor.rowcount}
     except Exception as e:

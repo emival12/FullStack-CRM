@@ -31,6 +31,7 @@ CREATE TABLE field_definition (
     numeric_scale TINYINT,
     reference_object VARCHAR(100),
     reference_field VARCHAR(255),
+    lookup_filter VARCHAR(1000),
     is_active BOOL DEFAULT 1,
     is_visible BOOL DEFAULT 1,
     is_editable BOOL DEFAULT 1,
@@ -173,28 +174,28 @@ VALUES
 
 
 INSERT INTO field_definition(object_name, record_type_name, field_name, field_type, length, numeric_precision, 
-    numeric_scale, reference_object, reference_field, is_active, is_visible, is_editable, is_required, is_primary_key)
+    numeric_scale, reference_object, reference_field, is_active, is_visible, is_editable, is_required, is_primary_key, lookup_filter)
 VALUES 
-    ('account', 'Cliente',      'id',                       'number',   null,   null, null, null,                       null,               1, 1, 1, 1, 1),
-    ('account', 'Cliente',      'record_type_name',         'picklist', 255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0),
-    ('account', 'Cliente',      'ragione_sociale',          'text',     255,    null, null, null,                       null,               1, 1, 1, 1, 0),
-    ('account', 'Cliente',      'zone',                     'picklist', 5,      null, null, 'zone',                     'nome',             1, 1, 1, 0, 0),
-    ('account', 'Cliente',      'nome_fornitore',           'text',     50,     null, null, null,                       null,               0, 1, 1, 0, 0),
-    ('account', 'Cliente',      'costo_totale_contatti',    'rollup',   null,   null, null, 'contatto',                 null,               1, 1, 0, 0, 0),
-    ('account', 'Fornitore',    'id',                       'number',   null,   null, null, null,                       null,               1, 1, 1, 1, 1),
-    ('account', 'Fornitore',    'record_type_name',         'picklist', 255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0),
-    ('account', 'Fornitore',    'ragione_sociale',          'text',     255,    null, null, null,                       null,               1, 1, 1, 1, 0),
-    ('account', 'Fornitore',    'zone',                     'picklist', 5,      null, null, 'zone',                     'nome',             1, 1, 1, 0, 0),
-    ('account', 'Fornitore',    'nome_fornitore',           'text',     50,     null, null, null,                       null,               1, 1, 1, 0, 0),
-    ('account', 'Fornitore',    'costo_totale_contatti',    'rollup',   null,   null, null, 'contatto',                 null,               1, 1, 0, 0, 0),
-    ('contatto','master',       'telefono',                 'text',     15,     null, null, null,                       null,               1, 1, 1, 1, 1),
-    ('contatto','master',       'record_type_name',         'picklist', 15,     null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0),
-    ('contatto','master',       'descrizione',              'text',     255,    null, null, null,                       null,               1, 1, 1, 0, 0),
-    ('contatto','master',       'costo',                    'number',   null,   null, null, null,                       null,               1, 1, 1, 0, 0),
-    ('contatto','master',       'account',                  'lookup',   255,    null, null, 'account',                  'ragione_sociale',  1, 1, 1, 1, 0),
-    ('zone',    'master',       'id',                       'text',     5,      null, null, null,                       null,               1, 1, 1, 1, 1),
-    ('zone',    'master',       'nome',                     'text',     255,    null, null, null,                       null,               1, 1, 1, 1, 0),
-    ('zone',    'master',       'record_type_name',         'picklist', 255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0);
+    ('account', 'Cliente',      'id',                       'number',   null,   null, null, null,                       null,               1, 1, 1, 1, 1, null),
+    ('account', 'Cliente',      'record_type_name',         'lookup',   255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0, "object_name = 'account' AND is_active = 1"),
+    ('account', 'Cliente',      'ragione_sociale',          'text',     255,    null, null, null,                       null,               1, 1, 1, 1, 0, null),
+    ('account', 'Cliente',      'zone',                     'picklist', 5,      null, null, 'zone',                     'nome',             1, 1, 1, 0, 0, null),
+    ('account', 'Cliente',      'nome_fornitore',           'text',     50,     null, null, null,                       null,               0, 1, 1, 0, 0, null),
+    ('account', 'Cliente',      'costo_totale_contatti',    'rollup',   null,   null, null, 'contatto',                 null,               1, 1, 0, 0, 0, null),
+    ('account', 'Fornitore',    'id',                       'number',   null,   null, null, null,                       null,               1, 1, 1, 1, 1, null),
+    ('account', 'Fornitore',    'record_type_name',         'lookup',   255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0, "object_name = 'account' AND is_active = 1"),
+    ('account', 'Fornitore',    'ragione_sociale',          'text',     255,    null, null, null,                       null,               1, 1, 1, 1, 0, null),
+    ('account', 'Fornitore',    'zone',                     'picklist', 5,      null, null, 'zone',                     'nome',             1, 1, 1, 0, 0, null),
+    ('account', 'Fornitore',    'nome_fornitore',           'text',     50,     null, null, null,                       null,               1, 1, 1, 0, 0, null),
+    ('account', 'Fornitore',    'costo_totale_contatti',    'rollup',   null,   null, null, 'contatto',                 null,               1, 1, 0, 0, 0, null),
+    ('contatto','master',       'telefono',                 'text',     15,     null, null, null,                       null,               1, 1, 1, 1, 1, null),
+    ('contatto','master',       'record_type_name',         'lookup',   15,     null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0, "object_name = 'contatto' AND is_active = 1"),
+    ('contatto','master',       'descrizione',              'text',     255,    null, null, null,                       null,               1, 1, 1, 0, 0, null),
+    ('contatto','master',       'costo',                    'number',   null,   null, null, null,                       null,               1, 1, 1, 0, 0, null),
+    ('contatto','master',       'account',                  'lookup',   255,    null, null, 'account',                  'ragione_sociale',  1, 1, 1, 1, 0, "object_name = 'account' AND record_type_name = 'Cliente'"),
+    ('zone',    'master',       'id',                       'text',     5,      null, null, null,                       null,               1, 1, 1, 1, 1, null),
+    ('zone',    'master',       'nome',                     'text',     255,    null, null, null,                       null,               1, 1, 1, 1, 0, null),
+    ('zone',    'master',       'record_type_name',         'lookup',   255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0, "object_name = 'zone' AND is_active = 1");
 
 
 INSERT INTO list_view_definition(object_name, record_type_name, field_name, sort_order)

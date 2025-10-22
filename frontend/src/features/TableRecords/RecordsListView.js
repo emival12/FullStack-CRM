@@ -8,12 +8,15 @@ import { API_BASE_URL } from "../../config/K";
 import MissingPage from "../../components/MissingPage";
 import LoadingScreen from "../../components/LoadingScreen";
 import RecordsList from "./RecordsList";
+import NewRecord from "./NewRecord";
 
 export default function RecordsListView() {
   const { selectedTable, selectedRecord, setSelectedRecord } =
     useOutletContext();
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState([]);
+  const [showNewModal, setShowNewModal] = useState(false);
+  const [refreshList, setRefreshList] = useState(false);
 
   useEffect(() => {
     if (!selectedTable) return; // Blocks execution if the selected tabel is not correct
@@ -27,7 +30,7 @@ export default function RecordsListView() {
       })
       .catch((err) => console.error("Error:", err))
       .finally(() => setLoading(false));
-  }, [selectedTable]);
+  }, [selectedTable, refreshList]);
 
   if (!selectedTable) return <MissingPage MissingText={MISSING_TABLE_LABEL} />;
   if (loading) return <LoadingScreen />;
@@ -39,7 +42,7 @@ export default function RecordsListView() {
         <Button
           size="sm"
           onClick={() => {
-            console.log("TODO");
+            setShowNewModal(true);
           }}
         >
           {NEW_LABEL}
@@ -49,6 +52,12 @@ export default function RecordsListView() {
         records={records}
         selectedTable={selectedTable}
         onSelectedRecord={setSelectedRecord}
+      />
+      <NewRecord
+        selectedTable={selectedTable}
+        showNewModal={showNewModal}
+        setShowNewModal={setShowNewModal}
+        setRefreshList={setRefreshList}
       />
     </div>
   );

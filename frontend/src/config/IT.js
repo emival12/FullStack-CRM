@@ -13,15 +13,15 @@ export const CANCEL_LABEL = "Annulla";
 //NavBar
 export const DATABASE_LABEL = "Database";
 
-//Database Main Page
+//DatabaseMainPage
 export const TABLES_LABEL = "Tabelle";
 
-//Record List View
+//RecordListView
 export const NEW_LABEL = "Nuovo";
 export const MANDATORY_FIELD_LABEL = "Campo obbligatorio";
 export const MAX_FIELD_LABEL = "Massimo X caratteri";
 
-//Record Buttons
+//RecordButtons
 export const DELETE_LABEL = "Elimina";
 export const EDIT_LABEL = "Modifica";
 export const SAVE_LABEL = "Salva";
@@ -32,4 +32,7 @@ export const BODY_MODAL_DELETE_LABEL =
 
 export const ERROR_TOAST_TITLE_LABEL = "Errore";
 export const ERROR_TOAST_BODY_LABEL =
-  "E' avvenuto un errore. Controllare nel dettaglio";
+  "E' avvenuto un errore. Contattare un admin";
+
+//NewRecord
+export const NEW_RECORD_TITLE_LABEL = "Nuovo record";
