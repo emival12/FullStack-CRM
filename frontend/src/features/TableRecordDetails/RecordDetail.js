@@ -172,6 +172,7 @@ export default function RecordDetail() {
       <RecordButtons
         setLoading={setLoading}
         selectedRecord={selectedRecord}
+        setSelectedRecord={setSelectedRecord}
         selectedTable={selectedTable}
         isEdit={isEdit}
         onEditClick={setIsEdit}

@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { Button } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 
 import {
   BODY_MODAL_DELETE_LABEL,
@@ -12,7 +13,7 @@ import {
   SAVE_LABEL,
   TITLE_MODAL_DELETE_LABEL,
 } from "../../config/IT";
-import { API_BASE_URL, PATH_DELETE } from "../../config/K";
+import { API_BASE_URL, PATH_DATABASE, PATH_DELETE } from "../../config/K";
 import ModalScreen from "../../components/ModalScreen";
 
 /**
@@ -32,6 +33,7 @@ import ModalScreen from "../../components/ModalScreen";
 export default function RecordButtons({
   setLoading,
   selectedRecord,
+  setSelectedRecord,
   selectedTable,
   isEdit,
   onEditClick,
@@ -44,6 +46,8 @@ export default function RecordButtons({
   const [showModal, setShowModal] = useState(false);
   const [titleModal, setTitleModal] = useState();
   const [bodyModal, setBodyModal] = useState();
+
+  const navigate = useNavigate();
 
   const deleteRecord = () => {
     setLoading(true);
@@ -58,6 +62,9 @@ export default function RecordButtons({
           setShowToast(true);
           setToastTitle(ERROR_TOAST_TITLE_LABEL);
           setToastBody(ERROR_TOAST_BODY_LABEL);
+        } else {
+          setSelectedRecord(null);
+          navigate(PATH_DATABASE + "/" + selectedTable.label);
         }
       })
       .catch((err) => {
