@@ -15,7 +15,7 @@ import "../../App.css";
  */
 export default function RecordsList({
   records,
-  selectedTable,
+  selectedTableKey,
   onSelectedRecord,
 }) {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ export default function RecordsList({
               record: record,
               primary_key: records.primary_key_name,
             });
-            navigate(PATH_DATABASE + "/" + selectedTable.key + "/" + value);
+            navigate(PATH_DATABASE + "/" + selectedTableKey + "/" + value);
           }}
         >
           {value}

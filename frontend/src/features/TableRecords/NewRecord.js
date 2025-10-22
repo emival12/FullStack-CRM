@@ -91,7 +91,12 @@ export default function NewRecord({
     return (
       <>
         <Form.Select
-          defaultValue={info.options.length == 1 ? "master" : "NULL"}
+          defaultValue={
+            info.reference_field == "record_type_name"
+              ? selectedTableKey.split("_")[1]
+              : "NULL"
+          }
+          disabled={info.reference_field == "record_type_name"}
           isInvalid={errors[key]}
           {...register(key, {
             validate: (value) =>

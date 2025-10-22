@@ -32,7 +32,7 @@ export default function RecordsListView() {
       })
       .catch((err) => console.error("Error:", err))
       .finally(() => setLoading(false));
-  }, [selectedTable, refreshList]);
+  }, [selectedTable, tableName, refreshList]);
 
   if (!selectedTable && !tableName) {
     return <MissingPage MissingText={MISSING_TABLE_LABEL} />;
@@ -59,7 +59,7 @@ export default function RecordsListView() {
       </div>
       <RecordsList
         records={records}
-        selectedTable={selectedTable}
+        selectedTable={selectedTable?.key || tableName}
         onSelectedRecord={setSelectedRecord}
       />
       <NewRecord
