@@ -5,9 +5,11 @@ import { useOutletContext, useParams } from "react-router-dom";
 import { Tab, Tabs } from "react-bootstrap";
 
 import {
+  DETAIL_TAB_LABEL,
   ERROR_TOAST_BODY_LABEL,
   ERROR_TOAST_TITLE_LABEL,
   MISSING_RECORD_LABEL,
+  RELATED_TAB_LABEL,
 } from "../../config/IT";
 import { API_BASE_URL, PATH_UPDATE } from "../../config/K";
 import MissingPage from "../../components/MissingPage";
@@ -126,7 +128,7 @@ export default function RecordDetail() {
         id="uncontrolled-tab-example"
         className="mb-3"
       >
-        <Tab eventKey="details" title="Details">
+        <Tab eventKey="details" title={DETAIL_TAB_LABEL}>
           <RecordButtons
             setLoading={setLoading}
             selectedRecord={selectedRecord}
@@ -158,19 +160,21 @@ export default function RecordDetail() {
             body={toastBody}
           ></ToastMsg>
         </Tab>
-        <Tab eventKey="relatedLists" title="Related">
-          {Object.entries(fields.related_list).map(([key, related_list]) => (
-            <div className="border border-2 p-3 pt-2 rounded-4" key={key}>
-              <div className="fw-bold mb-2">{related_list.label}</div>
-              <RecordsList
-                records={related_list}
-                selectedTableKey={selectedTableKey}
-                onSelectedTable={setSelectedTableKey}
-                onSelectedRecord={setSelectedRecord}
-              />
-            </div>
-          ))}
-        </Tab>
+        {fields.related_list.length > 0 ? (
+          <Tab eventKey="relatedLists" title={RELATED_TAB_LABEL}>
+            {Object.entries(fields.related_list).map(([key, related_list]) => (
+              <div className="border border-2 p-3 pt-2 rounded-4" key={key}>
+                <div className="fw-bold mb-2">{related_list.label}</div>
+                <RecordsList
+                  records={related_list}
+                  selectedTableKey={selectedTableKey}
+                  onSelectedTable={setSelectedTableKey}
+                  onSelectedRecord={setSelectedRecord}
+                />
+              </div>
+            ))}
+          </Tab>
+        ) : null}
       </Tabs>
     </div>
   );

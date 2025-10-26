@@ -36,3 +36,7 @@ export const ERROR_TOAST_BODY_LABEL =
 
 //NewRecord
 export const NEW_RECORD_TITLE_LABEL = "Nuovo record";
+
+//RecordDetail
+export const DETAIL_TAB_LABEL = "Dettaglio";
+export const RELATED_TAB_LABEL = "Correlati";
