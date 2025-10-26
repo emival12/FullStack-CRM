@@ -18,6 +18,7 @@ export default function RecordsListView() {
     selectedRecord,
     setSelectedRecord,
   } = useOutletContext();
+
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState([]);
   const [showNewModal, setShowNewModal] = useState(false);

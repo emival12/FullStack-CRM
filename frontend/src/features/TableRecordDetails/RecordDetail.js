@@ -2,13 +2,11 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useOutletContext, useParams } from "react-router-dom";
-import { Form, FloatingLabel, Tab, Tabs } from "react-bootstrap";
+import { Tab, Tabs } from "react-bootstrap";
 
 import {
   ERROR_TOAST_BODY_LABEL,
   ERROR_TOAST_TITLE_LABEL,
-  MANDATORY_FIELD_LABEL,
-  MAX_FIELD_LABEL,
   MISSING_RECORD_LABEL,
 } from "../../config/IT";
 import { API_BASE_URL, PATH_UPDATE } from "../../config/K";
@@ -17,6 +15,7 @@ import LoadingScreen from "../../components/LoadingScreen";
 import RecordButtons from "./RecordButtons";
 import ToastMsg from "../../components/ToastMsg";
 import RecordsList from "../TableRecords/RecordsList";
+import RecordForm from "./RecordForm";
 
 export default function RecordDetail() {
   const { tableKey, recordId } = useParams();
@@ -26,6 +25,7 @@ export default function RecordDetail() {
     selectedRecord,
     setSelectedRecord,
   } = useOutletContext();
+
   const [loading, setLoading] = useState(true);
   const [fields, setFields] = useState([]);
   const [isEdit, setIsEdit] = useState(false);
@@ -119,60 +119,6 @@ export default function RecordDetail() {
 
   if (loading) return <LoadingScreen />;
 
-  const get_selection_entry = (key, info) => {
-    return (
-      <>
-        <Form.Select
-          defaultValue={info.value}
-          disabled={!info.is_editable || !isEdit}
-          isInvalid={errors[key]}
-          {...register(key, {
-            validate: (value) =>
-              !info.is_required || value !== "NULL" || MANDATORY_FIELD_LABEL,
-          })}
-        >
-          <option value="NULL"></option>
-          {info.options.map((opt) => (
-            <option key={opt.id} value={opt.id}>
-              {opt.reference_field}
-            </option>
-          ))}
-        </Form.Select>
-        <Form.Control.Feedback type="invalid">
-          {errors[key]?.message}
-        </Form.Control.Feedback>
-      </>
-    );
-  };
-
-  const get_entry = (key, info) => {
-    return (
-      <>
-        <Form.Control
-          type={info.field_type}
-          defaultValue={info.value}
-          disabled={!info.is_editable || !isEdit}
-          required={info.is_required}
-          isInvalid={errors[key]}
-          step="0.01"
-          {...register(key, {
-            required: {
-              value: info.is_required,
-              message: MANDATORY_FIELD_LABEL,
-            },
-            maxLength: {
-              value: info.length,
-              message: MAX_FIELD_LABEL.replace("X", info.length),
-            },
-          })}
-        />
-        <Form.Control.Feedback type="invalid">
-          {errors[key]?.message}
-        </Form.Control.Feedback>
-      </>
-    );
-  };
-
   return (
     <div>
       <Tabs
@@ -194,25 +140,16 @@ export default function RecordDetail() {
             setToastTitle={setToastTitle}
             setToastBody={setToastBody}
           ></RecordButtons>
-          <Form
-            id="recordDetailForm"
-            noValidate
+          <RecordForm
+            fields={fields.field_structure}
             validated={validated}
             onSubmit={handleSubmit(onSubmit)}
-          >
-            {Object.entries(fields.field_structure).map(([key, info]) => (
-              <FloatingLabel
-                key={key}
-                controlId="floatingInput"
-                label={key.replace("_", " ") + (info.is_required ? " *" : "")}
-                className="mb-3"
-              >
-                {info.field_type === "picklist" || info.field_type === "lookup"
-                  ? get_selection_entry(key, info)
-                  : get_entry(key, info)}
-              </FloatingLabel>
-            ))}
-          </Form>
+            selectedTableKey={selectedTableKey}
+            errors={errors}
+            register={register}
+            isNewForm={false}
+            isEdit={isEdit}
+          ></RecordForm>
           <ToastMsg
             showToast={showToast}
             setShowToast={setShowToast}

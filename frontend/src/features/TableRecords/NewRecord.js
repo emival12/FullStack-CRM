@@ -1,18 +1,17 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Button, Modal, Form, FloatingLabel } from "react-bootstrap";
+import { Button, Modal } from "react-bootstrap";
 
 import {
   NEW_RECORD_TITLE_LABEL,
   SAVE_LABEL,
-  MANDATORY_FIELD_LABEL,
-  MAX_FIELD_LABEL,
   ERROR_TOAST_BODY_LABEL,
   ERROR_TOAST_TITLE_LABEL,
 } from "../../config/IT";
 import { API_BASE_URL, PATH_INSERT } from "../../config/K";
 import ToastMsg from "../../components/ToastMsg";
+import RecordForm from "../TableRecordDetails/RecordForm";
 
 /**
  * Shows a table of record
@@ -87,62 +86,6 @@ export default function NewRecord({
     setValidated(true);
   };
 
-  const get_selection_entry = (key, info) => {
-    return (
-      <>
-        <Form.Select
-          defaultValue={
-            info.reference_field == "record_type_name"
-              ? selectedTableKey.split("_")[1]
-              : "NULL"
-          }
-          disabled={info.reference_field == "record_type_name"}
-          isInvalid={errors[key]}
-          {...register(key, {
-            validate: (value) =>
-              !info.is_required || value !== "NULL" || MANDATORY_FIELD_LABEL,
-          })}
-        >
-          <option value="NULL"></option>
-          {info.options.map((opt) => (
-            <option key={opt.id} value={opt.id}>
-              {opt.reference_field}
-            </option>
-          ))}
-        </Form.Select>
-        <Form.Control.Feedback type="invalid">
-          {errors[key]?.message}
-        </Form.Control.Feedback>
-      </>
-    );
-  };
-
-  const get_entry = (key, info) => {
-    return (
-      <>
-        <Form.Control
-          type={info.field_type}
-          required={info.is_required}
-          isInvalid={errors[key]}
-          step="0.01"
-          {...register(key, {
-            required: {
-              value: info.is_required,
-              message: MANDATORY_FIELD_LABEL,
-            },
-            maxLength: {
-              value: info.length,
-              message: MAX_FIELD_LABEL.replace("X", info.length),
-            },
-          })}
-        />
-        <Form.Control.Feedback type="invalid">
-          {errors[key]?.message}
-        </Form.Control.Feedback>
-      </>
-    );
-  };
-
   return (
     <>
       <Modal show={showNewModal} onHide={() => setShowNewModal(false)}>
@@ -151,25 +94,16 @@ export default function NewRecord({
         </Modal.Header>
 
         <Modal.Body>
-          <Form
-            id="recordDetailForm"
-            noValidate
+          <RecordForm
+            fields={fields}
             validated={validated}
             onSubmit={handleSubmit(onSubmit)}
-          >
-            {Object.entries(fields).map(([key, info]) => (
-              <FloatingLabel
-                key={key}
-                controlId="floatingInput"
-                label={key.replace("_", " ") + (info.is_required ? " *" : "")}
-                className="mb-3"
-              >
-                {info.field_type === "picklist" || info.field_type === "lookup"
-                  ? get_selection_entry(key, info)
-                  : get_entry(key, info)}
-              </FloatingLabel>
-            ))}
-          </Form>
+            selectedTableKey={selectedTableKey}
+            errors={errors}
+            register={register}
+            isNewForm={true}
+            isEdit={null}
+          ></RecordForm>
         </Modal.Body>
 
         <Modal.Footer>

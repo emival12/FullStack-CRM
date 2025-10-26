@@ -13,6 +13,25 @@ import "../../App.css";
  * @param {Object[]} props.selectedTable          - Table currently selected
  * @param {Object[]} props.onSelectedRecord       - Function to update the selected record
  */
+/**
+ * Records structure:
+ * {
+ *   "fields": [ "nameOfField_1", ... ],
+ *   "primary_key_name": "nameOfPrimaryKeyField",
+ *   "table": {
+ *      "object_name": "...",
+ *      ...
+ *      "key": "..."
+ *    },
+ *   "records": [
+ *       {
+ *           "nameOfField_1": value_1,
+ *           ...
+ *       },
+ *       ...
+ *   ]
+ * }
+ */
 export default function RecordsList({
   records,
   selectedTableKey,
