@@ -223,9 +223,8 @@ export default function RecordDetail() {
         </Tab>
         <Tab eventKey="relatedLists" title="Related">
           {Object.entries(fields.related_list).map(([key, related_list]) => (
-            <div key={key}>
-              <p>{related_list.label}</p>
-              {console.log(related_list)}
+            <div className="border border-2 p-3 pt-2 rounded-4" key={key}>
+              <div className="fw-bold mb-2">{related_list.label}</div>
               <RecordsList
                 records={related_list}
                 selectedTableKey={selectedTableKey}
