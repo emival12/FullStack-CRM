@@ -19,9 +19,13 @@ import ToastMsg from "../../components/ToastMsg";
 import RecordsList from "../TableRecords/RecordsList";
 
 export default function RecordDetail() {
-  const { tableName, recordId } = useParams();
-  const { selectedTable, setSelectedTable, selectedRecord, setSelectedRecord } =
-    useOutletContext();
+  const { tableKey, recordId } = useParams();
+  const {
+    selectedTableKey,
+    setSelectedTableKey,
+    selectedRecord,
+    setSelectedRecord,
+  } = useOutletContext();
   const [loading, setLoading] = useState(true);
   const [fields, setFields] = useState([]);
   const [isEdit, setIsEdit] = useState(false);
@@ -40,9 +44,9 @@ export default function RecordDetail() {
   } = useForm();
 
   useEffect(() => {
-    if (!selectedTable && !tableName && !selectedRecord && !recordId) return; // Blocks execution if the selected tabel is not correct
+    if (!selectedTableKey && !tableKey && !selectedRecord && !recordId) return; // Blocks execution if the selected tabel is not correct
 
-    const tableKey = selectedTable?.key || tableName;
+    const actualTableKey = selectedTableKey || tableKey;
     const recordKey =
       selectedRecord?.record[selectedRecord?.primary_key] || recordId;
 
@@ -50,7 +54,7 @@ export default function RecordDetail() {
     setIsEdit(false);
     setValidated(false);
     axios
-      .get(API_BASE_URL + "/" + tableKey + "/record/" + recordKey)
+      .get(API_BASE_URL + "/" + actualTableKey + "/record/" + recordKey)
       .then((res) => {
         console.log("Field List Received:", res.data);
         setFields(res.data);
@@ -80,7 +84,7 @@ export default function RecordDetail() {
         setLoading(true);
         axios
           .post(API_BASE_URL + PATH_UPDATE, {
-            table: selectedTable?.key,
+            table: selectedTableKey,
             id: selectedRecord?.record[selectedRecord?.primary_key],
             field: modified_data,
           })
@@ -109,7 +113,7 @@ export default function RecordDetail() {
     }
   };
 
-  if (!selectedTable && !tableName && !selectedRecord && !recordId) {
+  if (!selectedTableKey && !tableKey && !selectedRecord && !recordId) {
     return <MissingPage MissingText={MISSING_RECORD_LABEL} />;
   }
 
@@ -181,7 +185,7 @@ export default function RecordDetail() {
             setLoading={setLoading}
             selectedRecord={selectedRecord}
             setSelectedRecord={setSelectedRecord}
-            selectedTable={selectedTable}
+            selectedTableKey={selectedTableKey}
             isEdit={isEdit}
             onEditClick={setIsEdit}
             refreshRecord={refreshRecord}
@@ -224,8 +228,8 @@ export default function RecordDetail() {
               {console.log(related_list)}
               <RecordsList
                 records={related_list}
-                selectedTableKey={selectedTable}
-                onSelectedTable={setSelectedTable}
+                selectedTableKey={selectedTableKey}
+                onSelectedTable={setSelectedTableKey}
                 onSelectedRecord={setSelectedRecord}
               />
             </div>

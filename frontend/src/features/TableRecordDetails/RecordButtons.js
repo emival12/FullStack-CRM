@@ -22,7 +22,7 @@ import ModalScreen from "../../components/ModalScreen";
  * @param {Object[]} props.setLoading         - Function to update the loading variable
  * @param {Object[]} props.selectedRecord     - Record currently selected
  * @param {Object[]} props.setSelectedRecord  - Function to update the selectedRecord variable
- * @param {Object[]} props.selectedTable      - Table currently selected
+ * @param {Object[]} props.selectedTableKey      - Table currently selected
  * @param {Object[]} props.isEdit             - Variable to understand if is in edit or in view
  * @param {Object[]} props.onEditClick        - Function to update the isEdit variable
  * @param {Object[]} props.refreshRecord      - Variable to understand if is needed a refresh in the view
@@ -35,7 +35,7 @@ export default function RecordButtons({
   setLoading,
   selectedRecord,
   setSelectedRecord,
-  selectedTable,
+  selectedTableKey,
   isEdit,
   onEditClick,
   refreshRecord,
@@ -54,7 +54,7 @@ export default function RecordButtons({
     setLoading(true);
     axios
       .post(API_BASE_URL + PATH_DELETE, {
-        table: selectedTable?.key,
+        table: selectedTableKey,
         id: selectedRecord?.record[selectedRecord?.primary_key],
       })
       .then((res) => {
@@ -65,7 +65,7 @@ export default function RecordButtons({
           setToastBody(ERROR_TOAST_BODY_LABEL);
         } else {
           setSelectedRecord(null);
-          navigate(PATH_DATABASE + "/" + selectedTable.label);
+          navigate(PATH_DATABASE + "/" + selectedTableKey);
         }
       })
       .catch((err) => {

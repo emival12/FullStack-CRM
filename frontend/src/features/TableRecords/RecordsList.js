@@ -38,8 +38,8 @@ export default function RecordsList({
           onClick={() => {
             var tableKey = selectedTableKey;
             if (records?.table && selectedTableKey !== records.table.key) {
-              onSelectedTable(records.table);
               tableKey = records.table.key;
+              onSelectedTable(tableKey);
             }
 
             onSelectedRecord({

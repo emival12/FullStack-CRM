@@ -11,10 +11,10 @@ import { TABLES_LABEL } from "../../config/IT";
 /**
  * Shows a list of record
  *
- * @param {Object} props.selectedTable      - Table currently selected
+ * @param {Object} props.selectedTableKey      - Table currently selected
  * @param {Function} props.onSelectedTable  - Function to update the selected table
  */
-export default function TablesSidebar({ selectedTable, onSelectedTable }) {
+export default function TablesSidebar({ selectedTableKey, onSelectedTable }) {
   const [loading, setLoading] = useState(true);
   const [tables, setTables] = useState([]);
 
@@ -68,7 +68,7 @@ export default function TablesSidebar({ selectedTable, onSelectedTable }) {
           <Offcanvas.Body>
             <TablesSidebarAccordion
               data={tables}
-              selectedElement={selectedTable}
+              selectedElement={selectedTableKey}
               onSelectElement={(table) => {
                 onSelectedTable(table);
                 toggleSidebar();
@@ -86,7 +86,7 @@ export default function TablesSidebar({ selectedTable, onSelectedTable }) {
         <div className="pt-3 pb-3 ps-3 pe-2">
           <TablesSidebarAccordion
             data={tables}
-            selectedElement={selectedTable}
+            selectedElement={selectedTableKey}
             onSelectElement={onSelectedTable}
           />
         </div>

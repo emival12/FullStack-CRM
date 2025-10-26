@@ -11,30 +11,34 @@ import RecordsList from "./RecordsList";
 import NewRecord from "./NewRecord";
 
 export default function RecordsListView() {
-  const { tableName } = useParams();
-  const { selectedTable, setSelectedTable, selectedRecord, setSelectedRecord } =
-    useOutletContext();
+  const { tableKey } = useParams();
+  const {
+    selectedTableKey,
+    setSelectedTableKey,
+    selectedRecord,
+    setSelectedRecord,
+  } = useOutletContext();
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState([]);
   const [showNewModal, setShowNewModal] = useState(false);
   const [refreshList, setRefreshList] = useState(false);
 
   useEffect(() => {
-    if (!selectedTable && !tableName) return; // Blocks execution if the selected tabel is not correct
+    if (!selectedTableKey && !tableKey) return; // Blocks execution if the selected tabel is not correct
 
-    const tableKey = selectedTable?.key || tableName;
+    const actualTableKey = selectedTableKey || tableKey;
     setLoading(true);
     axios
-      .get(API_BASE_URL + "/" + tableKey)
+      .get(API_BASE_URL + "/" + actualTableKey)
       .then((res) => {
         console.log("Record List Received:", res.data);
         setRecords(res.data);
       })
       .catch((err) => console.error("Error:", err))
       .finally(() => setLoading(false));
-  }, [selectedTable, tableName, refreshList]);
+  }, [selectedTableKey, tableKey, refreshList]);
 
-  if (!selectedTable && !tableName) {
+  if (!selectedTableKey && !tableKey) {
     return <MissingPage MissingText={MISSING_TABLE_LABEL} />;
   }
 
@@ -43,9 +47,11 @@ export default function RecordsListView() {
   return (
     <div>
       <div className="fs-3 fw-bold">
-        {selectedTable?.label ||
-          tableName.split("_")[0].charAt(0).toUpperCase() +
-            tableName.split("_")[0].slice(1)}
+        {selectedTableKey
+          ? selectedTableKey.split("_")[0].charAt(0).toUpperCase() +
+            selectedTableKey.split("_")[0].slice(1)
+          : tableKey.split("_")[0].charAt(0).toUpperCase() +
+            tableKey.split("_")[0].slice(1)}
       </div>
       <div className="d-flex flex-row-reverse pb-2 pt-2">
         <Button
@@ -59,12 +65,12 @@ export default function RecordsListView() {
       </div>
       <RecordsList
         records={records}
-        selectedTableKey={selectedTable?.key || tableName}
-        onSelectedTable={setSelectedTable}
+        selectedTableKey={selectedTableKey || tableKey}
+        onSelectedTable={setSelectedTableKey}
         onSelectedRecord={setSelectedRecord}
       />
       <NewRecord
-        selectedTableKey={selectedTable?.key || tableName}
+        selectedTableKey={selectedTableKey || tableKey}
         showNewModal={showNewModal}
         setShowNewModal={setShowNewModal}
         setRefreshList={setRefreshList}

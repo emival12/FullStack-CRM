@@ -23,8 +23,8 @@ export default function TablesSidebarList({
         as={Link}
         to={PATH_DATABASE + "/" + objectElem.key}
         key={objectElem.key}
-        active={objectElem.key === selectedElement?.key}
-        onClick={() => onSelectElement(objectElem)}
+        active={objectElem.key === selectedElement}
+        onClick={() => onSelectElement(objectElem.key)}
       >
         {objectElem[displayField]}
       </ListGroup.Item>

@@ -24,8 +24,8 @@ function App() {
         <Route path={PATH_DATABASE} element={<DatabaseMainPage />}>
           {/*TODO Improv */}
           <Route index element={<p>Seleziona una tabella dalla sidebar</p>} />
-          <Route path=":tableName" element={<RecordsListView />} />
-          <Route path=":tableName/:recordId" element={<RecordDetail />} />
+          <Route path=":tableKey" element={<RecordsListView />} />
+          <Route path=":tableKey/:recordId" element={<RecordDetail />} />
         </Route>
         <Route path="/TOBE" element={<div>Pagina TOBE</div>} />
       </Routes>
