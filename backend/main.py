@@ -283,7 +283,6 @@ def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
         if row["field_type"] == "picklist" or row["field_type"] == "lookup":
             fields_to_retrieve = row["reference_field"]  + " reference_field, " + object_primary_key_names.get(row["reference_object"]) + ' id'
             query = "SELECT " + fields_to_retrieve + " FROM " + row["reference_object"] + (" WHERE " + row["lookup_filter"] if row["field_type"] == "lookup" else "") + ";"
-            print(query)
             cursor.execute(query)
             nested_records = cursor.fetchall()
             copy_row["options"] = nested_records
@@ -316,9 +315,85 @@ def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
         copy_row["value"] = record[row["field_name"]]
         field_structure[row["field_name"].capitalize()] = copy_row
 
-    cursor.close()
-    return field_structure
 
+    query = """
+    SELECT rld.master_object_name, rld.master_record_type_name, rld.master_primary_key, rld.child_object_name, 
+        rld.child_record_type_name, rld.child_join_key, rld.label, rld.sort_order, rld.filter_condition, rld.is_active
+    FROM related_list_definition rld
+    WHERE rld.master_object_name = %s AND rld.master_record_type_name = %s AND rld.is_active = 1
+    ORDER BY rld.sort_order ASC;
+    """
+    cursor.execute(query, (table_name, record_type_name))
+    related_lists = cursor.fetchall()
+    
+
+
+    tables_dict = {}
+    object_names = [rl["child_object_name"] for rl in related_lists]
+    if len(object_names) != 0:
+        placeholders = ", ".join(["%s"] * len(object_names))
+        query = """
+        SELECT od.object_name, rtd.record_type_name, od.category, od.sort_order, od.is_system_object, od.is_single_record_type
+        FROM object_definition od
+        LEFT JOIN record_type_definition rtd ON od.object_name = rtd.object_name
+        WHERE od.object_name IN (""" + placeholders + ") AND rtd.is_active = 1 ORDER BY od.sort_order ASC;"
+        cursor.execute(query, tuple(object_names))
+        tables = cursor.fetchall()
+
+        for table in tables:
+            table["key"] =  get_table_key(table)
+            table["label"] = table["object_name"].capitalize() if table["is_single_record_type"] else table["record_type_name"].capitalize()
+
+        tables_dict = {table["key"]: table for table in tables}
+
+
+
+
+    rel_lists = []
+    for related_list in related_lists:
+        alias_table_name = table_name[0]
+        child_table_name = related_list['child_object_name']
+        child_alias_table_name = child_table_name[0]
+
+        table_field = alias_table_name + "." + related_list["master_primary_key"]
+        join_field = child_alias_table_name + "." + related_list["child_join_key"]
+        join_clause = " JOIN " + table_name + " " + alias_table_name + " ON " + table_field + " = " + join_field
+
+        #rollup_field = rollup_definition["aggregation_function"] + "(" + alias_join_table + "." + rollup_definition["detail_field_name"] + ") " + rollup_definition["master_field_name"]
+        # get the list of the LIST VIEW fields active for that specific object and record type
+        query = """
+        SELECT fd.object_name, fd.record_type_name, fd.field_name, fd.field_type, fd.reference_object, fd.reference_field, fd.is_primary_key
+        FROM list_view_definition lvd
+        JOIN field_definition fd ON 
+            lvd.object_name = fd.object_name AND 
+            lvd.record_type_name = fd.record_type_name AND 
+            lvd.field_name = fd.field_name
+        WHERE fd.object_name = %s AND fd.record_type_name = %s AND fd.is_active = 1 AND fd.is_visible = 1
+        ORDER BY lvd.sort_order ASC;
+        """
+        cursor.execute(query, (child_table_name, related_list['child_record_type_name']))
+        fields = cursor.fetchall()
+
+        # get the list of fields name, join clauses and group clause
+        (fields_text, joins, group) = get_fields_text(cursor, fields, child_alias_table_name)
+        query = "SELECT " + fields_text + " FROM " + child_table_name + ' ' + child_alias_table_name
+        query += (" " + " ".join(joins) if joins else "") + " WHERE " + alias_table_name + "." + "record_type_name = %s"
+        query += (group + ";" if group else ";")
+        cursor.execute(query, (record_type_name,))
+        related_records = cursor.fetchall()
+
+ 
+
+        tempDictionary = {}
+        tempDictionary['label'] = related_list['label'].capitalize()
+        tempDictionary['table'] = tables_dict.get(child_table_name + "_" + related_list['child_record_type_name'])
+        tempDictionary['fields'] = [field["field_name"].replace("_", " ") for field in fields]
+        tempDictionary['primary_key_name'] = next((field["field_name"] for field in fields if field["is_primary_key"]), None)
+        tempDictionary['records'] = related_records
+        rel_lists.append(tempDictionary)
+
+    cursor.close()
+    return { "field_structure": field_structure, "related_list": rel_lists}
 
 
 # Delete a single record

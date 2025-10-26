@@ -6,7 +6,7 @@ import { PATH_DATABASE } from "../../config/K";
  * Shows a list of record
  *
  * @param {Object[]} props.objectElem       - Record to show
- * @param {Object} props.selectedElement    - Element currently selected
+ * @param {Object} props.selectedElement    - Element Key currently selected
  * @param {Function} props.onSelectElement  - Function to update the selected element
  * @param {string} props.displayField       - Field to show in the frontend
  */
@@ -23,7 +23,7 @@ export default function TablesSidebarList({
         as={Link}
         to={PATH_DATABASE + "/" + objectElem.key}
         key={objectElem.key}
-        active={objectElem === selectedElement}
+        active={objectElem.key === selectedElement?.key}
         onClick={() => onSelectElement(objectElem)}
       >
         {objectElem[displayField]}

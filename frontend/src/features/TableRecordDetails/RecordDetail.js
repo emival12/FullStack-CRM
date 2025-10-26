@@ -2,7 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useOutletContext, useParams } from "react-router-dom";
-import { Form, FloatingLabel } from "react-bootstrap";
+import { Form, FloatingLabel, Tab, Tabs } from "react-bootstrap";
 
 import {
   ERROR_TOAST_BODY_LABEL,
@@ -16,10 +16,11 @@ import MissingPage from "../../components/MissingPage";
 import LoadingScreen from "../../components/LoadingScreen";
 import RecordButtons from "./RecordButtons";
 import ToastMsg from "../../components/ToastMsg";
+import RecordsList from "../TableRecords/RecordsList";
 
 export default function RecordDetail() {
   const { tableName, recordId } = useParams();
-  const { selectedTable, selectedRecord, setSelectedRecord } =
+  const { selectedTable, setSelectedTable, selectedRecord, setSelectedRecord } =
     useOutletContext();
   const [loading, setLoading] = useState(true);
   const [fields, setFields] = useState([]);
@@ -62,7 +63,7 @@ export default function RecordDetail() {
       })
       .catch((err) => console.error("Error:", err))
       .finally(() => setLoading(false));
-  }, [selectedRecord, refreshRecord]); //rerun everything when one of those fields change
+  }, [selectedRecord, recordId, refreshRecord]); //rerun everything when one of those fields change
 
   //Method fired when the button Save is pressed
   const onSubmit = (data) => {
@@ -170,45 +171,67 @@ export default function RecordDetail() {
 
   return (
     <div>
-      <RecordButtons
-        setLoading={setLoading}
-        selectedRecord={selectedRecord}
-        setSelectedRecord={setSelectedRecord}
-        selectedTable={selectedTable}
-        isEdit={isEdit}
-        onEditClick={setIsEdit}
-        refreshRecord={refreshRecord}
-        setRefreshRecord={setRefreshRecord}
-        setShowToast={setShowToast}
-        setToastTitle={setToastTitle}
-        setToastBody={setToastBody}
-      ></RecordButtons>
-      <Form
-        id="recordDetailForm"
-        noValidate
-        validated={validated}
-        onSubmit={handleSubmit(onSubmit)}
+      <Tabs
+        defaultActiveKey="details"
+        id="uncontrolled-tab-example"
+        className="mb-3"
       >
-        {Object.entries(fields).map(([key, info]) => (
-          <FloatingLabel
-            key={key}
-            controlId="floatingInput"
-            label={key.replace("_", " ") + (info.is_required ? " *" : "")}
-            className="mb-3"
+        <Tab eventKey="details" title="Details">
+          <RecordButtons
+            setLoading={setLoading}
+            selectedRecord={selectedRecord}
+            setSelectedRecord={setSelectedRecord}
+            selectedTable={selectedTable}
+            isEdit={isEdit}
+            onEditClick={setIsEdit}
+            refreshRecord={refreshRecord}
+            setRefreshRecord={setRefreshRecord}
+            setShowToast={setShowToast}
+            setToastTitle={setToastTitle}
+            setToastBody={setToastBody}
+          ></RecordButtons>
+          <Form
+            id="recordDetailForm"
+            noValidate
+            validated={validated}
+            onSubmit={handleSubmit(onSubmit)}
           >
-            {info.field_type === "picklist" || info.field_type === "lookup"
-              ? get_selection_entry(key, info)
-              : get_entry(key, info)}
-          </FloatingLabel>
-        ))}
-      </Form>
-      <ToastMsg
-        showToast={showToast}
-        setShowToast={setShowToast}
-        color="danger"
-        title={toastTitle}
-        body={toastBody}
-      ></ToastMsg>
+            {Object.entries(fields.field_structure).map(([key, info]) => (
+              <FloatingLabel
+                key={key}
+                controlId="floatingInput"
+                label={key.replace("_", " ") + (info.is_required ? " *" : "")}
+                className="mb-3"
+              >
+                {info.field_type === "picklist" || info.field_type === "lookup"
+                  ? get_selection_entry(key, info)
+                  : get_entry(key, info)}
+              </FloatingLabel>
+            ))}
+          </Form>
+          <ToastMsg
+            showToast={showToast}
+            setShowToast={setShowToast}
+            color="danger"
+            title={toastTitle}
+            body={toastBody}
+          ></ToastMsg>
+        </Tab>
+        <Tab eventKey="relatedLists" title="Related">
+          {Object.entries(fields.related_list).map(([key, related_list]) => (
+            <div key={key}>
+              <p>{related_list.label}</p>
+              {console.log(related_list)}
+              <RecordsList
+                records={related_list}
+                selectedTableKey={selectedTable}
+                onSelectedTable={setSelectedTable}
+                onSelectedRecord={setSelectedRecord}
+              />
+            </div>
+          ))}
+        </Tab>
+      </Tabs>
     </div>
   );
 }

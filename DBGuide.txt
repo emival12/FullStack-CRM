@@ -102,6 +102,25 @@ CREATE TABLE rollup_definition (
 );
 
 
+# Creazione Tabella related_list_definition
+#   La tabella descrive la struttura di una related list
+CREATE TABLE related_list_definition (
+    master_object_name VARCHAR(100),
+    master_record_type_name VARCHAR(100),
+    master_primary_key VARCHAR(255),
+    child_object_name VARCHAR(100) NOT NULL,
+    child_record_type_name VARCHAR(100),
+    child_join_key VARCHAR(255) NOT NULL,
+    label VARCHAR(255) NOT NULL,
+    sort_order SMALLINT,
+    filter_condition VARCHAR(1000),
+    is_active BOOL DEFAULT 1,
+    PRIMARY KEY (master_object_name, master_record_type_name, child_object_name, child_record_type_name, label),
+    FOREIGN KEY (child_object_name, child_record_type_name) 
+        REFERENCES list_view_definition(object_name, record_type_name) ON DELETE CASCADE
+);
+
+
 ######################################
 TEST VALUES
 ######################################
@@ -248,4 +267,8 @@ VALUES
 
 
 
-
+INSERT INTO related_list_definition (master_object_name, master_record_type_name, master_primary_key, child_object_name, 
+    child_record_type_name, child_join_key, label, sort_order, filter_condition, is_active)
+VALUES 
+    ('account', 'Cliente',  'Id',   'contatto', 'master',   'account', 'lista contatti', 1, null, 1),
+    ('account', 'Fornitore','Id',   'contatto', 'master',   'account', 'lista contatti', 1, null, 1);

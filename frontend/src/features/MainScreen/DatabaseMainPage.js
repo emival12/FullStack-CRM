@@ -9,7 +9,7 @@ export default function DatabaseMainPage() {
   const [selectedRecord, setSelectedRecord] = useState(null);
 
   useEffect(() => {
-    if (!tableName) {
+    if (!tableName || tableName != selectedTable?.key) {
       setSelectedTable(null);
       setSelectedRecord(null);
     }
@@ -26,7 +26,12 @@ export default function DatabaseMainPage() {
         <Col xs={12} md={10} className="ps-md-0">
           <div className="h-100 pt-3 pb-3 ps-3 ps-md-2 pe-3">
             <Outlet
-              context={{ selectedTable, selectedRecord, setSelectedRecord }}
+              context={{
+                selectedTable,
+                setSelectedTable,
+                selectedRecord,
+                setSelectedRecord,
+              }}
             />
           </div>
         </Col>

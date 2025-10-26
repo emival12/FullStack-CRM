@@ -12,7 +12,7 @@ import NewRecord from "./NewRecord";
 
 export default function RecordsListView() {
   const { tableName } = useParams();
-  const { selectedTable, selectedRecord, setSelectedRecord } =
+  const { selectedTable, setSelectedTable, selectedRecord, setSelectedRecord } =
     useOutletContext();
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState([]);
@@ -59,7 +59,8 @@ export default function RecordsListView() {
       </div>
       <RecordsList
         records={records}
-        selectedTable={selectedTable?.key || tableName}
+        selectedTableKey={selectedTable?.key || tableName}
+        onSelectedTable={setSelectedTable}
         onSelectedRecord={setSelectedRecord}
       />
       <NewRecord
