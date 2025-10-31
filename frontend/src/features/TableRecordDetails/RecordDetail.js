@@ -38,6 +38,10 @@ export default function RecordDetail() {
   const [toastTitle, setToastTitle] = useState();
   const [toastBody, setToastBody] = useState();
 
+  const actualTableKey = selectedTableKey || tableKey;
+  const recordKey =
+    selectedRecord?.record[selectedRecord?.primary_key] || recordId;
+
   const {
     register,
     handleSubmit,
@@ -46,11 +50,7 @@ export default function RecordDetail() {
   } = useForm();
 
   useEffect(() => {
-    if (!selectedTableKey && !tableKey && !selectedRecord && !recordId) return; // Blocks execution if the selected tabel is not correct
-
-    const actualTableKey = selectedTableKey || tableKey;
-    const recordKey =
-      selectedRecord?.record[selectedRecord?.primary_key] || recordId;
+    if (!actualTableKey && !recordKey) return; // Blocks execution if the selected tabel is not correct
 
     setLoading(true);
     setIsEdit(false);
@@ -74,8 +74,8 @@ export default function RecordDetail() {
   //Method fired when the button Save is pressed
   const onSubmit = (data) => {
     var modified_data = {};
-    for (const key in fields) {
-      if (fields[key].value != data[key]) {
+    for (const key in fields.field_structure) {
+      if (fields.field_structure[key].value != data[key]) {
         modified_data[key] = data[key];
       }
     }
@@ -86,8 +86,8 @@ export default function RecordDetail() {
         setLoading(true);
         axios
           .post(API_BASE_URL + PATH_UPDATE, {
-            table: selectedTableKey,
-            id: selectedRecord?.record[selectedRecord?.primary_key],
+            table: actualTableKey,
+            id: recordKey,
             field: modified_data,
           })
           .then((res) => {
@@ -115,7 +115,7 @@ export default function RecordDetail() {
     }
   };
 
-  if (!selectedTableKey && !tableKey && !selectedRecord && !recordId) {
+  if (!actualTableKey && !recordKey) {
     return <MissingPage MissingText={MISSING_RECORD_LABEL} />;
   }
 
@@ -131,9 +131,9 @@ export default function RecordDetail() {
         <Tab eventKey="details" title={DETAIL_TAB_LABEL}>
           <RecordButtons
             setLoading={setLoading}
-            selectedRecord={selectedRecord}
+            selectedRecordKey={recordKey}
             setSelectedRecord={setSelectedRecord}
-            selectedTableKey={selectedTableKey}
+            selectedTableKey={actualTableKey}
             isEdit={isEdit}
             onEditClick={setIsEdit}
             refreshRecord={refreshRecord}
@@ -146,7 +146,7 @@ export default function RecordDetail() {
             fields={fields.field_structure}
             validated={validated}
             onSubmit={handleSubmit(onSubmit)}
-            selectedTableKey={selectedTableKey}
+            selectedTableKey={actualTableKey}
             errors={errors}
             register={register}
             isNewForm={false}
@@ -167,7 +167,7 @@ export default function RecordDetail() {
                 <div className="fw-bold mb-2">{related_list.label}</div>
                 <RecordsList
                   records={related_list}
-                  selectedTableKey={selectedTableKey}
+                  selectedTableKey={actualTableKey}
                   onSelectedTable={setSelectedTableKey}
                   onSelectedRecord={setSelectedRecord}
                 />

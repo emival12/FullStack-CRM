@@ -20,9 +20,9 @@ import ModalScreen from "../../components/ModalScreen";
  * Shows a table of record
  *
  * @param {Object[]} props.setLoading         - Function to update the loading variable
- * @param {Object[]} props.selectedRecord     - Record currently selected
+ * @param {Object[]} props.selectedRecordKey  - Record Key currently selected
  * @param {Object[]} props.setSelectedRecord  - Function to update the selectedRecord variable
- * @param {Object[]} props.selectedTableKey      - Table currently selected
+ * @param {Object[]} props.selectedTableKey   - Table currently selected
  * @param {Object[]} props.isEdit             - Variable to understand if is in edit or in view
  * @param {Object[]} props.onEditClick        - Function to update the isEdit variable
  * @param {Object[]} props.refreshRecord      - Variable to understand if is needed a refresh in the view
@@ -33,7 +33,7 @@ import ModalScreen from "../../components/ModalScreen";
  */
 export default function RecordButtons({
   setLoading,
-  selectedRecord,
+  selectedRecordKey,
   setSelectedRecord,
   selectedTableKey,
   isEdit,
@@ -55,7 +55,7 @@ export default function RecordButtons({
     axios
       .post(API_BASE_URL + PATH_DELETE, {
         table: selectedTableKey,
-        id: selectedRecord?.record[selectedRecord?.primary_key],
+        id: selectedRecordKey,
       })
       .then((res) => {
         console.log("Deletion record results:", res.data);

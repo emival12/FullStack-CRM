@@ -8,6 +8,8 @@ export default function DatabaseMainPage() {
   const [selectedTableKey, setSelectedTableKey] = useState(null);
   const [selectedRecord, setSelectedRecord] = useState(null);
 
+  const actualTableKey = selectedTableKey || tableKey;
+
   useEffect(() => {
     if (!tableKey || tableKey != selectedTableKey) {
       setSelectedTableKey(null);
@@ -19,7 +21,7 @@ export default function DatabaseMainPage() {
     <Container className="p-0" fluid>
       <Row>
         <TablesSidebar
-          selectedTableKey={selectedTableKey || tableKey}
+          selectedTableKey={actualTableKey}
           onSelectedTable={setSelectedTableKey}
         />
 
@@ -27,7 +29,7 @@ export default function DatabaseMainPage() {
           <div className="h-100 pt-3 pb-3 ps-3 ps-md-2 pe-3">
             <Outlet
               context={{
-                selectedTableKey,
+                actualTableKey,
                 setSelectedTableKey,
                 selectedRecord,
                 setSelectedRecord,

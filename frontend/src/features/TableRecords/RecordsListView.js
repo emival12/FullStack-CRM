@@ -24,10 +24,11 @@ export default function RecordsListView() {
   const [showNewModal, setShowNewModal] = useState(false);
   const [refreshList, setRefreshList] = useState(false);
 
-  useEffect(() => {
-    if (!selectedTableKey && !tableKey) return; // Blocks execution if the selected tabel is not correct
+  const actualTableKey = selectedTableKey || tableKey;
 
-    const actualTableKey = selectedTableKey || tableKey;
+  useEffect(() => {
+    if (!actualTableKey) return; // Blocks execution if the selected tabel is not correct
+
     setLoading(true);
     axios
       .get(API_BASE_URL + "/" + actualTableKey)
@@ -39,7 +40,7 @@ export default function RecordsListView() {
       .finally(() => setLoading(false));
   }, [selectedTableKey, tableKey, refreshList]);
 
-  if (!selectedTableKey && !tableKey) {
+  if (!actualTableKey) {
     return <MissingPage MissingText={MISSING_TABLE_LABEL} />;
   }
 
@@ -48,11 +49,8 @@ export default function RecordsListView() {
   return (
     <div>
       <div className="fs-3 fw-bold">
-        {selectedTableKey
-          ? selectedTableKey.split("_")[0].charAt(0).toUpperCase() +
-            selectedTableKey.split("_")[0].slice(1)
-          : tableKey.split("_")[0].charAt(0).toUpperCase() +
-            tableKey.split("_")[0].slice(1)}
+        {actualTableKey.split("_")[0].charAt(0).toUpperCase() +
+          actualTableKey.split("_")[0].slice(1)}
       </div>
       <div className="d-flex flex-row-reverse pb-2 pt-2">
         <Button
@@ -66,12 +64,12 @@ export default function RecordsListView() {
       </div>
       <RecordsList
         records={records}
-        selectedTableKey={selectedTableKey || tableKey}
+        selectedTableKey={actualTableKey}
         onSelectedTable={setSelectedTableKey}
         onSelectedRecord={setSelectedRecord}
       />
       <NewRecord
-        selectedTableKey={selectedTableKey || tableKey}
+        selectedTableKey={actualTableKey}
         showNewModal={showNewModal}
         setShowNewModal={setShowNewModal}
         setRefreshList={setRefreshList}
