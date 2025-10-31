@@ -2,10 +2,11 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import NavBar from "./components/NavBar";
 
 import "./App.css";
+import { PATH_DATABASE, PATH_SETUP } from "./config/K";
 import DatabaseMainPage from "./features/MainScreen/DatabaseMainPage";
 import RecordsListView from "./features/TableRecords/RecordsListView";
 import RecordDetail from "./features/TableRecordDetails/RecordDetail";
-import { PATH_DATABASE } from "./config/K";
+import SetupMainPage from "./features/MainScreen/SetupMainPage";
 
 function App() {
   return (
@@ -28,6 +29,12 @@ function App() {
           <Route path=":tableKey/:recordId" element={<RecordDetail />} />
         </Route>
         <Route path="/TOBE" element={<div>Pagina TOBE</div>} />
+        <Route path={PATH_SETUP} element={<SetupMainPage />}>
+          {/*TODO Improv */}
+          <Route index element={<p>Seleziona una tabella da modificare</p>} />
+          <Route path=":tableKey" element={<p>body </p>} />
+          <Route path=":tableKey/:sectionKey" element={<p>body Section</p>} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

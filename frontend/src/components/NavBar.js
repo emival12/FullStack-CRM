@@ -1,6 +1,7 @@
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { Navbar, Nav, Container } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { PATH_DATABASE } from "../config/K";
+import { PATH_DATABASE, PATH_SETUP } from "../config/K";
 import { DATABASE_LABEL } from "../config/IT";
 import "../App.css";
 
@@ -25,6 +26,11 @@ export default function NavBar() {
             </Nav.Link>
             <Nav.Link as={Link} to="/TOBE">
               TOBE
+            </Nav.Link>
+          </Nav>
+          <Nav>
+            <Nav.Link as={Link} to={PATH_SETUP}>
+              <i className="bi bi-gear"></i>
             </Nav.Link>
           </Nav>
         </Navbar.Collapse>

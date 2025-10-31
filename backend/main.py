@@ -29,8 +29,8 @@ def get_db():
 
 # EXPOSED API'S:
 # Get all the tables to show in the sidebar
-@app.get("/tables")
-def get_tables(db = Depends(get_db)):
+@app.get("/plain_tables")
+def get_tables_plain(db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
     query = """
@@ -45,7 +45,15 @@ def get_tables(db = Depends(get_db)):
 
     for table in tables:
         table["key"] =  get_table_key(table)
-        table["label"] = table["object_name"].capitalize() if table["is_single_record_type"] else table["record_type_name"].capitalize() 
+        table["label"] = table["object_name"].capitalize() if table["is_single_record_type"] else table["record_type_name"].capitalize()  
+
+    cursor.close()
+    return tables
+
+
+@app.get("/tables")
+def get_tables(db = Depends(get_db)):
+    tables = get_tables_plain(db)
 
     structure = dict()
     for table in tables:
@@ -66,7 +74,6 @@ def get_tables(db = Depends(get_db)):
 
             structure[cat][len(structure[cat])-1][obj_name].append(table) # if is multi RT append the tables inside the object container 
 
-    cursor.close()
     return structure
 
 def get_table_key(row):

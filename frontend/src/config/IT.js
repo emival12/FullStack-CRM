@@ -40,3 +40,6 @@ export const NEW_RECORD_TITLE_LABEL = "Nuovo record";
 //RecordDetail
 export const DETAIL_TAB_LABEL = "Dettaglio";
 export const RELATED_TAB_LABEL = "Correlati";
+
+//SetupSidebar
+export const SETUP_TABLE_SELECTION_LABEL = "Tabella da modificare";
