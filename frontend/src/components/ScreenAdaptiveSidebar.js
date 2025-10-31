@@ -1,4 +1,3 @@
-import "bootstrap-icons/font/bootstrap-icons.css";
 import { useState } from "react";
 import { Col, Button, Offcanvas } from "react-bootstrap";
 

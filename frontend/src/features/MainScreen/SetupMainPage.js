@@ -9,6 +9,13 @@ export default function SetupMainPage() {
   const [selectedTableKey, setSelectedTableKey] = useState(null);
   const [selectedSection, setSelectedSection] = useState(null);
 
+  useEffect(() => {
+    if (!tableKey || tableKey != selectedTableKey) {
+      setSelectedTableKey(null);
+      setSelectedSection(null);
+    }
+  }, [tableKey]);
+
   return (
     <Container className="p-0" fluid>
       <Row>

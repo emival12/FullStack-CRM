@@ -1,3 +1,4 @@
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import NavBar from "./components/NavBar";
 
@@ -7,6 +8,7 @@ import DatabaseMainPage from "./features/MainScreen/DatabaseMainPage";
 import RecordsListView from "./features/TableRecords/RecordsListView";
 import RecordDetail from "./features/TableRecordDetails/RecordDetail";
 import SetupMainPage from "./features/MainScreen/SetupMainPage";
+import SetupNewObject from "./features/SetupPages/SetupNewObject";
 
 function App() {
   return (
@@ -31,7 +33,7 @@ function App() {
         <Route path="/TOBE" element={<div>Pagina TOBE</div>} />
         <Route path={PATH_SETUP} element={<SetupMainPage />}>
           {/*TODO Improv */}
-          <Route index element={<p>Seleziona una tabella da modificare</p>} />
+          <Route index element={<SetupNewObject />} />
           <Route path=":tableKey" element={<p>body </p>} />
           <Route path=":tableKey/:sectionKey" element={<p>body Section</p>} />
         </Route>

@@ -1,4 +1,3 @@
-import "bootstrap-icons/font/bootstrap-icons.css";
 import { MISSING_DEFAULT_LABEL } from "../config/IT";
 import "../App.css";
 
