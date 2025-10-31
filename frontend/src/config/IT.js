@@ -20,6 +20,7 @@ export const TABLES_LABEL = "Tabelle";
 export const NEW_LABEL = "Nuovo";
 export const MANDATORY_FIELD_LABEL = "Campo obbligatorio";
 export const MAX_FIELD_LABEL = "Massimo X caratteri";
+export const MAX_NUMBER_LABEL = "Valore massimo accettato: X";
 
 //RecordButtons
 export const DELETE_LABEL = "Elimina";

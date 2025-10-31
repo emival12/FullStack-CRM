@@ -287,7 +287,11 @@ def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
     for row in fields:
         copy_row = row.copy()
         copy_row.pop("field_name")
-        if row["field_type"] == "picklist" or row["field_type"] == "lookup":
+        if row["field_type"] == "number":
+            limit_value = "9" * row["numeric_precision"]
+            limit_value += "." + ("9" * row["numeric_scale"]) if row["numeric_scale"] else ""
+            copy_row["limit_value"] = limit_value
+        elif row["field_type"] == "picklist" or row["field_type"] == "lookup":
             fields_to_retrieve = row["reference_field"]  + " reference_field, " + object_primary_key_names.get(row["reference_object"]) + ' id'
             query = "SELECT " + fields_to_retrieve + " FROM " + row["reference_object"] + (" WHERE " + row["lookup_filter"] if row["field_type"] == "lookup" else "") + ";"
             cursor.execute(query)
@@ -522,7 +526,11 @@ def get_table_records(table_name: str, db = Depends(get_db)):
     for row in fields:
         copy_row = row.copy()
         copy_row.pop("field_name")
-        if row["field_type"] == "picklist" or row["field_type"] == "lookup":
+        if row["field_type"] == "number":
+            limit_value = "9" * row["numeric_precision"]
+            limit_value += "." + ("9" * row["numeric_scale"]) if row["numeric_scale"] else ""
+            copy_row["limit_value"] = limit_value
+        elif row["field_type"] == "picklist" or row["field_type"] == "lookup":
             fields_to_retrieve = row["reference_field"]  + " reference_field, " + object_primary_key_names.get(row["reference_object"]) + ' id'
             query = "SELECT " + fields_to_retrieve + " FROM " + row["reference_object"] + (" WHERE " + row["lookup_filter"] if row["field_type"] == "lookup" else "") + ";"
             cursor.execute(query)

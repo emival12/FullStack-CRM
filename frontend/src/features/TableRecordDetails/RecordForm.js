@@ -1,5 +1,9 @@
 import { Form, FloatingLabel } from "react-bootstrap";
-import { MANDATORY_FIELD_LABEL, MAX_FIELD_LABEL } from "../../config/IT";
+import {
+  MANDATORY_FIELD_LABEL,
+  MAX_FIELD_LABEL,
+  MAX_NUMBER_LABEL,
+} from "../../config/IT";
 
 /**
  * Shows a form with some fields
@@ -89,7 +93,13 @@ export default function RecordForm({
           defaultValue={isNewForm ? null : info?.value}
           disabled={isNewForm ? false : !info.is_editable || !isEdit}
           isInvalid={errors[key]}
-          step="0.01"
+          step={
+            info.numeric_scale
+              ? "0." + "1".padStart(info.numeric_scale, "0")
+              : "1"
+          }
+          min={info?.limit_value && -Number(info.limit_value)}
+          max={info?.limit_value && Number(info.limit_value)}
           {...register(key, {
             required: {
               value: info.is_required,
@@ -98,6 +108,14 @@ export default function RecordForm({
             maxLength: {
               value: info.length,
               message: MAX_FIELD_LABEL.replace("X", info.length),
+            },
+            min: {
+              value: -Number(info?.limit_value),
+              message: MAX_NUMBER_LABEL.replace("X", -info?.limit_value),
+            },
+            max: {
+              value: Number(info?.limit_value),
+              message: MAX_NUMBER_LABEL.replace("X", info?.limit_value),
             },
           })}
         />
