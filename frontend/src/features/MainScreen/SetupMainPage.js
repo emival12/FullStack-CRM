@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Container, Row, Col, Form, Nav } from "react-bootstrap";
 import { Outlet, useParams } from "react-router-dom";
-
-import SetupSidebar from "../SetupSidebar/SetupSidebar";
+import SetupSidebar from "../Setup/SetupSidebar";
 
 export default function SetupMainPage() {
   const { tableKey, sectionKey } = useParams();

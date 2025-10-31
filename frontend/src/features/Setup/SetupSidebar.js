@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { Form, FloatingLabel, ListGroup } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 
-import { SECTIONS } from "./SidebarSections";
 import { SETUP_TABLE_SELECTION_LABEL, TABLES_LABEL } from "../../config/IT";
 import { API_BASE_URL, PATH_SETUP } from "../../config/K";
+import { SECTIONS } from "./K_Setup";
 import LoadingScreen from "../../components/LoadingScreen";
 import ScreenAdaptiveSidebar from "../../components/ScreenAdaptiveSidebar";
 

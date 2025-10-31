@@ -8,7 +8,7 @@ import DatabaseMainPage from "./features/MainScreen/DatabaseMainPage";
 import RecordsListView from "./features/TableRecords/RecordsListView";
 import RecordDetail from "./features/TableRecordDetails/RecordDetail";
 import SetupMainPage from "./features/MainScreen/SetupMainPage";
-import SetupNewObject from "./features/SetupPages/SetupNewObject";
+import SetupNewObject from "./features/Setup/SetupPages/SetupNewObject";
 
 function App() {
   return (

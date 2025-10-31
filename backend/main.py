@@ -572,3 +572,23 @@ async def update_record(request: Request, db = Depends(get_db)):
         db.rollback()
         print('Error: ' + str(e))
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Insert a new record
+@app.post("/new-object")
+async def update_record(request: Request, db = Depends(get_db)):
+    # Read the data from the body
+    data = await request.json() 
+    object_data = data.get("data")
+
+    cursor = db.cursor(dictionary=True)
+
+    return {"result": 1}
+    try:
+        cursor.execute(query)
+        db.commit() 
+        return {"result": cursor.rowcount}
+    except Exception as e:
+        db.rollback()
+        print('Error: ' + str(e))
+        raise HTTPException(status_code=500, detail=str(e))
