@@ -85,7 +85,7 @@ def get_table_key(row):
 @app.get("/{table_name}")
 def get_table_records(table_name: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
-    
+
     # Check if the table in input is a correct table (Avoid SQLInjection, corner case quasi inutile)
     check_allowed_tables(cursor, table_name)
     
@@ -110,7 +110,7 @@ def get_table_records(table_name: str, db = Depends(get_db)):
     # get the list of fields name, join clauses and group clause
     alias_table_name = table_name[0]
     (fields_text, joins, group) = get_fields_text(cursor, fields, alias_table_name)
-    
+
     # get records
     query = "SELECT " + fields_text + " FROM " + table_name + ' ' + alias_table_name
     query += (" " + " ".join(joins) if joins else "") + " WHERE " + alias_table_name + "." + "record_type_name = %s"
@@ -600,12 +600,84 @@ async def update_record(request: Request, db = Depends(get_db)):
 
     cursor = db.cursor(dictionary=True)
 
-    return {"result": 1}
     try:
-        cursor.execute(query)
+        #Create the table
+        field_lenght = 255 if object_data["Id_field_type"] == "VARCHAR" else None
+        field_type = object_data["Id_field_type"] + "(" + str(field_lenght) + ")" if object_data["Id_field_type"] == "VARCHAR" else object_data["Id_field_type"]
+        field_definition_type = "text" if object_data["Id_field_type"] == "VARCHAR" else "number"
+        object_name = object_data["Object_name"].lower()
+
+        command = "CREATE TABLE " + object_name + " ( "
+        command += object_data["Id_field_name"] + " " + field_type + " PRIMARY KEY, "
+        command += "object_name VARCHAR(255) NOT NULL DEFAULT '" + object_name + "', "
+        command += "record_type_name VARCHAR(255) NOT NULL DEFAULT 'master');"
+        cursor.execute(command)
+
+        #Create the record: object_definition
+        command = """
+        INSERT INTO object_definition(object_name, category, sort_order, is_system_object, is_single_record_type)
+        VALUES (%s, %s, %s, %s, %s);
+        """
+        params = (object_name, object_data["Category"], int(object_data["Sort_order"]), 0, 1)
+        cursor.execute(command, params)
+
+        #Create the record: record_type_definition
+        command = """
+        INSERT INTO record_type_definition(object_name, record_type_name, is_active)
+        VALUES (%s, %s, %s);
+        """
+        params = (object_name, "master", 1)
+        cursor.execute(command, params)
+
+        #Create the record: field_definition for the Id
+        command = """
+        INSERT INTO field_definition(object_name, record_type_name, field_name, field_type, length, numeric_precision, 
+            numeric_scale, reference_object, reference_field, is_active, is_visible, is_editable, is_required, is_primary_key, lookup_filter)
+        VALUES 
+        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s),
+        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+        """
+
+        record_type_filter = "object_name = '" + object_name + "' AND is_active = 1" 
+        params = (
+            object_name, "master", object_data["Id_field_name"],    field_definition_type,  field_lenght,   None, None, None,                     None,                 1, 1, 1, 1, 1, None,
+            object_name, "master", "record_type_name",              "picklist",             255,            None, None, "record_type_definition", "record_type_name",   1, 0, 0, 1, 0, record_type_filter
+            )
+        cursor.execute(command, params)
+
+        #Create the record: list_view_definition
+        command = """
+        INSERT INTO list_view_definition(object_name, record_type_name, field_name, sort_order)
+        VALUES (%s, %s, %s, %s);
+        """
+        params = (object_name, "master", object_data["Id_field_name"], 1)
+        cursor.execute(command, params)
+
+        #Create the record: record_layout_definition
+        command = """
+        INSERT INTO record_layout_definition(object_name, record_type_name, field_name, sort_order)
+        VALUES (%s, %s, %s, %s);
+        """
+        params = (object_name, "master", object_data["Id_field_name"], 1)
+        cursor.execute(command, params)
+        
         db.commit() 
-        return {"result": cursor.rowcount}
+        return {"result": 1}
     except Exception as e:
         db.rollback()
+        try:
+            cursor.execute("DROP TABLE IF EXISTS " + object_data['Object_name']) # Create table is not rollbacked 
+        except Exception as e_d:
+            print('Error in the DROP: ' + str(e_d))
+            pass
+
         print('Error: ' + str(e))
         raise HTTPException(status_code=500, detail=str(e))
+
+
+"""
+DROP TABLE aaa;
+DELETE FROM object_definition WHERE object_name = 'aaa';
+DELETE FROM record_type_definition WHERE object_name = 'aaa';
+DELETE FROM field_definition WHERE object_name = 'aaa';
+"""
