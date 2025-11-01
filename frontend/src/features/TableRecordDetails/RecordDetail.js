@@ -63,7 +63,10 @@ export default function RecordDetail() {
 
         //use to handle the values and redraw it
         const formValues = Object.fromEntries(
-          Object.entries(res.data).map(([key, info]) => [key, info.value])
+          Object.entries(res.data.field_structure).map(([key, info]) => [
+            key,
+            info.value,
+          ])
         );
         reset(formValues);
       })
@@ -109,6 +112,9 @@ export default function RecordDetail() {
             setToastBody(err.response.data.detail);
           })
           .finally(() => setLoading(false));
+      } else {
+        setRefreshRecord(!refreshRecord);
+        setIsEdit(false);
       }
 
       setValidated(true);

@@ -94,7 +94,8 @@ def get_table_records(table_name: str, db = Depends(get_db)):
 
     # get the list of the LIST VIEW fields active for that specific object and record type
     query = """
-    SELECT fd.object_name, fd.record_type_name, fd.field_name, fd.field_type, fd.reference_object, fd.reference_field, fd.is_primary_key
+    SELECT fd.object_name, fd.record_type_name, fd.field_name, fd.field_type, fd.reference_object, fd.reference_field, 
+        fd.is_primary_key, fd.lookup_filter
     FROM list_view_definition lvd
     JOIN field_definition fd ON 
         lvd.object_name = fd.object_name AND 
@@ -109,7 +110,7 @@ def get_table_records(table_name: str, db = Depends(get_db)):
     # get the list of fields name, join clauses and group clause
     alias_table_name = table_name[0]
     (fields_text, joins, group) = get_fields_text(cursor, fields, alias_table_name)
-
+    
     # get records
     query = "SELECT " + fields_text + " FROM " + table_name + ' ' + alias_table_name
     query += (" " + " ".join(joins) if joins else "") + " WHERE " + alias_table_name + "." + "record_type_name = %s"
@@ -157,7 +158,17 @@ def get_fields_text(cursor, fields, alias_table_name):
     fields_text = ""
     for idx, row in enumerate(fields):
         fieldSyntax = ""
-        if row["reference_object"] and (row["field_type"] == "picklist" or row["field_type"] == "lookup"):
+        if row["field_type"] == "radio" or row["field_type"] == "checkbox":
+            alias_join_table = row["reference_object"][0]
+            join_table_name = row["reference_object"]
+         
+            table_field = alias_table_name + "." + row["field_name"]
+            join_field = alias_join_table + ".option_key"
+            join_clause = "JOIN " + join_table_name + " " + alias_join_table + " ON " + table_field + " = " + join_field
+            joins.append(join_clause)
+
+            fieldSyntax = alias_join_table + ".option_label " + " " + row["field_name"]
+        elif row["reference_object"] and (row["field_type"] == "picklist" or row["field_type"] == "lookup"):
             # If is a linked fields we have to:
             #   - insert a JOIN clause and match the current FK saved in field name with the actual PK saved in the map created before
             #   - add to the list of the field to retrieve the field reference field located in the other object
@@ -291,9 +302,15 @@ def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
             limit_value = "9" * row["numeric_precision"]
             limit_value += "." + ("9" * row["numeric_scale"]) if row["numeric_scale"] else ""
             copy_row["limit_value"] = limit_value
+        elif row["field_type"] == "radio" or row["field_type"] == "checkbox":
+            query = "SELECT option_label, option_key FROM " + row["reference_object"] + (" WHERE " + row["lookup_filter"] if row["lookup_filter"] else "") + " ORDER BY sort_order ASC;"
+            print(query)
+            cursor.execute(query)
+            nested_records = cursor.fetchall()
+            copy_row["options"] = nested_records
         elif row["field_type"] == "picklist" or row["field_type"] == "lookup":
             fields_to_retrieve = row["reference_field"]  + " reference_field, " + object_primary_key_names.get(row["reference_object"]) + ' id'
-            query = "SELECT " + fields_to_retrieve + " FROM " + row["reference_object"] + (" WHERE " + row["lookup_filter"] if row["field_type"] == "lookup" else "") + ";"
+            query = "SELECT " + fields_to_retrieve + " FROM " + row["reference_object"] + (" WHERE " + row["lookup_filter"] if row["lookup_filter"] else "") + ";"
             cursor.execute(query)
             nested_records = cursor.fetchall()
             copy_row["options"] = nested_records

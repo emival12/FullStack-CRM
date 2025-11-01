@@ -48,6 +48,16 @@ export default function RecordForm({
   isNewForm,
   isEdit,
 }) {
+  const renderField = (key, info) => {
+    if (info.field_type === "picklist" || info.field_type === "lookup") {
+      return get_selection_entry(key, info);
+    } else if (info.field_type === "radio" || info.field_type === "checkbox") {
+      return get_radio(key, info);
+    } else {
+      return get_entry(key, info);
+    }
+  };
+
   const get_selection_entry = (key, info) => {
     return (
       <>
@@ -80,6 +90,36 @@ export default function RecordForm({
         <Form.Control.Feedback type="invalid">
           {errors[key]?.message}
         </Form.Control.Feedback>
+      </>
+    );
+  };
+
+  const get_radio = (key, info) => {
+    return (
+      <>
+        {info.options.map((opt) => (
+          <div key={opt.option_key} className="ms-2">
+            <Form.Check
+              inline
+              type={info.field_type}
+              required={info.is_required}
+              disabled={isNewForm ? false : !info.is_editable || !isEdit}
+              id={opt.option_key}
+              label={opt.option_label}
+              value={opt.option_key}
+              isInvalid={errors[key]}
+              {...register(key, {
+                required: {
+                  value: info.is_required,
+                  message: MANDATORY_FIELD_LABEL,
+                },
+              })}
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors[key]?.message}
+            </Form.Control.Feedback>
+          </div>
+        ))}
       </>
     );
   };
@@ -133,18 +173,28 @@ export default function RecordForm({
       validated={validated}
       onSubmit={onSubmit}
     >
-      {Object.entries(fields).map(([key, info]) => (
-        <FloatingLabel
-          key={key}
-          controlId="floatingInput"
-          label={key.replace("_", " ") + (info.is_required ? " *" : "")}
-          className="mb-3"
-        >
-          {info.field_type === "picklist" || info.field_type === "lookup"
-            ? get_selection_entry(key, info)
-            : get_entry(key, info)}
-        </FloatingLabel>
-      ))}
+      {Object.entries(fields).map(([key, info]) => {
+        const isFloatingAllowed = !["radio", "checkbox"].includes(
+          info.field_type
+        );
+        return isFloatingAllowed ? (
+          <FloatingLabel
+            key={key}
+            controlId={`floating-${key}`}
+            label={key.replaceAll("_", " ") + (info.is_required ? " *" : "")}
+            className="mb-3"
+          >
+            {renderField(key, info)}
+          </FloatingLabel>
+        ) : (
+          <Form.Group key={key} className="mb-3">
+            <Form.Label>
+              {key.replaceAll("_", " ") + (info.is_required ? " *" : "")}
+            </Form.Label>
+            {renderField(key, info)}
+          </Form.Group>
+        );
+      })}
     </Form>
   );
 }

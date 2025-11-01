@@ -20,7 +20,7 @@ CREATE TABLE object_definition (
 # Creazione Tabella field_definition
 #   La tabella contiene la definizione di tutti i campi di tutte le tabelle del database più info chiave del campo.
 #   Questa tabella è fondamentale per le lookup, in modo da conoscere a quale oggetto puntano
-#   Il campo field_type avrà dei valori attesi di questo tipo: text, int, float, rollup_summary, lookup, picklist
+#   Il campo field_type avrà dei valori attesi di questo tipo: [text, number, lookup, picklist, rollup, radio, checkbox]
 CREATE TABLE field_definition (
     object_name VARCHAR(100),
     record_type_name VARCHAR(100),
@@ -40,6 +40,21 @@ CREATE TABLE field_definition (
     PRIMARY KEY (object_name, record_type_name, field_name),
     FOREIGN KEY (object_name) REFERENCES object_definition(object_name) ON DELETE CASCADE,
     INDEX idx_reference_object(reference_object)
+);
+
+# Creazione Tabella radio_checkbox_options
+#   La tabella descrive le opzioni disponibili per i checkbox/radio
+CREATE TABLE radio_checkbox_options (
+    object_name VARCHAR(100),
+    record_type_name VARCHAR(100),
+    field_name VARCHAR(255),
+    option_key VARCHAR(255),
+    option_label VARCHAR(255),
+    sort_order SMALLINT,
+    is_active BOOL DEFAULT 1,
+    PRIMARY KEY (object_name, record_type_name, field_name, option_key),
+    FOREIGN KEY (object_name, record_type_name, field_name) 
+        REFERENCES field_definition(object_name, record_type_name, field_name) ON DELETE CASCADE
 );
 
 # Creazione Tabella list_view_definition
@@ -129,7 +144,8 @@ CREATE TABLE zone (
     id CHAR(5) PRIMARY KEY,
     object_name VARCHAR(255) NOT NULL DEFAULT "zone",
     record_type_name VARCHAR(255) NOT NULL DEFAULT "master",
-    nome VARCHAR(255) NOT NULL
+    nome VARCHAR(255) NOT NULL,
+    pil VARCHAR(255)
 );
 
 CREATE TABLE account (
@@ -196,25 +212,34 @@ INSERT INTO field_definition(object_name, record_type_name, field_name, field_ty
     numeric_scale, reference_object, reference_field, is_active, is_visible, is_editable, is_required, is_primary_key, lookup_filter)
 VALUES 
     ('account', 'Cliente',      'id',                       'number',   null,   6,    null, null,                       null,               1, 1, 1, 1, 1, null),
-    ('account', 'Cliente',      'record_type_name',         'lookup',   255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0, "object_name = 'account' AND is_active = 1"),
+    ('account', 'Cliente',      'record_type_name',         'picklist', 255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0, "object_name = 'account' AND is_active = 1"),
     ('account', 'Cliente',      'ragione_sociale',          'text',     255,    null, null, null,                       null,               1, 1, 1, 1, 0, null),
     ('account', 'Cliente',      'zone',                     'picklist', 5,      null, null, 'zone',                     'nome',             1, 1, 1, 0, 0, null),
     ('account', 'Cliente',      'nome_fornitore',           'text',     50,     null, null, null,                       null,               0, 1, 1, 0, 0, null),
     ('account', 'Cliente',      'costo_totale_contatti',    'rollup',   null,   null, null, 'contatto',                 null,               1, 1, 0, 0, 0, null),
     ('account', 'Fornitore',    'id',                       'number',   null,   6,    null, null,                       null,               1, 1, 1, 1, 1, null),
-    ('account', 'Fornitore',    'record_type_name',         'lookup',   255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0, "object_name = 'account' AND is_active = 1"),
+    ('account', 'Fornitore',    'record_type_name',         'picklist', 255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0, "object_name = 'account' AND is_active = 1"),
     ('account', 'Fornitore',    'ragione_sociale',          'text',     255,    null, null, null,                       null,               1, 1, 1, 1, 0, null),
     ('account', 'Fornitore',    'zone',                     'picklist', 5,      null, null, 'zone',                     'nome',             1, 1, 1, 0, 0, null),
     ('account', 'Fornitore',    'nome_fornitore',           'text',     50,     null, null, null,                       null,               1, 1, 1, 0, 0, null),
     ('account', 'Fornitore',    'costo_totale_contatti',    'rollup',   null,   null, null, 'contatto',                 null,               1, 1, 0, 0, 0, null),
     ('contatto','master',       'telefono',                 'text',     15,     null, null, null,                       null,               1, 1, 1, 1, 1, null),
-    ('contatto','master',       'record_type_name',         'lookup',   15,     null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0, "object_name = 'contatto' AND is_active = 1"),
+    ('contatto','master',       'record_type_name',         'picklist', 15,     null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0, "object_name = 'contatto' AND is_active = 1"),
     ('contatto','master',       'descrizione',              'text',     255,    null, null, null,                       null,               1, 1, 1, 0, 0, null),
     ('contatto','master',       'costo',                    'number',   null,   3,    2,    null,                       null,               1, 1, 1, 0, 0, null),
     ('contatto','master',       'account',                  'lookup',   255,    null, null, 'account',                  'ragione_sociale',  1, 1, 1, 1, 0, "object_name = 'account' AND record_type_name = 'Cliente'"),
     ('zone',    'master',       'id',                       'text',     5,      null, null, null,                       null,               1, 1, 1, 1, 1, null),
     ('zone',    'master',       'nome',                     'text',     255,    null, null, null,                       null,               1, 1, 1, 1, 0, null),
-    ('zone',    'master',       'record_type_name',         'lookup',   255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0, "object_name = 'zone' AND is_active = 1");
+    ('zone',    'master',       'record_type_name',         'picklist', 255,    null, null, 'record_type_definition',   'record_type_name', 1, 0, 0, 1, 0, "object_name = 'zone' AND is_active = 1"),
+    ('zone',    'master',       'pil',                      'radio',    255,    null, null, 'radio_checkbox_options',   'field_name',       1, 1, 1, 0, 0, "object_name = 'zone' AND record_type_name = 'master' AND is_active = 1");
+
+
+INSERT INTO radio_checkbox_options(object_name, record_type_name, field_name, sort_order, option_key, option_label, is_active)
+VALUES 
+    ('zone',    'master',   'pil',  1,    'basso',      'Basso',    1),
+    ('zone',    'master',   'pil',  2,    'medio',      'Medio',    1),
+    ('zone',    'master',   'pil',  3,    'alto',       'Alto',     1),
+    ('zone',    'master',   'pil',  4,    'insane',     'Insane',   0);
 
 
 INSERT INTO list_view_definition(object_name, record_type_name, field_name, sort_order)
@@ -230,7 +255,8 @@ VALUES
     ('contatto','master',       'account',              2),
     ('contatto','master',       'costo',                3),
     ('zone',    'master',       'id',                   1),
-    ('zone',    'master',       'nome',                 2);
+    ('zone',    'master',       'nome',                 2),
+    ('zone',    'master',       'pil',                  3);
 
 
 INSERT INTO record_layout_definition(object_name, record_type_name, field_name, sort_order)
@@ -249,7 +275,8 @@ VALUES
     ('contatto','master',       'costo',                    3),
     ('contatto','master',       'account',                  4),
     ('zone',    'master',       'id',                       1),
-    ('zone',    'master',       'nome',                     2);
+    ('zone',    'master',       'nome',                     2),
+    ('zone',    'master',       'pil',                      3);
 
 
 INSERT INTO aggregation_function (name)
