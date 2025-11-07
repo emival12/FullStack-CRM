@@ -10,6 +10,13 @@ export default function DatabaseMainPage() {
 
   const actualTableKey = selectedTableKey || tableKey;
 
+  useEffect(() => {
+    if (!tableKey || tableKey != selectedTableKey) {
+      setSelectedTableKey(null);
+      setSelectedRecord(null);
+    }
+  }, [tableKey]);
+
   return (
     <Container className="p-0" fluid>
       <Row>
