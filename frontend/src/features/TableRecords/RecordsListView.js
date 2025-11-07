@@ -22,11 +22,10 @@ export default function RecordsListView() {
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState([]);
   const [showNewModal, setShowNewModal] = useState(false);
-  const [refreshList, setRefreshList] = useState(false);
 
   const actualTableKey = selectedTableKey || tableKey;
 
-  useEffect(() => {
+  const fetchData = () => {
     if (!actualTableKey) return; // Blocks execution if the selected tabel is not correct
 
     setLoading(true);
@@ -38,7 +37,11 @@ export default function RecordsListView() {
       })
       .catch((err) => console.error("Error:", err))
       .finally(() => setLoading(false));
-  }, [selectedTableKey, tableKey, refreshList]);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [selectedTableKey, tableKey]);
 
   if (!actualTableKey) {
     return <MissingPage MissingText={MISSING_TABLE_LABEL} />;
@@ -72,7 +75,7 @@ export default function RecordsListView() {
         selectedTableKey={actualTableKey}
         showNewModal={showNewModal}
         setShowNewModal={setShowNewModal}
-        setRefreshList={setRefreshList}
+        refreshData={fetchData}
       />
     </div>
   );

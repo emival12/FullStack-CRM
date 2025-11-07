@@ -19,13 +19,13 @@ import RecordForm from "../TableRecordDetails/RecordForm";
  * @param {Object[]} props.selectedTable        - Table currently selected
  * @param {Object[]} props.showNewModal         - Flag to show or hide the modal
  * @param {Object[]} props.setShowNewModal      - Function to update flag to show or hide the modal
- * @param {Object[]} props.setRefreshList       - Function to run the refresh on the record list
+ * @param {Object[]} props.refreshData          - Function to run the refresh on the record list
  */
 export default function NewRecord({
   selectedTableKey,
   showNewModal,
   setShowNewModal,
-  setRefreshList,
+  refreshData,
 }) {
   const [fields, setFields] = useState([]);
   const [validated, setValidated] = useState(false);
@@ -71,7 +71,7 @@ export default function NewRecord({
             setToastBody(ERROR_TOAST_BODY_LABEL);
           } else {
             setShowNewModal(false);
-            setRefreshList(true);
+            refreshData();
           }
         })
         .catch((err) => {
