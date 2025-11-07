@@ -7,42 +7,46 @@ import {
   BODY_MODAL_DELETE_LABEL,
   CANCEL_LABEL,
   DELETE_LABEL,
-  EDIT_LABEL,
   ERROR_TOAST_BODY_LABEL,
   ERROR_TOAST_TITLE_LABEL,
   SAVE_LABEL,
   TITLE_MODAL_DELETE_LABEL,
 } from "../../config/IT";
-import { API_BASE_URL, PATH_DATABASE, PATH_DELETE } from "../../config/K";
 import ModalScreen from "../../components/ModalScreen";
 
 /**
  * Shows a table of record
  *
  * @param {Object[]} props.setLoading         - Function to update the loading variable
- * @param {Object[]} props.selectedRecordKey  - Record Key currently selected
  * @param {Object[]} props.setSelectedRecord  - Function to update the selectedRecord variable
- * @param {Object[]} props.selectedTableKey   - Table currently selected
+ * @param {Object[]} props.editLabel          - Label used for the first button near the delete (generally is New or Edit)
  * @param {Object[]} props.isEdit             - Variable to understand if is in edit or in view
  * @param {Object[]} props.onEditClick        - Function to update the isEdit variable
- * @param {Object[]} props.refreshRecord      - Variable to understand if is needed a refresh in the view
- * @param {Object[]} props.setRefreshRecord   - Function to update the refreshRecord variable
+ * @param {Object[]} props.reset              - Function used to refresh the form
  * @param {Object[]} props.setShowToast       - Function to update the showToast variable
  * @param {Object[]} props.setToastTitle      - Function to update the toastTitle variable
  * @param {Object[]} props.setToastBody       - Function to update the toastBody variable
+ * @param {Object[]} props.hasDeleteButton    - Flag to decide if the deleted button is needed
+ * @param {Object[]} props.pathAPI            - Path used in the API call
+ * @param {Object[]} props.payloadAPI         - Payload used in the API call
+ * @param {Object[]} props.redirectAPI        - Path used to redirect after the API success
+ * @param {Object[]} props.extraDescription   - Variable with an optional text to be shown near the Delete/New buttons
  */
 export default function RecordButtons({
   setLoading,
-  selectedRecordKey,
   setSelectedRecord,
-  selectedTableKey,
+  editLabel,
   isEdit,
   onEditClick,
-  refreshRecord,
-  setRefreshRecord,
+  reset,
   setShowToast,
   setToastTitle,
   setToastBody,
+  hasDeleteButton,
+  pathAPI,
+  payloadAPI,
+  redirectAPI,
+  extraDescription,
 }) {
   const [showModal, setShowModal] = useState(false);
   const [titleModal, setTitleModal] = useState();
@@ -53,10 +57,7 @@ export default function RecordButtons({
   const deleteRecord = () => {
     setLoading(true);
     axios
-      .post(API_BASE_URL + PATH_DELETE, {
-        table: selectedTableKey,
-        id: selectedRecordKey,
-      })
+      .post(pathAPI, payloadAPI)
       .then((res) => {
         console.log("Deletion record results:", res.data);
         if (res.data.result == 0) {
@@ -65,7 +66,7 @@ export default function RecordButtons({
           setToastBody(ERROR_TOAST_BODY_LABEL);
         } else {
           setSelectedRecord(null);
-          navigate(PATH_DATABASE + "/" + selectedTableKey);
+          navigate(redirectAPI);
         }
       })
       .catch((err) => {
@@ -79,40 +80,34 @@ export default function RecordButtons({
   };
 
   return (
-    <div className="d-flex flex-row-reverse pb-2 pt-2">
+    <div className="d-flex flex-row-reverse justify-content-between align-items-center pb-2 pt-2">
       {!isEdit ? (
         <>
-          <Button
-            className="ms-3 fw-medium"
-            size="sm"
-            onClick={() => {
-              setTitleModal(TITLE_MODAL_DELETE_LABEL);
-              setBodyModal(BODY_MODAL_DELETE_LABEL);
-              setShowModal(true);
-            }}
-          >
-            {DELETE_LABEL}
-          </Button>
-          <Button
-            className="ms-3 fw-medium"
-            size="sm"
-            onClick={() => onEditClick(true)}
-          >
-            {EDIT_LABEL}
-          </Button>
+          <span>
+            <Button
+              className="ms-3 fw-medium"
+              size="sm"
+              onClick={() => onEditClick(true)}
+            >
+              {editLabel}
+            </Button>
+            <Button
+              hidden={!hasDeleteButton}
+              className="ms-3 fw-medium"
+              size="sm"
+              onClick={() => {
+                setTitleModal(TITLE_MODAL_DELETE_LABEL);
+                setBodyModal(BODY_MODAL_DELETE_LABEL);
+                setShowModal(true);
+              }}
+            >
+              {DELETE_LABEL}
+            </Button>
+          </span>
+          <span>{extraDescription}</span>
         </>
       ) : (
-        <>
-          <Button
-            className="ms-3 fw-medium"
-            size="sm"
-            onClick={() => {
-              setRefreshRecord(!refreshRecord);
-              onEditClick(false);
-            }}
-          >
-            {CANCEL_LABEL}
-          </Button>
+        <span>
           <Button
             className="ms-3 fw-medium"
             size="sm"
@@ -122,7 +117,17 @@ export default function RecordButtons({
           >
             {SAVE_LABEL}
           </Button>
-        </>
+          <Button
+            className="ms-3 fw-medium"
+            size="sm"
+            onClick={() => {
+              onEditClick(false);
+              reset();
+            }}
+          >
+            {CANCEL_LABEL}
+          </Button>
+        </span>
       )}
 
       <ModalScreen

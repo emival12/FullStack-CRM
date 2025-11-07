@@ -11,10 +11,11 @@ import {
   CANCEL_LABEL,
 } from "../../../config/IT";
 import { API_BASE_URL } from "../../../config/K";
-import { fields_structure_new_object } from "../K_Setup";
+import { NEW_OBJECT_FIELD_STRUCTURE } from "../K_Setup";
 import RecordForm from "../../TableRecordDetails/RecordForm";
 import LoadingScreen from "../../../components/LoadingScreen";
 import ToastMsg from "../../../components/ToastMsg";
+import RecordButtons from "../../TableRecordDetails/RecordButtons";
 
 export default function SetupNewObject() {
   const [loading, setLoading] = useState(false);
@@ -70,44 +71,26 @@ export default function SetupNewObject() {
 
   return (
     <>
-      {!showNewForm ? (
-        <div className="d-flex flex-row-reverse justify-content-between pb-2 pt-2">
-          <Button
-            size="sm"
-            onClick={() => {
-              setShowNewForm(true);
-            }}
-          >
-            {NEW_LABEL}
-          </Button>
-
-          <span>Seleziona una tabella da modificare</span>
-        </div>
-      ) : (
+      <RecordButtons
+        setLoading={setLoading}
+        setSelectedRecord={() => {}}
+        editLabel={NEW_LABEL}
+        isEdit={showNewForm}
+        onEditClick={setShowNewForm}
+        reset={reset}
+        setShowToast={setShowToast}
+        setToastTitle={setToastTitle}
+        setToastBody={setToastBody}
+        hasDeleteButton={false}
+        pathAPI={null}
+        payloadAPI={null}
+        redirectAPI={null}
+        extraDescription="Seleziona una tabella da modificare"
+      ></RecordButtons>
+      {showNewForm ? (
         <>
-          <div className="d-flex flex-row-reverse pb-2 pt-2">
-            <Button
-              className="ms-3 fw-medium"
-              size="sm"
-              onClick={() => {
-                setShowNewForm(false);
-                reset();
-              }}
-            >
-              {CANCEL_LABEL}
-            </Button>
-            <Button
-              className="ms-3 fw-medium"
-              size="sm"
-              onClick={() => {
-                document.getElementById("recordDetailForm").requestSubmit();
-              }}
-            >
-              {SAVE_LABEL}
-            </Button>
-          </div>
           <RecordForm
-            fields={fields_structure_new_object}
+            fields={NEW_OBJECT_FIELD_STRUCTURE}
             validated={validated}
             onSubmit={handleSubmit(onSubmit)}
             selectedTableKey={null}
@@ -124,6 +107,8 @@ export default function SetupNewObject() {
             body={toastBody}
           ></ToastMsg>
         </>
+      ) : (
+        ""
       )}
     </>
   );

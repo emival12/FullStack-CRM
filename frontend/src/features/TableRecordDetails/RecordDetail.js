@@ -6,12 +6,18 @@ import { Tab, Tabs } from "react-bootstrap";
 
 import {
   DETAIL_TAB_LABEL,
+  EDIT_LABEL,
   ERROR_TOAST_BODY_LABEL,
   ERROR_TOAST_TITLE_LABEL,
   MISSING_RECORD_LABEL,
   RELATED_TAB_LABEL,
 } from "../../config/IT";
-import { API_BASE_URL, PATH_UPDATE } from "../../config/K";
+import {
+  API_BASE_URL,
+  PATH_DATABASE,
+  PATH_DELETE,
+  PATH_UPDATE,
+} from "../../config/K";
 import MissingPage from "../../components/MissingPage";
 import LoadingScreen from "../../components/LoadingScreen";
 import RecordButtons from "./RecordButtons";
@@ -32,7 +38,6 @@ export default function RecordDetail() {
   const [fields, setFields] = useState([]);
   const [isEdit, setIsEdit] = useState(false);
   const [validated, setValidated] = useState(false);
-  const [refreshRecord, setRefreshRecord] = useState(false);
 
   const [showToast, setShowToast] = useState(false);
   const [toastTitle, setToastTitle] = useState();
@@ -49,7 +54,7 @@ export default function RecordDetail() {
     reset,
   } = useForm();
 
-  useEffect(() => {
+  const fetchData = () => {
     if (!actualTableKey && !recordKey) return; // Blocks execution if the selected tabel is not correct
 
     setLoading(true);
@@ -72,7 +77,11 @@ export default function RecordDetail() {
       })
       .catch((err) => console.error("Error:", err))
       .finally(() => setLoading(false));
-  }, [selectedRecord, recordId, refreshRecord]); //rerun everything when one of those fields change
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [selectedRecord, recordId]); //rerun everything when one of those fields change
 
   //Method fired when the button Save is pressed
   const onSubmit = (data) => {
@@ -100,7 +109,7 @@ export default function RecordDetail() {
               setToastTitle(ERROR_TOAST_TITLE_LABEL);
               setToastBody(ERROR_TOAST_BODY_LABEL);
             } else {
-              setRefreshRecord(!refreshRecord);
+              fetchData();
               setIsEdit(false);
             }
           })
@@ -113,7 +122,7 @@ export default function RecordDetail() {
           })
           .finally(() => setLoading(false));
       } else {
-        setRefreshRecord(!refreshRecord);
+        reset();
         setIsEdit(false);
       }
 
@@ -137,16 +146,22 @@ export default function RecordDetail() {
         <Tab eventKey="details" title={DETAIL_TAB_LABEL}>
           <RecordButtons
             setLoading={setLoading}
-            selectedRecordKey={recordKey}
             setSelectedRecord={setSelectedRecord}
-            selectedTableKey={actualTableKey}
+            editLabel={EDIT_LABEL}
             isEdit={isEdit}
             onEditClick={setIsEdit}
-            refreshRecord={refreshRecord}
-            setRefreshRecord={setRefreshRecord}
+            reset={reset}
             setShowToast={setShowToast}
             setToastTitle={setToastTitle}
             setToastBody={setToastBody}
+            hasDeleteButton={true}
+            pathAPI={API_BASE_URL + PATH_DELETE}
+            payloadAPI={{
+              table: actualTableKey,
+              id: recordKey,
+            }}
+            redirectAPI={PATH_DATABASE + "/" + actualTableKey}
+            extraDescription={null}
           ></RecordButtons>
           <RecordForm
             fields={fields.field_structure}

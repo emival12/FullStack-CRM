@@ -9,6 +9,7 @@ import RecordsListView from "./features/TableRecords/RecordsListView";
 import RecordDetail from "./features/TableRecordDetails/RecordDetail";
 import SetupMainPage from "./features/MainScreen/SetupMainPage";
 import SetupNewObject from "./features/Setup/SetupPages/SetupNewObject";
+import SetupSectionObject from "./features/Setup/SetupPages/SetupSectionObject";
 
 function App() {
   return (
@@ -34,8 +35,11 @@ function App() {
         <Route path={PATH_SETUP} element={<SetupMainPage />}>
           {/*TODO Improv */}
           <Route index element={<SetupNewObject />} />
-          <Route path=":tableKey" element={<p>body </p>} />
-          <Route path=":tableKey/:sectionKey" element={<p>body Section</p>} />
+          <Route path=":tableKey" element={<Navigate to="home" replace />} />
+          <Route
+            path=":tableKey/:sectionKey"
+            element={<SetupSectionObject />}
+          />
         </Route>
       </Routes>
     </BrowserRouter>

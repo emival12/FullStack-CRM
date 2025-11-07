@@ -164,7 +164,7 @@ def get_fields_text(cursor, fields, alias_table_name):
          
             table_field = alias_table_name + "." + row["field_name"]
             join_field = alias_join_table + ".option_key"
-            join_clause = "JOIN " + join_table_name + " " + alias_join_table + " ON " + table_field + " = " + join_field
+            join_clause = "LEFT JOIN " + join_table_name + " " + alias_join_table + " ON " + table_field + " = " + join_field
             joins.append(join_clause)
 
             fieldSyntax = alias_join_table + ".option_label " + " " + row["field_name"]
@@ -177,7 +177,7 @@ def get_fields_text(cursor, fields, alias_table_name):
 
             table_field = alias_table_name + "." + row["field_name"]
             join_field = alias_join_table + "." + object_primary_key_names.get(join_table_name)
-            join_clause = "JOIN " + join_table_name + " " + alias_join_table + " ON " + table_field + " = " + join_field
+            join_clause = "LEFT JOIN " + join_table_name + " " + alias_join_table + " ON " + table_field + " = " + join_field
             joins.append(join_clause)
 
             fieldSyntax = alias_join_table + "." + row["reference_field"] + " " + row["field_name"]
@@ -543,13 +543,18 @@ def get_table_records(table_name: str, db = Depends(get_db)):
     for row in fields:
         copy_row = row.copy()
         copy_row.pop("field_name")
-        if row["field_type"] == "number":
+        if row["field_type"] == "radio" or row["field_type"] == "checkbox":
+            query = "SELECT option_label, option_key FROM " + row["reference_object"] + (" WHERE " + row["lookup_filter"] if row["lookup_filter"] else "") + " ORDER BY sort_order ASC;"
+            cursor.execute(query)
+            nested_records = cursor.fetchall()
+            copy_row["options"] = nested_records
+        elif row["field_type"] == "number":
             limit_value = "9" * row["numeric_precision"]
             limit_value += "." + ("9" * row["numeric_scale"]) if row["numeric_scale"] else ""
             copy_row["limit_value"] = limit_value
         elif row["field_type"] == "picklist" or row["field_type"] == "lookup":
             fields_to_retrieve = row["reference_field"]  + " reference_field, " + object_primary_key_names.get(row["reference_object"]) + ' id'
-            query = "SELECT " + fields_to_retrieve + " FROM " + row["reference_object"] + (" WHERE " + row["lookup_filter"] if row["field_type"] == "lookup" else "") + ";"
+            query = "SELECT " + fields_to_retrieve + " FROM " + row["reference_object"] + (" WHERE " + row["lookup_filter"] if row["lookup_filter"] else "") + ";"
             cursor.execute(query)
             nested_records = cursor.fetchall()
             copy_row["options"] = nested_records
