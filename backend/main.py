@@ -1,6 +1,7 @@
 import mysql.connector
-from fastapi import FastAPI, Depends, Request, HTTPException
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+import utils
 
 app = FastAPI()
 
@@ -33,52 +34,20 @@ def get_db():
 def get_tables_plain(db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
-    query = """
-    SELECT od.object_name, rtd.record_type_name, od.category, od.sort_order, od.is_system_object, od.is_single_record_type
-    FROM object_definition od
-    LEFT JOIN record_type_definition rtd ON od.object_name = rtd.object_name
-    WHERE rtd.is_active = 1
-    ORDER BY od.sort_order ASC;
-    """
-    cursor.execute(query)
-    tables = cursor.fetchall()
-
-    for table in tables:
-        table["key"] =  get_table_key(table)
-        table["label"] = table["object_name"].capitalize() if table["is_single_record_type"] else table["record_type_name"].capitalize()  
+    tables = utils.get_object_definition_records(cursor)
 
     cursor.close()
     return tables
 
-
 @app.get("/tables")
 def get_tables(db = Depends(get_db)):
-    tables = get_tables_plain(db)
+    cursor = db.cursor(dictionary=True)
 
-    structure = dict()
-    for table in tables:
-        is_single_rt = table["is_single_record_type"]
-        cat = table["category"].capitalize()
-        obj_name = table["object_name"].capitalize()
+    tables = utils.get_object_definition_records(cursor)
+    structure = utils.group_object_definition_by_category(tables)
 
-        # if doesn't exist create the Category 
-        if cat not in structure:
-            structure[cat] = []
-
-        if is_single_rt:
-            structure[cat].append(table) # if is single RT append the tables inside the Category 
-        else:
-            # if doesn't exist create the object container of the RTs 
-            if len(structure[cat]) == 0 or obj_name not in structure[cat][len(structure[cat])-1]:
-                structure[cat].append({obj_name: []})
-
-            structure[cat][len(structure[cat])-1][obj_name].append(table) # if is multi RT append the tables inside the object container 
-
+    cursor.close()
     return structure
-
-def get_table_key(row):
-    return row["object_name"] + '_' + row["record_type_name"]
-
 
 
 # Get all the records of an object
@@ -86,35 +55,18 @@ def get_table_key(row):
 def get_table_records(table_name: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
-    # Check if the table in input is a correct table (Avoid SQLInjection, corner case quasi inutile)
-    check_allowed_tables(cursor, table_name)
-    
-    # table_name is ObjectName_RecordTypeName
-    (table_name, record_type_name) = table_name.split("_")
+    utils.check_allowed_tables(cursor, table_name)                                                                  # Evaluate input value (Avoid SQLInjection)
+    (table_name, record_type_name) = table_name.split("_")                                                          # table_name == ObjectName_RecordTypeName
+    fields = utils.get_list_view_definition_fields(cursor, table_name, record_type_name)                            # retrieve fields definitions on the list view
 
-    # get the list of the LIST VIEW fields active for that specific object and record type
-    query = """
-    SELECT fd.object_name, fd.record_type_name, fd.field_name, fd.field_type, fd.reference_object, fd.reference_field, 
-        fd.is_primary_key, fd.lookup_filter
-    FROM list_view_definition lvd
-    JOIN field_definition fd ON 
-        lvd.object_name = fd.object_name AND 
-        lvd.record_type_name = fd.record_type_name AND 
-        lvd.field_name = fd.field_name
-    WHERE fd.object_name = %s AND fd.record_type_name = %s AND fd.is_active = 1 AND fd.is_visible = 1
-    ORDER BY lvd.sort_order ASC;
-    """
-    cursor.execute(query, (table_name, record_type_name))
-    fields = cursor.fetchall()
-
-    # get the list of fields name, join clauses and group clause
-    alias_table_name = table_name[0]
-    (fields_text, joins, group) = get_fields_text(cursor, fields, alias_table_name)
-
-    # get records
-    query = "SELECT " + fields_text + " FROM " + table_name + ' ' + alias_table_name
-    query += (" " + " ".join(joins) if joins else "") + " WHERE " + alias_table_name + "." + "record_type_name = %s"
-    query += (group + ";" if group else ";")
+    (fields_text, joins, has_group, group) = utils.build_field_value_select_clause(cursor, fields, table_name)      # retrieve SQL clause from the fields, to extract the values of the fields
+    query = f'''
+        SELECT {fields_text} 
+        FROM {table_name}
+        {" ".join(joins) if joins else ""}
+        WHERE {table_name}.record_type_name = %s
+        {group + ";" if has_group else ";"}
+    '''
     cursor.execute(query, (record_type_name,))
     records = cursor.fetchall()
 
@@ -125,26 +77,11 @@ def get_table_records(table_name: str, db = Depends(get_db)):
         "records": records
     }
 
-def check_allowed_tables(cursor, table_name):
-    query = """
-    SELECT od.object_name, rtd.record_type_name, od.is_single_record_type 
-    FROM object_definition od
-    LEFT JOIN record_type_definition rtd ON od.object_name = rtd.object_name
-    WHERE rtd.is_active = 1;
-    """
-    cursor.execute(query)
 
-    allowed_tables = []
-    for row in cursor.fetchall():
-        allowed_tables.append(get_table_key(row))
-    
-    if table_name not in set(allowed_tables):
-        raise HTTPException(status_code=404, detail="Table not found")
 
-# Starting from a list of field the method create 2 output:
-#   - A text with all the field needed to be extracted 
-#   - A list with all the joins clause to add to a query
-#   - A text with all the field to add in the GROUP BY clause 
+
+
+############### TO DELETE
 def get_fields_text(cursor, fields, alias_table_name):
     object_primary_key_names = get_object_primary_keys(
         cursor,
@@ -226,10 +163,6 @@ def get_fields_text(cursor, fields, alias_table_name):
         group += ", ".join(group_fields)
 
     return (fields_text, joins, group)
-
-
-
-# Get a map with the primary key for each object that respect the condition
 def get_object_primary_keys(cursor, fields, object_condition):
     # Get the list of the object linked through a lookup/picklist
     object_names = [row["reference_object"] for row in fields if object_condition(row)]
@@ -248,6 +181,8 @@ def get_object_primary_keys(cursor, fields, object_condition):
     # Create a dictionary with the structure { "tableName": "keyName" } 
     #In this way we can access directly the key name without loop
     return {row["object_name"]: row["field_name"] for row in cursor.fetchall()}
+############### TO DELETE
+
 
 
 
@@ -256,94 +191,13 @@ def get_object_primary_keys(cursor, fields, object_condition):
 def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
-    # Check if the table in input is a correct table (Avoid SQLInjection, corner case quasi inutile)
-    check_allowed_tables(cursor, table_name)
+    utils.check_allowed_tables(cursor, table_name)                                                      # Evaluate input value (Avoid SQLInjection)
+    (table_name, record_type_name) = table_name.split("_")                                              # table_name == ObjectName_RecordTypeName
+    fields = utils.get_record_layout_definition_fields(cursor, table_name, record_type_name)            # retrieve fields definitions on the record Layout
 
-    # table_name is ObjectName_RecordTypeName
-    (table_name, record_type_name) = table_name.split("_")
+    field_structure = utils.get_field_structure_and_value(cursor, table_name, fields, record_id)        # retrive structure and values of the field 
 
-    # get the list of the fields active for that specific object and record type
-    query = """
-    SELECT fd.object_name, fd.record_type_name,  fd.field_name, fd.field_type, fd.length, fd.numeric_precision, fd.numeric_scale, fd.reference_object, fd.reference_field, 
-        fd.is_editable, fd.is_required, fd.is_primary_key, fd.lookup_filter
-    FROM record_layout_definition rvd
-    JOIN field_definition fd ON 
-        rvd.object_name = fd.object_name AND 
-        rvd.record_type_name = fd.record_type_name AND 
-        rvd.field_name = fd.field_name
-    WHERE fd.object_name = %s AND fd.record_type_name = %s AND fd.is_active = 1 AND fd.is_visible = 1
-    ORDER BY rvd.sort_order ASC;
-    """
-    cursor.execute(query, (table_name, record_type_name))
-    fields = cursor.fetchall()
-
-    ### SECTION: Retrieve records
-    # get the list of fields name
-    fields_text = ", ".join(row["field_name"] for row in fields)
-    
-    # get records
-    primary_key_field = next((field["field_name"] for field in fields if field["is_primary_key"]), None)
-    query = "SELECT " + fields_text + " FROM " + table_name + " WHERE record_type_name = %s AND " + primary_key_field + " = %s;"
-    cursor.execute(query, (record_type_name, record_id))
-    record = cursor.fetchall()[0]
-
-    ### SECTION: Retrieve Field Structure. For the picklist/lookup take also the pair (key, value) to show the picklist choice
-    object_primary_key_names = get_object_primary_keys(
-        cursor,
-        fields,
-        lambda row: row["field_type"] == "picklist" or row["field_type"] == "lookup"
-    )
-
-    field_structure = {}
-    for row in fields:
-        copy_row = row.copy()
-        copy_row.pop("field_name")
-        if row["field_type"] == "number":
-            limit_value = "9" * row["numeric_precision"]
-            limit_value += "." + ("9" * row["numeric_scale"]) if row["numeric_scale"] else ""
-            copy_row["limit_value"] = limit_value
-        elif row["field_type"] == "radio" or row["field_type"] == "checkbox":
-            query = "SELECT option_label, option_key FROM " + row["reference_object"] + (" WHERE " + row["lookup_filter"] if row["lookup_filter"] else "") + " ORDER BY sort_order ASC;"
-            print(query)
-            cursor.execute(query)
-            nested_records = cursor.fetchall()
-            copy_row["options"] = nested_records
-        elif row["field_type"] == "picklist" or row["field_type"] == "lookup":
-            fields_to_retrieve = row["reference_field"]  + " reference_field, " + object_primary_key_names.get(row["reference_object"]) + ' id'
-            query = "SELECT " + fields_to_retrieve + " FROM " + row["reference_object"] + (" WHERE " + row["lookup_filter"] if row["lookup_filter"] else "") + ";"
-            cursor.execute(query)
-            nested_records = cursor.fetchall()
-            copy_row["options"] = nested_records
-        elif row["field_type"] == "rollup":
-            query = """
-            SELECT master_object_name, master_record_type_name, master_primary_key, master_field_name, 
-                detail_object_name, detail_join_key, detail_field_name, aggregation_function, filter_condition
-            FROM rollup_definition
-            WHERE master_object_name = %s AND master_record_type_name = %s AND master_field_name = %s 
-                AND detail_object_name = %s
-            """
-            cursor.execute(query, (row["object_name"], row["record_type_name"], row["field_name"], row["reference_object"]))
-            rollup_definition = cursor.fetchall()[0]
-            
-            alias_table_name = table_name[0]
-            alias_join_table = row["reference_object"][0]
-            join_table_name = row["reference_object"]
-
-            table_field = alias_table_name + "." + rollup_definition["master_primary_key"]
-            join_field = alias_join_table + "." + rollup_definition["detail_join_key"]
-            join_clause = " JOIN " + join_table_name + " " + alias_join_table + " ON " + table_field + " = " + join_field
-
-            rollup_field = rollup_definition["aggregation_function"] + "(" + alias_join_table + "." + rollup_definition["detail_field_name"] + ") " + rollup_definition["master_field_name"]
-            query = "SELECT " + rollup_field + " FROM " + table_name + ' ' + alias_table_name + join_clause + " WHERE " + primary_key_field + " = %s;"
-
-            cursor.execute(query, (record_id,))
-            rollup_record = cursor.fetchall()[0]
-            record[row["field_name"]] = rollup_record[rollup_definition["master_field_name"]]
-
-        copy_row["value"] = record[row["field_name"]]
-        field_structure[row["field_name"].capitalize()] = copy_row
-
-
+    #TODO
     query = """
     SELECT rld.master_object_name, rld.master_record_type_name, rld.master_primary_key, rld.child_object_name, 
         rld.child_record_type_name, rld.child_join_key, rld.label, rld.sort_order, rld.filter_condition, rld.is_active
@@ -369,7 +223,7 @@ def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
         tables = cursor.fetchall()
 
         for table in tables:
-            table["key"] =  get_table_key(table)
+            table["key"] =  utils.get_table_key(table)
             table["label"] = table["object_name"].capitalize() if table["is_single_record_type"] else table["record_type_name"].capitalize()
 
         tables_dict = {table["key"]: table for table in tables}
