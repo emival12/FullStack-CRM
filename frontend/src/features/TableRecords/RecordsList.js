@@ -55,7 +55,7 @@ export default function RecordsList({
           key={key}
           className="cursor-pointer text-primary"
           onClick={() => {
-            var tableKey = selectedTableKey;
+            let tableKey = selectedTableKey;
             if (records?.table && selectedTableKey !== records.table.key) {
               tableKey = records.table.key;
               onSelectedTable(tableKey);

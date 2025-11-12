@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useOutletContext, useParams } from "react-router-dom";
+import { useOutletContext, useParams, useNavigate } from "react-router-dom";
 import { Tab, Tabs } from "react-bootstrap";
 
 import {
@@ -47,6 +47,8 @@ export default function RecordDetail() {
   const recordKey =
     selectedRecord?.record[selectedRecord?.primary_key] || recordId;
 
+  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -85,10 +87,15 @@ export default function RecordDetail() {
 
   //Method fired when the button Save is pressed
   const onSubmit = (data) => {
-    var modified_data = {};
+    let modified_data = {};
+    let new_PK = null;
     for (const key in fields.field_structure) {
       if (fields.field_structure[key].value != data[key]) {
         modified_data[key] = data[key];
+        new_PK =
+          key.toLowerCase() == fields.primary_key_name.toLowerCase()
+            ? data[key]
+            : null;
       }
     }
 
@@ -109,8 +116,12 @@ export default function RecordDetail() {
               setToastTitle(ERROR_TOAST_TITLE_LABEL);
               setToastBody(ERROR_TOAST_BODY_LABEL);
             } else {
-              fetchData();
-              setIsEdit(false);
+              if (new_PK) {
+                navigate(PATH_DATABASE + "/" + actualTableKey + "/" + new_PK);
+              } else {
+                fetchData();
+                setIsEdit(false);
+              }
             }
           })
           .catch((err) => {
