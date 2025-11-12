@@ -57,225 +57,59 @@ def get_table_records(table_name: str, db = Depends(get_db)):
 
     utils.check_allowed_tables(cursor, table_name)                                                                  # Evaluate input value (Avoid SQLInjection)
     (table_name, record_type_name) = table_name.split("_")                                                          # table_name == ObjectName_RecordTypeName
-    fields = utils.get_list_view_definition_fields(cursor, table_name, record_type_name)                            # retrieve fields definitions on the list view
+
+    dict_fields = utils.get_list_view_definition_fields(cursor, [(table_name, record_type_name)])                   # retrieve fields definitions on the list view
+    fields = dict_fields.get(utils.get_table_key_from_strings(table_name, record_type_name))
 
     (fields_text, joins, has_group, group) = utils.build_field_value_select_clause(cursor, fields, table_name)      # retrieve SQL clause from the fields, to extract the values of the fields
-    query = f'''
-        SELECT {fields_text} 
-        FROM {table_name}
-        {" ".join(joins) if joins else ""}
-        WHERE {table_name}.record_type_name = %s
-        {group + ";" if has_group else ";"}
-    '''
-    cursor.execute(query, (record_type_name,))
-    records = cursor.fetchall()
+    records = utils.build_query(cursor, table_name, record_type_name, fields_text, joins, has_group, group)         # make the query using the clauses created 
 
     cursor.close()
     return {
-        "fields": [field["field_name"].replace("_", " ") for field in fields],
-        "primary_key_name": next((field["field_name"] for field in fields if field["is_primary_key"]), None),
+        "fields": utils.get_clean_field_names_from_fields(fields),
+        "primary_key_name": utils.get_primary_key_from_fields(fields),
         "records": records
     }
 
 
-
-
-
-############### TO DELETE
-def get_fields_text(cursor, fields, alias_table_name):
-    object_primary_key_names = get_object_primary_keys(
-        cursor,
-        fields,
-        lambda row: row["reference_object"] is not None
-    )
-
-    joins = []
-    group = ""
-    remove_from_group = []
-    fields_text = ""
-    for idx, row in enumerate(fields):
-        fieldSyntax = ""
-        if row["field_type"] == "radio" or row["field_type"] == "checkbox":
-            alias_join_table = row["reference_object"][0]
-            join_table_name = row["reference_object"]
-         
-            table_field = alias_table_name + "." + row["field_name"]
-            join_field = alias_join_table + ".option_key"
-            join_clause = "LEFT JOIN " + join_table_name + " " + alias_join_table + " ON " + table_field + " = " + join_field
-            joins.append(join_clause)
-
-            fieldSyntax = alias_join_table + ".option_label " + " " + row["field_name"]
-        elif row["reference_object"] and (row["field_type"] == "picklist" or row["field_type"] == "lookup"):
-            # If is a linked fields we have to:
-            #   - insert a JOIN clause and match the current FK saved in field name with the actual PK saved in the map created before
-            #   - add to the list of the field to retrieve the field reference field located in the other object
-            alias_join_table = row["reference_object"][0]
-            join_table_name = row["reference_object"]
-
-            table_field = alias_table_name + "." + row["field_name"]
-            join_field = alias_join_table + "." + object_primary_key_names.get(join_table_name)
-            join_clause = "LEFT JOIN " + join_table_name + " " + alias_join_table + " ON " + table_field + " = " + join_field
-            joins.append(join_clause)
-
-            fieldSyntax = alias_join_table + "." + row["reference_field"] + " " + row["field_name"]
-        elif row["reference_object"] and row["field_type"] == "rollup":
-            query = """
-            SELECT master_object_name, master_record_type_name, master_primary_key, master_field_name, 
-                detail_object_name, detail_join_key, detail_field_name, aggregation_function, filter_condition
-            FROM rollup_definition
-            WHERE master_object_name = %s AND master_record_type_name = %s AND master_field_name = %s 
-                AND detail_object_name = %s
-            """
-            cursor.execute(query, (row["object_name"], row["record_type_name"], row["field_name"], row["reference_object"]))
-            rollup_definition = cursor.fetchall()[0]
-            
-            alias_join_table = row["reference_object"][0]
-            join_table_name = row["reference_object"]
-
-            table_field = alias_table_name + "." + rollup_definition["master_primary_key"]
-            join_field = alias_join_table + "." + rollup_definition["detail_join_key"]
-            join_clause = "LEFT JOIN " + join_table_name + " " + alias_join_table + " ON " + table_field + " = " + join_field
-            joins.append(join_clause)
-
-            fieldSyntax = rollup_definition["aggregation_function"] + "(" + alias_join_table + "." + rollup_definition["detail_field_name"] + ") " + rollup_definition["master_field_name"]
-            group = " GROUP BY "
-            remove_from_group.append(fieldSyntax)
-        else:
-            # If is a normal field we have to add it to the list of the field to retrive
-            fieldSyntax = alias_table_name + "." + row["field_name"]
-
-        fields_text += (", " if idx != 0 else "") + fieldSyntax
-
-
-    # If there is a group clause create the list of field to group
-    if group:
-        fields = [f.strip() for f in fields_text.split(",")]
-        group_fields = []
-        for f in fields:
-            if f in remove_from_group:
-                continue
-
-            parts = f.split() #if contains an alia take only the first part
-            if len(parts) > 1:
-                f = parts[0]
-            group_fields.append(f)
-
-        group += ", ".join(group_fields)
-
-    return (fields_text, joins, group)
-def get_object_primary_keys(cursor, fields, object_condition):
-    # Get the list of the object linked through a lookup/picklist
-    object_names = [row["reference_object"] for row in fields if object_condition(row)]
-
-    if len(object_names) == 0:
-        return {}
-
-    # Generate N strings %s to add in the query
-    placeholders = ", ".join(["%s"] * len(object_names))
-    query = """
-    SELECT object_name, field_name
-    FROM field_definition
-    WHERE object_name IN (""" + placeholders + ") AND is_active = 1 AND is_primary_key = 1;"
-    cursor.execute(query, tuple(object_names))
-
-    # Create a dictionary with the structure { "tableName": "keyName" } 
-    #In this way we can access directly the key name without loop
-    return {row["object_name"]: row["field_name"] for row in cursor.fetchall()}
-############### TO DELETE
-
-
-
-
-# Get all the fields with their structure
+# Get all the fields values with their structure of a single record
 @app.get("/{table_name}/record/{record_id}")
 def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
-    utils.check_allowed_tables(cursor, table_name)                                                      # Evaluate input value (Avoid SQLInjection)
-    (table_name, record_type_name) = table_name.split("_")                                              # table_name == ObjectName_RecordTypeName
-    fields = utils.get_record_layout_definition_fields(cursor, table_name, record_type_name)            # retrieve fields definitions on the record Layout
+    utils.check_allowed_tables(cursor, table_name)                                                              # Evaluate input value (Avoid SQLInjection)
+    (table_name, record_type_name) = table_name.split("_")                                                      # table_name == ObjectName_RecordTypeName
+    fields = utils.get_record_layout_definition_fields(cursor, table_name, record_type_name)                    # retrieve fields definitions on the record Layout
 
-    field_structure = utils.get_field_structure_and_value(cursor, table_name, fields, record_id)        # retrive structure and values of the field 
+    field_structure = utils.get_field_structure_and_value(cursor, table_name, fields, record_id)                # retrive structure and values of the field 
 
-    #TODO
-    query = """
-    SELECT rld.master_object_name, rld.master_record_type_name, rld.master_primary_key, rld.child_object_name, 
-        rld.child_record_type_name, rld.child_join_key, rld.label, rld.sort_order, rld.filter_condition, rld.is_active
-    FROM related_list_definition rld
-    WHERE rld.master_object_name = %s AND rld.master_record_type_name = %s AND rld.is_active = 1
-    ORDER BY rld.sort_order ASC;
-    """
-    cursor.execute(query, (table_name, record_type_name))
-    related_lists = cursor.fetchall()
+    related_lists = utils.get_related_list_definition_fields(cursor, table_name, record_type_name)              # retrieve all the related list of the object
+    tables = utils.get_object_definition_records(cursor, [rl["child_object_name"] for rl in related_lists])     # retrieve the description of the child table
     
-
-
-    tables_dict = {}
-    object_names = [rl["child_object_name"] for rl in related_lists]
-    if len(object_names) != 0:
-        placeholders = ", ".join(["%s"] * len(object_names))
-        query = """
-        SELECT od.object_name, rtd.record_type_name, od.category, od.sort_order, od.is_system_object, od.is_single_record_type
-        FROM object_definition od
-        LEFT JOIN record_type_definition rtd ON od.object_name = rtd.object_name
-        WHERE od.object_name IN (""" + placeholders + ") AND rtd.is_active = 1 ORDER BY od.sort_order ASC;"
-        cursor.execute(query, tuple(object_names))
-        tables = cursor.fetchall()
-
-        for table in tables:
-            table["key"] =  utils.get_table_key(table)
-            table["label"] = table["object_name"].capitalize() if table["is_single_record_type"] else table["record_type_name"].capitalize()
-
-        tables_dict = {table["key"]: table for table in tables}
-
-
-
-
-    rel_lists = []
-    for related_list in related_lists:
-        alias_table_name = table_name[0]
-        child_table_name = related_list['child_object_name']
-        child_alias_table_name = child_table_name[0]
-
-        table_field = alias_table_name + "." + related_list["master_primary_key"]
-        join_field = child_alias_table_name + "." + related_list["child_join_key"]
-        join_clause = " JOIN " + table_name + " " + alias_table_name + " ON " + table_field + " = " + join_field
-
-        #rollup_field = rollup_definition["aggregation_function"] + "(" + alias_join_table + "." + rollup_definition["detail_field_name"] + ") " + rollup_definition["master_field_name"]
-        # get the list of the LIST VIEW fields active for that specific object and record type
-        query = """
-        SELECT fd.object_name, fd.record_type_name, fd.field_name, fd.field_type, fd.reference_object, fd.reference_field, fd.is_primary_key
-        FROM list_view_definition lvd
-        JOIN field_definition fd ON 
-            lvd.object_name = fd.object_name AND 
-            lvd.record_type_name = fd.record_type_name AND 
-            lvd.field_name = fd.field_name
-        WHERE fd.object_name = %s AND fd.record_type_name = %s AND fd.is_active = 1 AND fd.is_visible = 1
-        ORDER BY lvd.sort_order ASC;
-        """
-        cursor.execute(query, (child_table_name, related_list['child_record_type_name']))
-        fields = cursor.fetchall()
-
-        # get the list of fields name, join clauses and group clause
-        (fields_text, joins, group) = get_fields_text(cursor, fields, child_alias_table_name)
-        query = "SELECT " + fields_text + " FROM " + child_table_name + ' ' + child_alias_table_name
-        query += (" " + " ".join(joins) if joins else "") + " WHERE " + alias_table_name + "." + "record_type_name = %s"
-        query += (group + ";" if group else ";")
-        cursor.execute(query, (record_type_name,))
-        related_records = cursor.fetchall()
-
- 
-
-        tempDictionary = {}
-        tempDictionary['label'] = related_list['label'].capitalize()
-        tempDictionary['table'] = tables_dict.get(child_table_name + "_" + related_list['child_record_type_name'])
-        tempDictionary['fields'] = [field["field_name"].replace("_", " ") for field in fields]
-        tempDictionary['primary_key_name'] = next((field["field_name"] for field in fields if field["is_primary_key"]), None)
-        tempDictionary['records'] = related_records
-        rel_lists.append(tempDictionary)
+    tables_dict = {table["key"]: table for table in tables}
+    rel_lists = utils.get_related_list_value(cursor, table_name, record_type_name, related_lists, tables_dict)  # create the relatedList structure with values
 
     cursor.close()
-    return { "field_structure": field_structure, "related_list": rel_lists}
+    return { 
+        "primary_key_name": utils.get_primary_key_from_fields(fields),
+        "field_structure": field_structure, 
+        "related_list": rel_lists
+    }
+
+
+# Get all the fields structure of an object
+@app.get("/{table_name}/new-record")
+def get_table_records(table_name: str, db = Depends(get_db)):
+    cursor = db.cursor(dictionary=True)
+
+    utils.check_allowed_tables(cursor, table_name)
+    (table_name, record_type_name) = table_name.split("_") 
+
+    fields = utils.get_record_layout_definition_fields(cursor, table_name, record_type_name, True)  # retrieve fields definitions on the record Layout
+    field_structure = utils.get_field_structure(cursor, table_name, fields)                         # retrive structure and values of the field 
+
+    cursor.close()
+    return field_structure
 
 
 # Delete a single record
@@ -288,31 +122,31 @@ async def delete_record(request: Request, db = Depends(get_db)):
 
     cursor = db.cursor(dictionary=True)
 
-    # Check if the table in input is a correct table (Avoid SQLInjection, corner case quasi inutile)
-    check_allowed_tables(cursor, table_name)
+    utils.check_allowed_tables(cursor, table_name)                                                              # Evaluate input value (Avoid SQLInjection)
+    (table_name, record_type_name) = table_name.split("_")                                                      # table_name == ObjectName_RecordTypeName
+    primary_key_field = utils.get_primary_keys_from_multiple_objects(cursor, [table_name]).get(table_name)      # get the name of the PK of the object
 
-    # table_name is ObjectName_RecordTypeName
-    (table_name, record_type_name) = table_name.split("_")
+    result = utils.delete_record_by_id(cursor, db, table_name, record_type_name, primary_key_field, record_id)  # execute the actual delete
+    cursor.close()
+    return result
 
-    # get primary field name
-    query = """
-    SELECT field_name, is_primary_key
-    FROM field_definition
-    WHERE object_name = %s AND record_type_name = %s AND is_active = 1 AND is_primary_key = 1;
-    """
-    cursor.execute(query, (table_name, record_type_name))
-    fields = cursor.fetchall()
-    primary_key_field = next((field["field_name"] for field in fields if field["is_primary_key"]), None)
 
-    query="DELETE FROM " + table_name + " WHERE record_type_name = %s AND " + primary_key_field + " = %s;"
-    try:
-        cursor.execute(query, (record_type_name, record_id))
-        db.commit() 
-        return {"result": cursor.rowcount}
-    except Exception as e:
-        db.rollback()
-        print('Error: ' + str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+# Insert a new record
+@app.post("/Insert")
+async def update_record(request: Request, db = Depends(get_db)):
+    # Read the data from the body
+    data = await request.json() 
+    table_name = data.get("table")
+    record = data.get("record")
+
+    cursor = db.cursor(dictionary=True)
+
+    utils.check_allowed_tables(cursor, table_name)                      # Evaluate input value (Avoid SQLInjection)
+    (table_name, record_type_name) = table_name.split("_")              # table_name == ObjectName_RecordTypeName
+
+    result = utils.insert_new_record(cursor, db, table_name, [record])  # execute the actual insert
+    cursor.close()
+    return result
 
 
 # Update a single record
@@ -326,131 +160,17 @@ async def update_record(request: Request, db = Depends(get_db)):
 
     cursor = db.cursor(dictionary=True)
 
-    # Check if the table in input is a correct table (Avoid SQLInjection, corner case quasi inutile)
-    check_allowed_tables(cursor, table_name)
+    utils.check_allowed_tables(cursor, table_name)                                                                              # Evaluate input value (Avoid SQLInjection)
+    (table_name, record_type_name) = table_name.split("_")                                                                      # table_name == ObjectName_RecordTypeName
+    primary_key_field = utils.get_primary_keys_from_multiple_objects(cursor, [table_name]).get(table_name)                      # get the name of the PK of the object
+    
 
-    # table_name is ObjectName_RecordTypeName
-    (table_name, record_type_name) = table_name.split("_")
-
-    # get primary field name
-    query = """
-    SELECT field_name, is_primary_key
-    FROM field_definition
-    WHERE object_name = %s AND record_type_name = %s AND is_active = 1 AND is_primary_key = 1;
-    """
-    cursor.execute(query, (table_name, record_type_name))
-    fields = cursor.fetchall()
-    primary_key_field = next((field["field_name"] for field in fields if field["is_primary_key"]), None)
-
-
-    columnList = ", ".join(key + " = '" + str(value) + "'" if value != 'NULL' else key + " = " + str(value) for key, value in field_structure.items())
-    query = (
-        "UPDATE " + table_name +
-        " SET " + columnList +
-        " WHERE record_type_name = %s AND " + primary_key_field + " = %s;"
-    )
-    try:
-        cursor.execute(query, (record_type_name, record_id))
-        db.commit() 
-        return {"result": cursor.rowcount}
-    except Exception as e:
-        db.rollback()
-        print('Error: ' + str(e))
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# Get all the fields structure
-@app.get("/{table_name}/new-record")
-def get_table_records(table_name: str, db = Depends(get_db)):
-    cursor = db.cursor(dictionary=True)
-
-    # Check if the table in input is a correct table (Avoid SQLInjection, corner case quasi inutile)
-    check_allowed_tables(cursor, table_name)
-
-    # table_name is ObjectName_RecordTypeName
-    (table_name, record_type_name) = table_name.split("_")
-
-    # get the list of the fields active for that specific object and record type
-    query = """
-    SELECT fd.object_name, fd.record_type_name,  fd.field_name, fd.field_type, fd.length, fd.numeric_precision, fd.numeric_scale, fd.reference_object, fd.reference_field, 
-        fd.is_editable, fd.is_required, fd.is_primary_key, fd.lookup_filter
-    FROM record_layout_definition rvd
-    RIGHT JOIN field_definition fd ON 
-        rvd.object_name = fd.object_name AND 
-        rvd.record_type_name = fd.record_type_name AND 
-        rvd.field_name = fd.field_name
-    WHERE fd.object_name = %s AND fd.record_type_name = %s AND fd.is_active = 1 AND ((fd.is_visible = 1 AND fd.is_editable = 1)  OR fd.field_name = 'record_type_name') 
-    ORDER BY rvd.sort_order ASC;
-    """
-    cursor.execute(query, (table_name, record_type_name))
-    fields = cursor.fetchall()
-
-    ### SECTION: Retrieve Field Structure. For the picklist/lookup take also the pair (key, value) to show the picklist choice
-    object_primary_key_names = get_object_primary_keys(
-        cursor,
-        fields,
-        lambda row: row["field_type"] == "picklist" or row["field_type"] == "lookup"
-    )
-    object_primary_key_names['record_type_definition'] = 'record_type_name'
-
-    field_structure = {}
-    for row in fields:
-        copy_row = row.copy()
-        copy_row.pop("field_name")
-        if row["field_type"] == "radio" or row["field_type"] == "checkbox":
-            query = "SELECT option_label, option_key FROM " + row["reference_object"] + (" WHERE " + row["lookup_filter"] if row["lookup_filter"] else "") + " ORDER BY sort_order ASC;"
-            cursor.execute(query)
-            nested_records = cursor.fetchall()
-            copy_row["options"] = nested_records
-        elif row["field_type"] == "number":
-            limit_value = "9" * row["numeric_precision"]
-            limit_value += "." + ("9" * row["numeric_scale"]) if row["numeric_scale"] else ""
-            copy_row["limit_value"] = limit_value
-        elif row["field_type"] == "picklist" or row["field_type"] == "lookup":
-            fields_to_retrieve = row["reference_field"]  + " reference_field, " + object_primary_key_names.get(row["reference_object"]) + ' id'
-            query = "SELECT " + fields_to_retrieve + " FROM " + row["reference_object"] + (" WHERE " + row["lookup_filter"] if row["lookup_filter"] else "") + ";"
-            cursor.execute(query)
-            nested_records = cursor.fetchall()
-            copy_row["options"] = nested_records
-        #elif row["field_type"] == "rollup":    The rollup is always readOnly is not needed in the creation
-
-        field_structure[row["field_name"].capitalize()] = copy_row
-
+    result = utils.update_record_by_id(cursor, db, table_name, record_type_name, field_structure, primary_key_field, record_id) # execute the actual update
     cursor.close()
-    return field_structure
+    return result
 
 
-# Insert a new record
-@app.post("/Insert")
-async def update_record(request: Request, db = Depends(get_db)):
-    # Read the data from the body
-    data = await request.json() 
-    table_name = data.get("table")
-    record = data.get("record")
-
-    cursor = db.cursor(dictionary=True)
-
-    # Check if the table in input is a correct table (Avoid SQLInjection, corner case quasi inutile)
-    check_allowed_tables(cursor, table_name)
-
-    # table_name is ObjectName_RecordTypeName
-    (table_name, record_type_name) = table_name.split("_")
-
-    field_list = ', '.join(record.keys())
-    new_record = "(" + ",".join("'" + v + "'" for v in record.values()) + ")"
-    query = "INSERT INTO " + table_name + "(" + field_list + ")" + " VALUES " + new_record + ";"
-
-    try:
-        cursor.execute(query)
-        db.commit() 
-        return {"result": cursor.rowcount}
-    except Exception as e:
-        db.rollback()
-        print('Error: ' + str(e))
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# Insert a new record
+# Insert a new table in the database
 @app.post("/new-object")
 async def update_record(request: Request, db = Depends(get_db)):
     # Read the data from the body
@@ -459,84 +179,18 @@ async def update_record(request: Request, db = Depends(get_db)):
 
     cursor = db.cursor(dictionary=True)
 
-    try:
-        #Create the table
-        field_lenght = 255 if object_data["Id_field_type"] == "VARCHAR" else None
-        field_type = object_data["Id_field_type"] + "(" + str(field_lenght) + ")" if object_data["Id_field_type"] == "VARCHAR" else object_data["Id_field_type"]
-        field_definition_type = "text" if object_data["Id_field_type"] == "VARCHAR" else "number"
-        object_name = object_data["Object_name"].lower()
+    result = utils.create_new_object(cursor, db, object_data)
 
-        command = "CREATE TABLE " + object_name + " ( "
-        command += object_data["Id_field_name"] + " " + field_type + " PRIMARY KEY, "
-        command += "object_name VARCHAR(255) NOT NULL DEFAULT '" + object_name + "', "
-        command += "record_type_name VARCHAR(255) NOT NULL DEFAULT 'master');"
-        cursor.execute(command)
+    cursor.close()
+    return result
 
-        #Create the record: object_definition
-        command = """
-        INSERT INTO object_definition(object_name, category, sort_order, is_system_object, is_single_record_type)
-        VALUES (%s, %s, %s, %s, %s);
-        """
-        params = (object_name, object_data["Category"], int(object_data["Sort_order"]), 0, 1)
-        cursor.execute(command, params)
-
-        #Create the record: record_type_definition
-        command = """
-        INSERT INTO record_type_definition(object_name, record_type_name, is_active)
-        VALUES (%s, %s, %s);
-        """
-        params = (object_name, "master", 1)
-        cursor.execute(command, params)
-
-        #Create the record: field_definition for the Id
-        command = """
-        INSERT INTO field_definition(object_name, record_type_name, field_name, field_type, length, numeric_precision, 
-            numeric_scale, reference_object, reference_field, is_active, is_visible, is_editable, is_required, is_primary_key, lookup_filter)
-        VALUES 
-        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s),
-        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-        """
-
-        record_type_filter = "object_name = '" + object_name + "' AND is_active = 1" 
-        params = (
-            object_name, "master", object_data["Id_field_name"],    field_definition_type,  field_lenght,   None, None, None,                     None,                 1, 1, 1, 1, 1, None,
-            object_name, "master", "record_type_name",              "picklist",             255,            None, None, "record_type_definition", "record_type_name",   1, 0, 0, 1, 0, record_type_filter
-            )
-        cursor.execute(command, params)
-
-        #Create the record: list_view_definition
-        command = """
-        INSERT INTO list_view_definition(object_name, record_type_name, field_name, sort_order)
-        VALUES (%s, %s, %s, %s);
-        """
-        params = (object_name, "master", object_data["Id_field_name"], 1)
-        cursor.execute(command, params)
-
-        #Create the record: record_layout_definition
-        command = """
-        INSERT INTO record_layout_definition(object_name, record_type_name, field_name, sort_order)
-        VALUES (%s, %s, %s, %s);
-        """
-        params = (object_name, "master", object_data["Id_field_name"], 1)
-        cursor.execute(command, params)
+    """
+        Per cancellare il test:
         
-        db.commit() 
-        return {"result": 1}
-    except Exception as e:
-        db.rollback()
-        try:
-            cursor.execute("DROP TABLE IF EXISTS " + object_data['Object_name']) # Create table is not rollbacked 
-        except Exception as e_d:
-            print('Error in the DROP: ' + str(e_d))
-            pass
-
-        print('Error: ' + str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        DROP TABLE aaa;
+        DELETE FROM object_definition WHERE object_name = 'aaa';
+        DELETE FROM record_type_definition WHERE object_name = 'aaa';
+        DELETE FROM field_definition WHERE object_name = 'aaa';
+    """
 
 
-"""
-DROP TABLE aaa;
-DELETE FROM object_definition WHERE object_name = 'aaa';
-DELETE FROM record_type_definition WHERE object_name = 'aaa';
-DELETE FROM field_definition WHERE object_name = 'aaa';
-"""

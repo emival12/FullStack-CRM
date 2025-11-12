@@ -41,11 +41,11 @@ export const NEW_OBJECT_FIELD_STRUCTURE = {
     options: [
       {
         option_label: "Text",
-        option_key: "VARCHAR",
+        option_key: "text",
       },
       {
         option_label: "Auto number",
-        option_key: "SMALLINT",
+        option_key: "number",
       },
     ],
   },
