@@ -22,8 +22,8 @@ export default function SetupSectionObject() {
       return (
         <SetupSectionHome
           selectedTableKey={actualTableKey}
-          selectedSectionKey={actualSectionKey}
           setSelectedTableKey={setSelectedTableKey}
+          selectedSectionKey={actualSectionKey}
         />
       );
     } else {

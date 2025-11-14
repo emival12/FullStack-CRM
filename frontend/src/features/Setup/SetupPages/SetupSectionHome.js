@@ -20,10 +20,17 @@ import {
   PATH_UPDATE,
 } from "../../../config/K";
 
+/**
+ * Page used for the section Home of an object in the setup
+ *
+ * @param {Object} props.selectedTableKey       - Table currently selected
+ * @param {Function} props.setSelectedTableKey  - Function to update the selected Table
+ * @param {Object} props.selectedSectionKey     - Section currently selected
+ */
 export default function SetupSectionHome({
   selectedTableKey,
-  selectedSectionKey,
   setSelectedTableKey,
+  selectedSectionKey,
 }) {
   const [loading, setLoading] = useState(true);
   const [fields, setFields] = useState([]);

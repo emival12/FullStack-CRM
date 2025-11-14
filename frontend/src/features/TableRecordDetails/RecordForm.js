@@ -9,13 +9,13 @@ import {
  * Shows a form with some fields
  *
  * @param {Object[]} props.fields               - Fields to show
- * @param {Object[]} props.validated            - Flag to show or hide the validations
- * @param {Object[]} props.onSubmit             - Function to use on submit
- * @param {Object[]} props.selectedTableKey     - Key of the selected table
+ * @param {Object} props.validated              - Flag to show or hide the validations
+ * @param {Function} props.onSubmit             - Function to use on submit
+ * @param {Object} props.selectedTableKey       - Key of the selected table
  * @param {Object[]} props.errors               - Collection of errors messages (standard of react-hook-form)
- * @param {Object[]} props.register             - Function to register the form element (standard of react-hook-form)
- * @param {Object[]} props.isNewForm            - Flag to understand which form is
- * @param {Object[]} props.isEdit               - Flag to understand if is in view or edit mode
+ * @param {Function} props.register             - Function to register the form element (standard of react-hook-form)
+ * @param {Object} props.isNewForm              - Flag to understand which form is
+ * @param {Object} props.isEdit                 - Flag to understand if is in view or edit mode
  */
 /**
  * Fields structure:

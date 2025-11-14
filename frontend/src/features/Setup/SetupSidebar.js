@@ -9,6 +9,15 @@ import { SECTIONS } from "./K_Setup";
 import LoadingScreen from "../../components/LoadingScreen";
 import ScreenAdaptiveSidebar from "../../components/ScreenAdaptiveSidebar";
 
+/**
+ * Shows a list of objects
+ *
+ * @param {Object} props.selectedTableKey       - Table currently selected
+ * @param {Function} props.setSelectedTableKey  - Function to update the selected Table
+ * @param {Object} props.selectedSection        - Section currently selected
+ * @param {Function} props.setSelectedSection   - Function to update the selected Section
+ * @param {Object} props.refreshSidebar         - Boolean to understand if is need a refresh of the list of objects
+ */
 export default function SetupSidebar({
   selectedTableKey,
   setSelectedTableKey,

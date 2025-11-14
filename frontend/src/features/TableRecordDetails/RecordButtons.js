@@ -17,20 +17,20 @@ import ModalScreen from "../../components/ModalScreen";
 /**
  * Shows a table of record
  *
- * @param {Object[]} props.setLoading         - Function to update the loading variable
- * @param {Object[]} props.setSelectedRecord  - Function to update the selectedRecord variable
- * @param {Object[]} props.editLabel          - Label used for the first button near the delete (generally is New or Edit)
- * @param {Object[]} props.isEdit             - Variable to understand if is in edit or in view
- * @param {Object[]} props.onEditClick        - Function to update the isEdit variable
- * @param {Object[]} props.reset              - Function used to refresh the form
- * @param {Object[]} props.setShowToast       - Function to update the showToast variable
- * @param {Object[]} props.setToastTitle      - Function to update the toastTitle variable
- * @param {Object[]} props.setToastBody       - Function to update the toastBody variable
- * @param {Object[]} props.hasDeleteButton    - Flag to decide if the deleted button is needed
- * @param {Object[]} props.pathAPI            - Path used in the API call
- * @param {Object[]} props.payloadAPI         - Payload used in the API call
- * @param {Object[]} props.redirectAPI        - Path used to redirect after the API success
- * @param {Object[]} props.extraDescription   - Variable with an optional text to be shown near the Delete/New buttons
+ * @param {Function} props.setLoading         - Function to update the loading variable
+ * @param {Function} props.setSelectedRecord  - Function to update the selectedRecord variable
+ * @param {Object} props.editLabel            - Label used for the first button near the delete (generally is New or Edit)
+ * @param {Object} props.isEdit               - Variable to understand if is in edit or in view
+ * @param {Function} props.onEditClick        - Function to update the isEdit variable
+ * @param {Function} props.reset              - Function used to refresh the form
+ * @param {Function} props.setShowToast       - Function to update the showToast variable
+ * @param {Function} props.setToastTitle      - Function to update the toastTitle variable
+ * @param {Function} props.setToastBody       - Function to update the toastBody variable
+ * @param {Object} props.hasDeleteButton      - Flag to decide if the deleted button is needed
+ * @param {Object} props.pathAPI              - Path used in the API call
+ * @param {Object} props.payloadAPI           - Payload used in the API call
+ * @param {Object} props.redirectAPI          - Path used to redirect after the API success
+ * @param {Object} props.extraDescription     - Variable with an optional text to be shown near the Delete/New buttons
  */
 export default function RecordButtons({
   setLoading,

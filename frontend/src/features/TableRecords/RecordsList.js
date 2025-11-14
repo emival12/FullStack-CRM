@@ -10,8 +10,8 @@ import "../../App.css";
  * Shows a table of record
  *
  * @param {Object[]} props.records                - List of the record to show
- * @param {Object[]} props.selectedTable          - Table currently selected
- * @param {Object[]} props.onSelectedRecord       - Function to update the selected record
+ * @param {Object} props.selectedTable            - Table currently selected
+ * @param {Function} props.onSelectedRecord       - Function to update the selected record
  */
 /**
  * Records structure:

@@ -16,10 +16,10 @@ import RecordForm from "../TableRecordDetails/RecordForm";
 /**
  * Shows a table of record
  *
- * @param {Object[]} props.selectedTable        - Table currently selected
- * @param {Object[]} props.showNewModal         - Flag to show or hide the modal
- * @param {Object[]} props.setShowNewModal      - Function to update flag to show or hide the modal
- * @param {Object[]} props.refreshData          - Function to run the refresh on the record list
+ * @param {Object} props.selectedTable          - Table currently selected
+ * @param {Object} props.showNewModal           - Flag to show or hide the modal
+ * @param {Function} props.setShowNewModal      - Function to update flag to show or hide the modal
+ * @param {Function} props.refreshData          - Function to run the refresh on the record list
  */
 export default function NewRecord({
   selectedTableKey,
