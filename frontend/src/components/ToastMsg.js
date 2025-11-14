@@ -1,5 +1,14 @@
 import { Toast, ToastContainer } from "react-bootstrap";
 
+/**
+ * Shows a Toast message
+ *
+ * @param {Object} props.showToast        - Boolean to show or hide the Toast message
+ * @param {Function} props.setShowToast   - Function to set the Boolean
+ * @param {string} props.color            - Background Color of the Toast
+ * @param {Object} props.title            - Text to set as title
+ * @param {Object} props.body             - Text to set in the body
+ */
 export default function ToastMsg({
   showToast,
   setShowToast,

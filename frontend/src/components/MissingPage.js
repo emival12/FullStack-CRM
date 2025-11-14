@@ -1,6 +1,12 @@
 import { MISSING_DEFAULT_LABEL } from "../config/IT";
 import "../App.css";
 
+/**
+ * Shows a missing text
+ *
+ * @param {Object} props.MissingText     - Text to show in the screen
+ * @param {Object} props.ShowImg         - Boolean to show or hide the image
+ */
 export default function MissingPage({ MissingText, ShowImg = true }) {
   return (
     <div className="CenteredPage flex-row mt-3">
