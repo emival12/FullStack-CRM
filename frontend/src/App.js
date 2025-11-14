@@ -9,7 +9,7 @@ import RecordsListView from "./features/TableRecords/RecordsListView";
 import RecordDetail from "./features/TableRecordDetails/RecordDetail";
 import SetupMainPage from "./features/MainScreen/SetupMainPage";
 import SetupNewObject from "./features/Setup/SetupPages/SetupNewObject";
-import SetupSectionObject from "./features/Setup/SetupPages/SetupSectionObject";
+import SetupSections from "./features/Setup/SetupPages/SetupSections";
 
 function App() {
   return (
@@ -33,13 +33,9 @@ function App() {
         </Route>
         <Route path="/TOBE" element={<div>Pagina TOBE</div>} />
         <Route path={PATH_SETUP} element={<SetupMainPage />}>
-          {/*TODO Improv */}
           <Route index element={<SetupNewObject />} />
           <Route path=":tableKey" element={<Navigate to="home" replace />} />
-          <Route
-            path=":tableKey/:sectionKey"
-            element={<SetupSectionObject />}
-          />
+          <Route path=":tableKey/:sectionKey" element={<SetupSections />} />
         </Route>
       </Routes>
     </BrowserRouter>

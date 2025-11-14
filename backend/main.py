@@ -35,7 +35,7 @@ def get_tables_plain(db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
     tables = utils.get_object_definition_records(cursor)
-
+    
     cursor.close()
     return tables
 
@@ -43,7 +43,7 @@ def get_tables_plain(db = Depends(get_db)):
 def get_tables(db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
-    tables = utils.get_object_definition_records(cursor)
+    tables = utils.get_object_definition_records_join_rt(cursor)
     structure = utils.group_object_definition_by_category(tables)
 
     cursor.close()
@@ -84,7 +84,7 @@ def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
     field_structure = utils.get_field_structure_and_value(cursor, table_name, fields, record_id)                # retrive structure and values of the field 
 
     related_lists = utils.get_related_list_definition_fields(cursor, table_name, record_type_name)              # retrieve all the related list of the object
-    tables = utils.get_object_definition_records(cursor, [rl["child_object_name"] for rl in related_lists])     # retrieve the description of the child table
+    tables = utils.get_object_definition_records_join_rt(cursor, [rl["child_object_name"] for rl in related_lists])     # retrieve the description of the child table
     
     tables_dict = {table["key"]: table for table in tables}
     rel_lists = utils.get_related_list_value(cursor, table_name, record_type_name, related_lists, tables_dict)  # create the relatedList structure with values
@@ -170,6 +170,11 @@ async def update_record(request: Request, db = Depends(get_db)):
     return result
 
 
+
+###############################################
+# SETUP
+###############################################
+
 # Insert a new table in the database
 @app.post("/new-object")
 async def update_record(request: Request, db = Depends(get_db)):
@@ -194,3 +199,43 @@ async def update_record(request: Request, db = Depends(get_db)):
     """
 
 
+# Insert a new table in the database
+@app.get("/setup/{table_name}")
+async def get_object_definition(table_name: str, db = Depends(get_db)):
+    cursor = db.cursor(dictionary=True)
+        
+    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)       
+    tables = utils.get_object_definition_records(cursor, [table_name])
+    
+    cursor.close()
+    return tables[0] if len(tables) > 0 else {}
+
+
+@app.post("/setup/home/Delete")
+async def update_record(request: Request, db = Depends(get_db)):
+    # Read the data from the body
+    data = await request.json() 
+    table_name = data.get("table")
+
+    cursor = db.cursor(dictionary=True)
+
+    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)
+    result = utils.delete_object(cursor, db, table_name)
+
+    cursor.close()
+    return result
+
+@app.post("/setup/home/Update")
+async def update_record(request: Request, db = Depends(get_db)):
+    # Read the data from the body
+    data = await request.json() 
+    table_name = data.get("table")
+    field_structure = data.get("field")
+
+    cursor = db.cursor(dictionary=True)
+
+    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)
+    result = utils.update_record_by_id(cursor, db, "object_definition", None, field_structure, "object_name", table_name)
+    cursor.close()
+
+    return {}

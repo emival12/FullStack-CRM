@@ -44,3 +44,7 @@ export const RELATED_TAB_LABEL = "Correlati";
 
 //SetupSidebar
 export const SETUP_TABLE_SELECTION_LABEL = "Tabella da modificare";
+
+//SetupNewObject
+export const SETUP_MSG_SELECT_TABLE_LABEL =
+  "Seleziona una tabella da modificare";

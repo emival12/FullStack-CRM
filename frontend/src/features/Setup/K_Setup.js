@@ -1,11 +1,20 @@
+export const Sections = {
+  home: "home",
+  fields: "fields",
+  layout: "layout",
+  record_types: "record_types",
+  related_lists: "related_lists",
+};
+
 export const SECTIONS = [
-  { key: "home", label: "Home" },
-  { key: "fields", label: "Campi" },
-  { key: "layout", label: "Layout" },
-  { key: "record_types", label: "Record Type" },
-  { key: "related_lists", label: "Related List" },
+  { key: Sections.home, label: "Home" },
+  { key: Sections.fields, label: "Campi" },
+  { key: Sections.layout, label: "Layout" },
+  { key: Sections.record_types, label: "Record Type" },
+  { key: Sections.related_lists, label: "Related List" },
 ];
 
+//Structure to create a new table
 export const NEW_OBJECT_FIELD_STRUCTURE = {
   Object_name: {
     field_type: "text",

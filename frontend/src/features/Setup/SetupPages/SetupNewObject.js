@@ -1,16 +1,15 @@
 import axios from "axios";
 import { useState } from "react";
-import { Button } from "react-bootstrap";
+import { useOutletContext } from "react-router-dom";
 import { useForm } from "react-hook-form";
 
 import {
   NEW_LABEL,
-  SAVE_LABEL,
   ERROR_TOAST_BODY_LABEL,
   ERROR_TOAST_TITLE_LABEL,
-  CANCEL_LABEL,
+  SETUP_MSG_SELECT_TABLE_LABEL,
 } from "../../../config/IT";
-import { API_BASE_URL } from "../../../config/K";
+import { API_BASE_URL, PATH_SETUP } from "../../../config/K";
 import { NEW_OBJECT_FIELD_STRUCTURE } from "../K_Setup";
 import RecordForm from "../../TableRecordDetails/RecordForm";
 import LoadingScreen from "../../../components/LoadingScreen";
@@ -18,6 +17,15 @@ import ToastMsg from "../../../components/ToastMsg";
 import RecordButtons from "../../TableRecordDetails/RecordButtons";
 
 export default function SetupNewObject() {
+  const {
+    selectedTableKey,
+    selectedSectionKey,
+    setSelectedTableKey,
+    setSelectedSection,
+    refreshSidebar,
+    setRefreshSidebar,
+  } = useOutletContext();
+
   const [loading, setLoading] = useState(false);
   const [validated, setValidated] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
@@ -51,6 +59,7 @@ export default function SetupNewObject() {
           } else {
             setShowNewForm(false);
             setValidated(false);
+            setRefreshSidebar(!refreshSidebar);
             reset();
           }
         })
@@ -85,7 +94,7 @@ export default function SetupNewObject() {
         pathAPI={null}
         payloadAPI={null}
         redirectAPI={null}
-        extraDescription="Seleziona una tabella da modificare"
+        extraDescription={SETUP_MSG_SELECT_TABLE_LABEL}
       ></RecordButtons>
       {showNewForm ? (
         <>

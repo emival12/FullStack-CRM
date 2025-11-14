@@ -14,6 +14,7 @@ export default function SetupSidebar({
   setSelectedTableKey,
   selectedSection,
   setSelectedSection,
+  refreshSidebar,
 }) {
   const navigate = useNavigate();
 
@@ -34,7 +35,7 @@ export default function SetupSidebar({
       })
       .catch((err) => console.error("Error:", err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshSidebar]);
 
   if (loading) return <LoadingScreen />;
 

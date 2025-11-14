@@ -4,8 +4,8 @@ from enum import Enum, auto
 """
 Python naming convention:
     - Classes:   PascaleCase    (Ex. Main)
-    - Functions: snake_case     (Ex. get_object_definition_records)
-    - Variables: snake_case     (Ex. get_object_definition_records)
+    - Functions: snake_case     (Ex. get_object_definition_records_join_rt)
+    - Variables: snake_case     (Ex. get_object_definition_records_join_rt)
 """
 
 class FieldTypes(Enum):
@@ -23,6 +23,41 @@ class FieldStructureMode(Enum):
 
 ########## BASE Query
 def get_object_definition_records(cursor, object_names=None):
+    """
+        Retrieve all the records from the 'object_definition' table
+
+        Args:
+            cursor (MySQLCursor): Database cursor used to execute SQL queries
+            object_names (list[str], optional): List of object names to filter by. 
+                If None, all active objects are returned.
+
+        Returns:
+            list[dict]: A list of dictionaries, each containing information about an object definition 
+                (e.g. object_name, record_type_name, category, etc.)
+    """
+
+    filter_object_name = ""
+    params = ()
+    if object_names:
+        filter_object_name = f'WHERE od.object_name IN ({", ".join(["%s"] * len(object_names))})'
+        params = tuple(object_names)
+
+    query = f'''
+    SELECT od.object_name, od.category, od.sort_order, od.is_system_object, od.is_single_record_type
+    FROM object_definition od
+    {filter_object_name}
+    ORDER BY od.sort_order ASC;
+    '''
+    cursor.execute(query, params)
+    tables = cursor.fetchall()
+
+    for table in tables:
+        table["key"] =  table["object_name"]
+        table["label"] = table["object_name"].capitalize() 
+
+    return tables
+
+def get_object_definition_records_join_rt(cursor, object_names=None):
     """
         Retrieve all active records from the 'object_definition' table
 
@@ -345,6 +380,9 @@ def get_related_list_definition_fields(cursor, table_name, record_type_name):
 def get_alias(table_name):
     return f'{table_name}__tab'
 
+def get_basic_table_key(row, object_name="object_name"):
+    return f'{row[object_name]}'
+
 def get_table_key(row, object_name="object_name", record_type_name="record_type_name"):
     return f'{row[object_name]}_{row[record_type_name]}'
 
@@ -368,13 +406,14 @@ def get_primary_key_from_fields(fields):
 def get_clean_field_names_from_fields(fields):
     return [field["field_name"].replace("_", " ") for field in fields]
 
-def check_allowed_tables(cursor, table_name):
+def check_allowed_tables(cursor, table_name, key_function=get_table_key):
     """
         Check if the given table name is allowed in the database
 
         Args:
             cursor (MySQLCursor): Database cursor used to execute SQL queries
             table_name (str): Name of a database table
+            key_function (function, optional): function used to calculate the key
 
         Returns:
             None
@@ -391,9 +430,9 @@ def check_allowed_tables(cursor, table_name):
     """
     cursor.execute(query)
 
-    allowed_tables = { get_table_key(row) for row in cursor.fetchall() }
+    allowed_tables = { key_function(row) for row in cursor.fetchall() }
     if table_name not in allowed_tables:
-        raise HTTPException(status_code=404, detail=f'Table "{table_name}" not found')
+        raise HTTPException(status_code=404, detail=f'Table \'{table_name}\' not found')
 
 def get_primary_keys_from_multiple_objects(cursor, object_names):
     """
@@ -503,7 +542,7 @@ def group_object_definition_by_category(tables):
 
         Args:
             tables (list[dict]): A list of object definition records 
-                returned by 'get_object_definition_records()'
+                returned by 'get_object_definition_records_join_rt()'
 
         Returns:
             dict: A dictionary where each key is a category name (capitalized),
@@ -940,12 +979,14 @@ def delete_record_by_id(cursor, db, table_name, record_type_name, primary_key_fi
             HTTPException: If a database error occurs during deletion
     """
 
+    params = [record_id] + ([record_type_name] if record_type_name else [])
+
     query = f'''
     DELETE FROM {table_name} 
-    WHERE record_type_name = %s AND {primary_key_field} = %s
+    WHERE {primary_key_field} = %s {"AND record_type_name = %s;" if record_type_name else ";" }
     '''
 
-    return execute_with_transaction(cursor, db, query, (record_type_name, record_id), "Error deleting record: ")
+    return execute_with_transaction(cursor, db, query, params, "Error deleting record: ")
 
 def insert_new_record(cursor, db, table_name, records):
     """
@@ -997,17 +1038,21 @@ def update_record_by_id(cursor, db, table_name, record_type_name, field_structur
     set_clause = ", ".join([f'{field_name} = %s' for field_name in field_structure.keys()])                     # create the clause (Es: Name = %s, Costo = %s, ...)
 
     values_params = [None if field_value == "" else field_value for field_value in field_structure.values()]    # prepare the list of values to be placed in the %s
-    params = values_params + [record_type_name, record_id]                                                      # add at the end of the params the WHERE filter
+    params = values_params + [record_id] + ([record_type_name] if record_type_name else [])                     # add at the end of the params the WHERE filter
 
     query = f'''
     UPDATE {table_name}
     SET {set_clause}
-    WHERE record_type_name = %s AND {primary_key_field} = %s
+    WHERE {primary_key_field} = %s {"AND record_type_name = %s;" if record_type_name else ";" }
     '''
 
     return execute_with_transaction(cursor, db, query, params, "Error updating record: ")
 
 
+
+###############################################
+# SETUP
+###############################################
 
 def create_new_object(cursor, db, object_data):
     """
@@ -1031,8 +1076,6 @@ def create_new_object(cursor, db, object_data):
     pk_field_type = object_data["Id_field_type"]
 
     try:
-        create_table(cursor, object_data, object_name, pk_field_name, pk_field_length, pk_field_type)
-
         params = [
             (
                 object_name,                    # object_name
@@ -1111,16 +1154,44 @@ def create_new_object(cursor, db, object_data):
         ]
         insert_record_layout_definition(cursor, params)         #Create the record_layout_definition
     
+        create_table(cursor, object_data, object_name, pk_field_name, pk_field_length, pk_field_type)
         db.commit() 
         return {"result": 1}
     except Exception as e:
+        db.rollback()
+
         # The creation of a table cannot be rollbacked so in case of error must be executed an actual delete
         try:
-            cursor.execute(f'DROP TABLE IF EXISTS {object_name}')
+            delete_table(cursor, object_name)
         except Exception as e_d:
             print('Error in the DROP: ' + str(e_d))
             pass
 
+        print('Error in the table create: ' + str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+def delete_object(cursor, db, table_name):
+    try:
+
+        filter_fields = ["object_name"]
+        params = [table_name]
+        delete_record(cursor, "object_definition", filter_fields, params)
+        delete_record(cursor, "field_definition", filter_fields + ["reference_object"], params + params, " OR ")
+        delete_record(cursor, "radio_checkbox_options", filter_fields, params)
+        delete_record(cursor, "list_view_definition", filter_fields, params)
+        delete_record(cursor, "record_layout_definition", filter_fields, params)
+        delete_record(cursor, "record_type_definition", filter_fields, params)
+    
+        delete_record(cursor, "rollup_definition", ["master_object_name", "detail_object_name"], params + params, " OR ")
+        delete_record(cursor, "related_list_definition", ["master_object_name", "child_object_name"], params + params, " OR ")
+    
+        delete_table(cursor, table_name)
+        db.commit() 
+        return {"result": 1}
+    except Exception as e:
+        db.rollback()
+        
+        print('Error in the table delete: ' + str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 ########## END - BASE Insert Query
@@ -1136,6 +1207,11 @@ def create_table(cursor, object_data, object_name, pk_field_name, pk_field_lengt
     record_type_name VARCHAR(255) NOT NULL DEFAULT 'master'
     );
     '''
+    cursor.execute(command)
+
+def delete_table(cursor, table_name):
+
+    command = f'DROP TABLE IF EXISTS {table_name}'
     cursor.execute(command)
 
 def insert_object_definition_record(cursor, params):
@@ -1190,4 +1266,15 @@ def insert_record_layout_definition(cursor, params):
     """
     cursor.executemany(command, params)
 
+def delete_record(cursor, table_name, fields_to_filter, params, operator=" AND "):
+    if not fields_to_filter:
+        raise ValueError("Missing field filters")
+
+    placeholders = operator.join(f'{f} = %s' for f in fields_to_filter)
+
+    command = f'''
+    DELETE FROM {table_name} 
+    WHERE {placeholders}
+    '''
+    cursor.execute(command, params)
 ########## END - BASE Insert Query

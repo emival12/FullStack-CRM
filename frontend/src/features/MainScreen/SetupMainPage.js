@@ -7,6 +7,7 @@ export default function SetupMainPage() {
   const { tableKey, sectionKey } = useParams();
   const [selectedTableKey, setSelectedTableKey] = useState(null);
   const [selectedSection, setSelectedSection] = useState(null);
+  const [refreshSidebar, setRefreshSidebar] = useState(false);
 
   const actualTableKey = selectedTableKey || tableKey;
   const actualSectionKey = selectedSection || sectionKey;
@@ -17,6 +18,7 @@ export default function SetupMainPage() {
     if (!tableKey || tableKey != selectedTableKey) {
       setSelectedTableKey(null);
       setSelectedSection(null);
+      setRefreshSidebar(!refreshSidebar);
     }
   }, [tableKey]);
 
@@ -33,6 +35,7 @@ export default function SetupMainPage() {
           setSelectedTableKey={setSelectedTableKey}
           selectedSection={actualSectionKey}
           setSelectedSection={setSelectedSection}
+          refreshSidebar={refreshSidebar}
         />
 
         <Col xs={12} md={10} className="ps-md-0">
@@ -43,6 +46,8 @@ export default function SetupMainPage() {
                 actualSectionKey,
                 setSelectedTableKey,
                 setSelectedSection,
+                refreshSidebar,
+                setRefreshSidebar,
               }}
             />
           </div>
