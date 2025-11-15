@@ -75,7 +75,7 @@ export default function SetupSectionHome({
 
   useEffect(() => {
     fetchData();
-  }, [selectedSectionKey]);
+  }, []);
 
   //Method fired when the button Save is pressed
   const onSubmit = (data) => {

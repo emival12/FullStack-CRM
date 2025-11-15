@@ -2,6 +2,7 @@ import { useOutletContext, useParams } from "react-router-dom";
 
 import SetupSectionHome from "./SetupSectionHome";
 import { Sections } from "../K_Setup";
+import SetupSectionFields from "./SetupSectionFields";
 
 export default function SetupSectionObject() {
   const { tableKey, sectionKey } = useParams();
@@ -12,6 +13,8 @@ export default function SetupSectionObject() {
     setSelectedSection,
     refreshSidebar,
     setRefreshSidebar,
+    selectedRecord,
+    setSelectedRecord,
   } = useOutletContext();
 
   const actualTableKey = selectedTableKey || tableKey;
@@ -24,6 +27,15 @@ export default function SetupSectionObject() {
           selectedTableKey={actualTableKey}
           setSelectedTableKey={setSelectedTableKey}
           selectedSectionKey={actualSectionKey}
+        />
+      );
+    } else if (actualSectionKey === Sections.fields) {
+      return (
+        <SetupSectionFields
+          selectedTableKey={actualTableKey}
+          setSelectedTableKey={setSelectedTableKey}
+          selectedSectionKey={actualSectionKey}
+          setSelectedRecord={setSelectedRecord}
         />
       );
     } else {

@@ -7,6 +7,8 @@ export default function SetupMainPage() {
   const { tableKey, sectionKey } = useParams();
   const [selectedTableKey, setSelectedTableKey] = useState(null);
   const [selectedSection, setSelectedSection] = useState(null);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+
   const [refreshSidebar, setRefreshSidebar] = useState(false);
 
   const actualTableKey = selectedTableKey || tableKey;
@@ -48,6 +50,8 @@ export default function SetupMainPage() {
                 setSelectedSection,
                 refreshSidebar,
                 setRefreshSidebar,
+                selectedRecord,
+                setSelectedRecord,
               }}
             />
           </div>

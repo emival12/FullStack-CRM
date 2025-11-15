@@ -82,3 +82,70 @@ export const HOME_OBJECT_FIELD_STRUCTURE = {
     limit_value: 99999,
   },
 };
+
+export const NEW_FIELD_OBJECT_STRUCTURE = {
+  Field_type: {
+    field_type: "radio",
+    is_editable: 1,
+    is_required: 1,
+    options: [],
+  },
+};
+
+export const BASE_FIELD_OBJECT_STRUCTURE = {
+  field_name: {
+    field_type: "text",
+    length: 255,
+    is_editable: 1,
+    is_required: 1,
+    order: 1,
+  },
+  is_active: {
+    field_type: "checkbox",
+    is_editable: 0,
+    is_required: 1,
+    label: "",
+    value: 1,
+    order: 97,
+  },
+  is_visible: {
+    field_type: "checkbox",
+    is_editable: 0,
+    is_required: 1,
+    label: "",
+    value: 1,
+    order: 98,
+  },
+  is_editable: {
+    field_type: "checkbox",
+    is_editable: 1,
+    is_required: 0,
+    label: "",
+    value: 1,
+    order: 99,
+  },
+  is_required: {
+    field_type: "checkbox",
+    is_editable: 1,
+    is_required: 0,
+    label: "",
+    value: 0,
+    order: 100,
+  },
+};
+
+export const NEW_TEXT_FIELD_OBJECT_STRUCTURE = {
+  length: {
+    field_type: "text",
+    length: 255,
+    is_editable: 1,
+    is_required: 1,
+    order: 2,
+  },
+};
+
+//numeric_precision;
+//numeric_scale;
+//reference_object;
+//reference_field;
+//lookup_filter;

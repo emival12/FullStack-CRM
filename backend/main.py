@@ -29,6 +29,15 @@ def get_db():
 
 
 # EXPOSED API'S:
+@app.get("/field_types")
+async def get_field_types():
+    result = {}
+    for ft in utils.FieldTypes:
+        result[ft.name] = ft.value
+
+    return result
+
+
 # Get all the tables to show in the sidebar
 @app.get("/plain_tables")
 def get_tables_plain(db = Depends(get_db)):
@@ -239,3 +248,32 @@ async def update_record(request: Request, db = Depends(get_db)):
     cursor.close()
 
     return {}
+
+
+@app.get("/setup/{table_name}/fields")
+async def get_object_fields_record(table_name: str, db = Depends(get_db)):
+    cursor = db.cursor(dictionary=True)
+        
+    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)       
+
+    fields = ["field_name", "field_type", "reference_object"]
+    fields_text = ", ".join(fields)
+    query = f'''
+    SELECT 
+        {fields_text}
+    FROM field_definition
+    WHERE 
+        object_name = %s
+    GROUP BY {fields_text}
+    ORDER BY field_name ASC;
+    '''
+    cursor.execute(query, (table_name,))
+    records = cursor.fetchall()
+
+    cursor.close()
+    return {
+        "fields": [field.replace("_", " ") for field in fields],
+        "primary_key_name": "field_name",
+        "records": records
+    }
+

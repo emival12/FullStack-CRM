@@ -48,3 +48,8 @@ export const SETUP_TABLE_SELECTION_LABEL = "Tabella da modificare";
 //SetupNewObject
 export const SETUP_MSG_SELECT_TABLE_LABEL =
   "Seleziona una tabella da modificare";
+
+//SetupNewFields
+export const NEW_FIELD_TITLE_LABEL = "Nuovo campo";
+export const NEXT_LABEL = "Avanti";
+export const PREVIOUS_LABEL = "Indietro";

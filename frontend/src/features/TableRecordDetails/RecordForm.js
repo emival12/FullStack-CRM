@@ -51,8 +51,10 @@ export default function RecordForm({
   const renderField = (key, info) => {
     if (info.field_type === "picklist" || info.field_type === "lookup") {
       return get_selection_entry(key, info);
-    } else if (info.field_type === "radio" || info.field_type === "checkbox") {
+    } else if (info.field_type === "radio") {
       return get_radio(key, info);
+    } else if (info.field_type === "checkbox") {
+      return get_checkbox(key, info);
     } else {
       return get_entry(key, info);
     }
@@ -124,6 +126,35 @@ export default function RecordForm({
     );
   };
 
+  const get_checkbox = (key, info) => {
+    const disabled = isNewForm ? false : !info.is_editable || !isEdit;
+    return (
+      <>
+        <span className="ms-2">
+          <Form.Check
+            inline
+            type={info.field_type}
+            required={info.is_required && !disabled}
+            disabled={disabled}
+            id={key}
+            label={info.label}
+            value={info.value}
+            isInvalid={errors[key]}
+            {...register(key, {
+              required: {
+                value: info.is_required && !disabled,
+                message: MANDATORY_FIELD_LABEL,
+              },
+            })}
+          />
+          <Form.Control.Feedback type="invalid">
+            {errors[key]?.message}
+          </Form.Control.Feedback>
+        </span>
+      </>
+    );
+  };
+
   const get_entry = (key, info) => {
     return (
       <>
@@ -187,7 +218,10 @@ export default function RecordForm({
             {renderField(key, info)}
           </FloatingLabel>
         ) : (
-          <Form.Group key={key} className="mb-3">
+          <Form.Group
+            key={key}
+            className={info.field_type == "radio" ? "mb-3" : "mb-3 d-flex"}
+          >
             <Form.Label>
               {key.replaceAll("_", " ") + (info.is_required ? " *" : "")}
             </Form.Label>

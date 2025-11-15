@@ -37,6 +37,7 @@ export default function RecordsList({
   selectedTableKey,
   onSelectedTable,
   onSelectedRecord,
+  pathRedirect = PATH_DATABASE,
 }) {
   const navigate = useNavigate();
 
@@ -65,7 +66,7 @@ export default function RecordsList({
               record: record,
               primary_key: records.primary_key_name,
             });
-            navigate(PATH_DATABASE + "/" + tableKey + "/" + value);
+            navigate(pathRedirect + "/" + tableKey + "/" + value);
           }}
         >
           {value}
