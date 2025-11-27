@@ -828,7 +828,9 @@ def get_field_structure_and_value_data(cursor, table_name, fields, mode, record_
         copy_row = row.copy()
 
         if row["field_type"] in (FieldTypes.NUMBER.value):
-            copy_row["limit_value"] = f'{"9" * row["numeric_precision"]}.{"9" * row["numeric_scale"] if row["numeric_scale"] else ""}'
+            limit_value = f'{"9" * row["numeric_precision"]}.{"9" * row["numeric_scale"] if row["numeric_scale"] else ""}'
+            copy_row["max_limit_value"] = limit_value
+            copy_row["min_limit_value"] = "-" + limit_value
         elif row["field_type"] in (FieldTypes.RADIO.value, FieldTypes.CHECKBOX.value):
             options = [
                 {
@@ -1071,7 +1073,7 @@ def create_new_object(cursor, db, object_data):
     """
 
     object_name = object_data["Object_name"].lower()
-    pk_field_name = object_data["Id_field_name"]
+    pk_field_name = object_data["Id_field_name"].lower()
     pk_field_length = 255 if object_data["Id_field_type"] == FieldTypes.TEXT.value else None    # apply default lenght if is a text
     pk_field_type = object_data["Id_field_type"]
 
@@ -1171,6 +1173,21 @@ def create_new_object(cursor, db, object_data):
         raise HTTPException(status_code=500, detail=str(e))
 
 def delete_object(cursor, db, table_name):
+    """
+        Delete a table in the database and all the record for the SystemObjects
+
+        Args:
+            cursor (MySQLCursor): Database cursor used to execute the SQL query
+            db (MySQLConnection): Database connection object used to commit or rollback changes
+            table_name (str): name of the table
+
+        Returns:
+            int: 1 if everything is gone well
+        
+        Raises:
+            HTTPException: If a database error occurs
+    """
+
     try:
 
         filter_fields = ["object_name"]
@@ -1194,9 +1211,41 @@ def delete_object(cursor, db, table_name):
         print('Error in the table delete: ' + str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
+def get_field_names_grouped_by_objects(cursor, tables, fields, only_active):
+    """
+        Retrieve the specified fields for a given list of objects 
+
+        Args:
+            cursor (MySQLCursor): Database cursor used to execute the SQL query
+            tables (list[dict]): A list of dictionaries, each containing information about an object definition
+            fields (list[str]): A list of field names
+            only_active (bool): Use to understand if is need the filter on is_active field
+
+        Returns:
+            dict[str, list[str]]: A dictionary where each key is an object name and the value is a list 
+                of active field names belonging to that object.  
+    """
+
+    object_names = [ t["object_name"] for t in tables ]
+    placeholders = ", ".join(["%s"] * len(object_names))
+
+    fields_text = ", ".join(fields)
+
+    query = f'''
+    SELECT 
+        {fields_text}
+    FROM field_definition
+    WHERE 
+        object_name IN ( {placeholders} ) 
+        {"AND is_active = 1" if only_active else ""}
+    GROUP BY 
+        {fields_text}
+    ORDER BY field_name ASC;
+    '''
+    cursor.execute(query, tuple(object_names))    
+    return cursor.fetchall()
 ########## END - BASE Insert Query
 def create_table(cursor, object_data, object_name, pk_field_name, pk_field_length, pk_field_type):
-
     converted_field_type = convert_into_SQL_field_type(pk_field_type)     # get the SQL field type
     field_type = f'{converted_field_type} ({pk_field_length})' if pk_field_type == FieldTypes.TEXT.value else converted_field_type
     
@@ -1210,7 +1259,6 @@ def create_table(cursor, object_data, object_name, pk_field_name, pk_field_lengt
     cursor.execute(command)
 
 def delete_table(cursor, table_name):
-
     command = f'DROP TABLE IF EXISTS {table_name}'
     cursor.execute(command)
 

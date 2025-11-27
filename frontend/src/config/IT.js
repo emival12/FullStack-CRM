@@ -16,11 +16,13 @@ export const DATABASE_LABEL = "Database";
 //DatabaseMainPage
 export const TABLES_LABEL = "Tabelle";
 
-//RecordListView
+//RecordForm
 export const NEW_LABEL = "Nuovo";
 export const MANDATORY_FIELD_LABEL = "Campo obbligatorio";
 export const MAX_FIELD_LABEL = "Massimo X caratteri";
 export const MAX_NUMBER_LABEL = "Valore massimo accettato: X";
+export const MIN_NUMBER_LABEL = "Valore minimo accettato: X";
+export const TEXT_AREA_HELP_LABEL = "Dividere ogni valore con l'accapo";
 
 //RecordButtons
 export const DELETE_LABEL = "Elimina";

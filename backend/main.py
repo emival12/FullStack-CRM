@@ -29,15 +29,6 @@ def get_db():
 
 
 # EXPOSED API'S:
-@app.get("/field_types")
-async def get_field_types():
-    result = {}
-    for ft in utils.FieldTypes:
-        result[ft.name] = ft.value
-
-    return result
-
-
 # Get all the tables to show in the sidebar
 @app.get("/plain_tables")
 def get_tables_plain(db = Depends(get_db)):
@@ -186,7 +177,7 @@ async def update_record(request: Request, db = Depends(get_db)):
 
 # Insert a new table in the database
 @app.post("/new-object")
-async def update_record(request: Request, db = Depends(get_db)):
+async def create_new_object(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
     object_data = data.get("data")
@@ -206,7 +197,6 @@ async def update_record(request: Request, db = Depends(get_db)):
         DELETE FROM record_type_definition WHERE object_name = 'aaa';
         DELETE FROM field_definition WHERE object_name = 'aaa';
     """
-
 
 # Insert a new table in the database
 @app.get("/setup/{table_name}")
@@ -249,6 +239,31 @@ async def update_record(request: Request, db = Depends(get_db)):
 
     return {}
 
+@app.get("/setup/field/new/structure")
+async def get_field_types(db = Depends(get_db)):
+    field_types = {}
+    for ft in utils.FieldTypes:
+        field_types[ft.name] = ft.value
+
+    cursor = db.cursor(dictionary=True)
+    tables = utils.get_object_definition_records(cursor)
+
+    fields = utils.get_field_names_grouped_by_objects(
+        cursor, 
+        tables, 
+        ["object_name", "field_name"],
+        True
+    )
+    grouped_fields = {}
+    for row in fields:
+        grouped_fields.setdefault(row["object_name"], []).append(row["field_name"])
+
+    cursor.close()
+    return {
+        "field_types": field_types,
+        "lookup_options": tables,
+        "fields_options": grouped_fields
+    }
 
 @app.get("/setup/{table_name}/fields")
 async def get_object_fields_record(table_name: str, db = Depends(get_db)):
@@ -257,18 +272,12 @@ async def get_object_fields_record(table_name: str, db = Depends(get_db)):
     utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)       
 
     fields = ["field_name", "field_type", "reference_object"]
-    fields_text = ", ".join(fields)
-    query = f'''
-    SELECT 
-        {fields_text}
-    FROM field_definition
-    WHERE 
-        object_name = %s
-    GROUP BY {fields_text}
-    ORDER BY field_name ASC;
-    '''
-    cursor.execute(query, (table_name,))
-    records = cursor.fetchall()
+    records = utils.get_field_names_grouped_by_objects(
+        cursor, 
+        [{"object_name": table_name}], 
+        fields,
+        False
+    )
 
     cursor.close()
     return {
@@ -277,3 +286,16 @@ async def get_object_fields_record(table_name: str, db = Depends(get_db)):
         "records": records
     }
 
+@app.post("/setup/{table_name}/field/new")
+async def create_new_field(request: Request, db = Depends(get_db)):
+    # Read the data from the body
+    data = await request.json() 
+    table_name = data.get("table")
+    field_data = data.get("record")
+
+    cursor = db.cursor(dictionary=True)
+
+    result = utils.create_new_field(cursor, db, table_name, field_data)
+
+    cursor.close()
+    return result

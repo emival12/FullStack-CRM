@@ -3,6 +3,8 @@ import {
   MANDATORY_FIELD_LABEL,
   MAX_FIELD_LABEL,
   MAX_NUMBER_LABEL,
+  MIN_NUMBER_LABEL,
+  TEXT_AREA_HELP_LABEL,
 } from "../../config/IT";
 
 /**
@@ -160,6 +162,7 @@ export default function RecordForm({
       <>
         <Form.Control
           type={info.field_type}
+          as={info?.is_textarea ? "textarea" : undefined}
           required={info.is_required}
           defaultValue={isNewForm ? null : info?.value}
           disabled={isNewForm ? false : !info.is_editable || !isEdit}
@@ -169,8 +172,8 @@ export default function RecordForm({
               ? "0." + "1".padStart(info.numeric_scale, "0")
               : "1"
           }
-          min={info?.limit_value && -Number(info.limit_value)}
-          max={info?.limit_value && Number(info.limit_value)}
+          min={info?.min_limit_value && Number(info.min_limit_value)}
+          max={info?.max_limit_value && Number(info.max_limit_value)}
           {...register(key, {
             required: {
               value: info.is_required,
@@ -181,18 +184,19 @@ export default function RecordForm({
               message: MAX_FIELD_LABEL.replace("X", info.length),
             },
             min: {
-              value: -Number(info?.limit_value),
-              message: MAX_NUMBER_LABEL.replace("X", -info?.limit_value),
+              value: Number(info?.min_limit_value),
+              message: MIN_NUMBER_LABEL.replace("X", info?.min_limit_value),
             },
             max: {
-              value: Number(info?.limit_value),
-              message: MAX_NUMBER_LABEL.replace("X", info?.limit_value),
+              value: Number(info?.max_limit_value),
+              message: MAX_NUMBER_LABEL.replace("X", info?.max_limit_value),
             },
           })}
         />
         <Form.Control.Feedback type="invalid">
           {errors[key]?.message}
         </Form.Control.Feedback>
+        {info?.is_textarea ? <div>{TEXT_AREA_HELP_LABEL}</div> : <></>}
       </>
     );
   };

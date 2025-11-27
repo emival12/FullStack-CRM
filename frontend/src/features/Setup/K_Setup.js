@@ -34,7 +34,8 @@ export const NEW_OBJECT_FIELD_STRUCTURE = {
     numeric_scale: null,
     is_editable: 1,
     is_required: 1,
-    limit_value: 99999,
+    max_limit_value: 99999,
+    min_limit_value: 1,
   },
   Id_field_name: {
     field_type: "text",
@@ -79,12 +80,13 @@ export const HOME_OBJECT_FIELD_STRUCTURE = {
     numeric_scale: null,
     is_editable: 1,
     is_required: 1,
-    limit_value: 99999,
+    max_limit_value: 99999,
+    min_limit_value: 1,
   },
 };
 
 export const NEW_FIELD_OBJECT_STRUCTURE = {
-  Field_type: {
+  field_type: {
     field_type: "radio",
     is_editable: 1,
     is_required: 1,
@@ -136,16 +138,100 @@ export const BASE_FIELD_OBJECT_STRUCTURE = {
 
 export const NEW_TEXT_FIELD_OBJECT_STRUCTURE = {
   length: {
+    field_type: "number",
+    numeric_precision: 3,
+    numeric_scale: null,
+    is_editable: 1,
+    is_required: 1,
+    max_limit_value: 255,
+    min_limit_value: 1,
+    order: 2,
+  },
+};
+
+export const NEW_NUMBER_FIELD_OBJECT_STRUCTURE = {
+  numeric_precision: {
+    field_type: "number",
+    numeric_precision: 2,
+    numeric_scale: null,
+    is_editable: 1,
+    is_required: 1,
+    max_limit_value: 18,
+    min_limit_value: 1,
+    order: 2,
+  },
+  numeric_scale: {
+    field_type: "number",
+    numeric_precision: 2,
+    numeric_scale: null,
+    is_editable: 1,
+    is_required: 1,
+    max_limit_value: 17,
+    min_limit_value: 0,
+    order: 3,
+  },
+};
+
+export const NEW_LOOKUP_FIELD_OBJECT_STRUCTURE = {
+  reference_object: {
+    field_type: "lookup",
+    is_editable: 1,
+    is_required: 1,
+    options: [],
+    order: 2,
+  },
+  reference_field: {
+    field_type: "lookup",
+    is_editable: 1,
+    is_required: 1,
+    options: [],
+    order: 3,
+  },
+  lookup_filter: {
     field_type: "text",
-    length: 255,
+    length: 1000,
+    is_editable: 1,
+    is_required: 0,
+    order: 4,
+  },
+};
+
+export const NEW_PICKLIST_FIELD_OBJECT_STRUCTURE = {
+  reference_object: {
+    field_type: "lookup",
+    is_editable: 1,
+    is_required: 1,
+    options: [],
+    order: 2,
+  },
+  reference_field: {
+    field_type: "lookup",
+    is_editable: 1,
+    is_required: 1,
+    options: [],
+    order: 3,
+  },
+};
+
+export const NEW_ROLLUP_FIELD_OBJECT_STRUCTURE = {
+  reference_object: {
+    field_type: "lookup",
+    is_editable: 1,
+    is_required: 1,
+    options: [],
+    order: 2,
+  },
+};
+
+export const NEW_RADIO_FIELD_OBJECT_STRUCTURE = {
+  options_values: {
+    field_type: "text",
+    is_textarea: true,
+    length: 1000,
     is_editable: 1,
     is_required: 1,
     order: 2,
   },
 };
 
-//numeric_precision;
-//numeric_scale;
-//reference_object;
-//reference_field;
-//lookup_filter;
+export const NEW_CHECKBOX_FIELD_OBJECT_STRUCTURE = {};

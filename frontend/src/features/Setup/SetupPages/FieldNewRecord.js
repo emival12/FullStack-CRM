@@ -11,10 +11,16 @@ import {
   NEXT_LABEL,
   PREVIOUS_LABEL,
 } from "../../../config/IT";
-import { API_BASE_URL, PATH_INSERT } from "../../../config/K";
+import { API_BASE_URL, PATH_INSERT, PATH_SETUP } from "../../../config/K";
 import {
   BASE_FIELD_OBJECT_STRUCTURE as BASE_FIELDS,
   NEW_TEXT_FIELD_OBJECT_STRUCTURE as NEW_TEXT_FIELDS,
+  NEW_NUMBER_FIELD_OBJECT_STRUCTURE as NEW_NUMBER_FIELDS,
+  NEW_LOOKUP_FIELD_OBJECT_STRUCTURE as NEW_LOOKUP_FIELDS,
+  NEW_PICKLIST_FIELD_OBJECT_STRUCTURE as NEW_PICKLIST_FIELDS,
+  NEW_ROLLUP_FIELD_OBJECT_STRUCTURE as NEW_ROLLUP_FIELDS,
+  NEW_RADIO_FIELD_OBJECT_STRUCTURE as NEW_RADIO_FIELDS,
+  NEW_CHECKBOX_FIELD_OBJECT_STRUCTURE as NEW_CHECKBOX_FIELDS,
 } from "../K_Setup";
 import RecordForm from "../../TableRecordDetails/RecordForm";
 import ToastMsg from "../../../components/ToastMsg";
@@ -27,6 +33,7 @@ export default function FieldNewRecord({
   refreshData,
 }) {
   const [listFieldForms, setListFieldForms] = useState(false);
+  const [mapObjectFields, setMapObjectFields] = useState();
   const [validated, setValidated] = useState(false);
 
   const [showToast, setShowToast] = useState(false);
@@ -40,8 +47,8 @@ export default function FieldNewRecord({
     handleSubmit,
     formState: { errors },
     watch,
-    getValues,
     reset,
+    resetField,
   } = useForm();
 
   const mergeDict = (dict1, dict2) => {
@@ -55,30 +62,63 @@ export default function FieldNewRecord({
     );
   };
 
+  const addOptionsToObject = (object, options, is_selection = true) => {
+    const key = is_selection ? "id" : "option_label";
+    const value = is_selection ? "reference_field" : "option_key";
+
+    if (object.length == 0) {
+      for (let o of Object.values(options)) {
+        const key_value = o?.key ? o?.key : o;
+        const label_value = o?.label ? o?.label : o;
+
+        object.push({
+          [key]: key_value,
+          [value]: label_value,
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     axios
-      .get(API_BASE_URL + "/field_types")
+      .get(API_BASE_URL + PATH_SETUP + "/field/new/structure")
       .then((res) => {
-        console.log("Field Types Received:", res.data);
+        console.log("Setup new Field structure Received:", res.data);
+        setMapObjectFields(res.data.fields_options);
+
+        const field_types = res.data.field_types;
+
+        //Set the possible lookup object possibilities
+        let obj_lookup_options = res.data.lookup_options;
+        addOptionsToObject(
+          NEW_LOOKUP_FIELDS.reference_object.options,
+          obj_lookup_options
+        );
+        addOptionsToObject(
+          NEW_PICKLIST_FIELDS.reference_object.options,
+          obj_lookup_options
+        );
+        addOptionsToObject(
+          NEW_ROLLUP_FIELDS.reference_object.options,
+          obj_lookup_options
+        );
 
         setListFieldForms({
-          [res.data.TEXT]: mergeDict(BASE_FIELDS, NEW_TEXT_FIELDS),
-          [res.data.NUMBER]: mergeDict(BASE_FIELDS, NEW_TEXT_FIELDS),
-          [res.data.LOOKUP]: mergeDict(BASE_FIELDS, NEW_TEXT_FIELDS),
-          [res.data.PICKLIST]: mergeDict(BASE_FIELDS, NEW_TEXT_FIELDS),
-          [res.data.ROLLUP]: mergeDict(BASE_FIELDS, NEW_TEXT_FIELDS),
-          [res.data.RADIO]: mergeDict(BASE_FIELDS, NEW_TEXT_FIELDS),
-          [res.data.CHECKBOX]: mergeDict(BASE_FIELDS, NEW_TEXT_FIELDS),
+          [field_types.TEXT]: mergeDict(BASE_FIELDS, NEW_TEXT_FIELDS),
+          [field_types.NUMBER]: mergeDict(BASE_FIELDS, NEW_NUMBER_FIELDS),
+          [field_types.LOOKUP]: mergeDict(BASE_FIELDS, NEW_LOOKUP_FIELDS),
+          [field_types.PICKLIST]: mergeDict(BASE_FIELDS, NEW_PICKLIST_FIELDS),
+          [field_types.ROLLUP]: mergeDict(BASE_FIELDS, NEW_ROLLUP_FIELDS),
+          [field_types.RADIO]: mergeDict(BASE_FIELDS, NEW_RADIO_FIELDS),
+          [field_types.CHECKBOX]: mergeDict(BASE_FIELDS, NEW_CHECKBOX_FIELDS),
         });
 
-        if (fieldTypeForm.Field_type.options.length == 0) {
-          for (let ft of Object.values(res.data)) {
-            fieldTypeForm.Field_type.options.push({
-              option_label: ft,
-              option_key: ft,
-            });
-          }
-        }
+        //Set the possible field type possibilities
+        addOptionsToObject(
+          fieldTypeForm.field_type.options,
+          field_types,
+          false
+        );
       })
       .catch((err) => console.error("Error:", err))
       .finally(() => {});
@@ -88,14 +128,16 @@ export default function FieldNewRecord({
   const onSubmit = (data) => {
     const formPointer = document.getElementById("recordDetailForm");
     if (formPointer.checkValidity()) {
-      /*
-        axios
-        .post(API_BASE_URL + PATH_INSERT, {
-          table: selectedTableKey,
-          record: data,
-        })
+      axios
+        .post(
+          API_BASE_URL + PATH_SETUP + "/" + selectedTableKey + "/field/new",
+          {
+            table: selectedTableKey,
+            record: data,
+          }
+        )
         .then((res) => {
-          console.log("Uploaded new record results:", res.data);
+          console.log("Create new field results:", res.data);
           if (res.data.result == 0) {
             setShowToast(true);
             setToastTitle(ERROR_TOAST_TITLE_LABEL);
@@ -112,25 +154,37 @@ export default function FieldNewRecord({
           setToastTitle(ERROR_TOAST_TITLE_LABEL);
           setToastBody(err.response.data.detail);
         });
-        */
     }
 
     setValidated(true);
   };
 
-  const field_type_value = watch("Field_type");
+  //Set the correct form after the field_type change
+  const field_type_value = watch("field_type");
   useEffect(() => {
-    if (!field_type_value) return;
+    if (!field_type_value || !(field_type_value in listFieldForms)) return;
 
     const formStructure = listFieldForms[field_type_value];
     const formValues = Object.fromEntries(
       Object.entries(formStructure).map(([key, info]) => [key, info.value])
     );
 
-    const currentValues = getValues();
-    const mergedValues = { ...currentValues, ...formValues };
+    const mergedValues = { field_type: field_type_value, ...formValues };
     reset(mergedValues);
   }, [field_type_value]);
+
+  //Set the picklist for the reference field fter the reference_object change
+  const reference_object_value = watch("reference_object");
+  useEffect(() => {
+    if (!reference_object_value || !(reference_object_value in mapObjectFields))
+      return;
+
+    let new_options = [];
+    addOptionsToObject(new_options, mapObjectFields[reference_object_value]);
+
+    getCorrectForm().reference_field.options = new_options;
+    resetField("reference_field");
+  }, [reference_object_value]);
 
   const getCorrectForm = () => {
     return listFieldForms[field_type_value];
@@ -138,7 +192,13 @@ export default function FieldNewRecord({
 
   return (
     <>
-      <Modal show={showNewModal} onHide={() => setShowNewModal(false)}>
+      <Modal
+        show={showNewModal}
+        onHide={() => {
+          reset();
+          setShowNewModal(false);
+        }}
+      >
         <Modal.Header closeButton>
           <Modal.Title>{NEW_FIELD_TITLE_LABEL}</Modal.Title>
         </Modal.Header>
@@ -175,7 +235,7 @@ export default function FieldNewRecord({
           </Button>
           <Button
             hidden={pageNumber !== 1}
-            disabled={!watch("Field_type")}
+            disabled={!field_type_value}
             variant="primary"
             onClick={() => setPageNumber(2)}
           >
