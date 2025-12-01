@@ -522,11 +522,12 @@ def execute_with_transaction(cursor, db, query, params, error_msg, many=False):
         print(error_msg + str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
-def convert_into_SQL_field_type(field_type):
-    if field_type == FieldTypes.TEXT.value:
-        return "VARCHAR"
-    elif field_type == FieldTypes.NUMBER.value:
-        return "SMALLINT"
+def convert_into_SQL_field_type(field_type, length):
+    if field_type in (FieldTypes.TEXT.value, FieldTypes.RADIO.value, FieldTypes.CHECKBOX.value, FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value):
+        return f'VARCHAR ({length})'
+    elif field_type in (FieldTypes.NUMBER.value, FieldTypes.ROLLUP.value):
+        return f'FLOAT ({length})'
+
 
 ########## END - HELP Method
 
@@ -831,7 +832,7 @@ def get_field_structure_and_value_data(cursor, table_name, fields, mode, record_
             limit_value = f'{"9" * row["numeric_precision"]}.{"9" * row["numeric_scale"] if row["numeric_scale"] else ""}'
             copy_row["max_limit_value"] = limit_value
             copy_row["min_limit_value"] = "-" + limit_value
-        elif row["field_type"] in (FieldTypes.RADIO.value, FieldTypes.CHECKBOX.value):
+        elif row["field_type"] in (FieldTypes.RADIO.value):
             options = [
                 {
                     "object_name": row["object_name"],
@@ -1047,7 +1048,6 @@ def update_record_by_id(cursor, db, table_name, record_type_name, field_structur
     SET {set_clause}
     WHERE {primary_key_field} = %s {"AND record_type_name = %s;" if record_type_name else ";" }
     '''
-
     return execute_with_transaction(cursor, db, query, params, "Error updating record: ")
 
 
@@ -1075,9 +1075,10 @@ def create_new_object(cursor, db, object_data):
     object_label = object_data["Object_label"].lower()
     object_name = object_data["Object_name"].lower()
     pk_field_name = object_data["Id_field_name"].lower()
-    pk_field_length = 255 if object_data["Id_field_type"] == FieldTypes.TEXT.value else None    # apply default lenght if is a text
+    pk_field_length = 255 if object_data["Id_field_type"] == FieldTypes.TEXT.value else None        # apply default lenght if is a text
+    pk_numeric_precision = 5 if object_data["Id_field_type"] == FieldTypes.NUMBER.value else None   # apply default lenght if is a number
     pk_field_type = object_data["Id_field_type"]
-
+    
     try:
         params = [
             (   
@@ -1107,7 +1108,7 @@ def create_new_object(cursor, db, object_data):
                 pk_field_name,                      # field_name
                 pk_field_type,                      # field_type
                 pk_field_length,                    # length
-                None,                               # numeric_precision
+                pk_numeric_precision,               # numeric_precision
                 None,                               # numeric_scale
                 None,                               # reference_object
                 None,                               # reference_field
@@ -1158,7 +1159,8 @@ def create_new_object(cursor, db, object_data):
         ]
         insert_record_layout_definition(cursor, params)         #Create the record_layout_definition
     
-        create_table(cursor, object_data, object_name, pk_field_name, pk_field_length, pk_field_type)
+        field_length = pk_field_length if pk_field_length else pk_numeric_precision
+        create_table(cursor, object_data, object_name, pk_field_name, pk_field_type, field_length)
         db.commit() 
         return {"result": 1}
     except Exception as e:
@@ -1246,17 +1248,285 @@ def get_field_names_grouped_by_objects(cursor, tables, fields, only_active):
     '''
     cursor.execute(query, tuple(object_names))    
     return cursor.fetchall()
-########## END - BASE Insert Query
-def create_table(cursor, object_data, object_name, pk_field_name, pk_field_length, pk_field_type):
-    converted_field_type = convert_into_SQL_field_type(pk_field_type)     # get the SQL field type
-    field_type = f'{converted_field_type} ({pk_field_length})' if pk_field_type == FieldTypes.TEXT.value else converted_field_type
+
+def create_new_field(cursor, db, object_name, field_data):
+    """
+        Create a new field for a specific table and generate all required SystemObject records.
+        This method handles every step involved in adding a new field to a custom object:
+            - Determining the correct logical and SQL-level length based on the field type.
+            - Creating the field definition.
+            - Adding the field to the record layout.
+            - Creating additional auxiliary system records for special field types
+            - Physically adding the column to the database table.
+
+        Args:
+            cursor (MySQLCursor): Database cursor used to execute SQL statements.
+            db (MySQLConnection): Database connection used to commit or rollback transactions.
+            object_name (str): Name of the table where the field will be created.
+            field_data (dict): Dictionary containing all required information to create the field.
+
+        Returns:
+            dict: {"result": 1} if the process completes successfully.
+
+        Raises:
+            HTTPException: If a database error occurs
+    """
     
+    field_name = field_data["field_name"].replace(" ", "_").lower()
+    field_type = field_data["field_type"]
+    field_length = field_data["length"] if "length" in field_data else None
+    numeric_precision = field_data["numeric_precision"] if "numeric_precision" in field_data else None
+    numeric_scale = field_data["numeric_scale"] if "numeric_scale" in field_data else None
+    reference_object = field_data["reference_object"] if "reference_object" in field_data else None
+    reference_object_record_type = field_data["reference_object_record_type"] if "reference_object_record_type" in field_data else None
+    reference_field = field_data["reference_field"] if "reference_field" in field_data else None
+    lookup_filter = field_data["lookup_filter"] if "lookup_filter" in field_data else None
+    aggregation_function = field_data["aggregation_function"] if "aggregation_function" in field_data else None
+
+    options_values = field_data["options_values"].split("\n") if "options_values" in field_data else None
+    try:
+        field_length, sql_length = get_length_based_on_field_type(cursor, field_type, field_length, numeric_precision, numeric_scale, reference_object, reference_field)
+        params = [
+            (
+                object_name,                        # object_name
+                "master",                           # record_type_name
+                field_name,                         # field_name
+                field_type,                         # field_type
+                field_length,                       # length
+                numeric_precision,                  # numeric_precision
+                numeric_scale,                      # numeric_scale
+                reference_object,                   # reference_object
+                reference_field,                    # reference_field
+                field_data["is_active"],            # is_active
+                field_data["is_visible"],           # is_visible
+                field_data["is_editable"],          # is_editable
+                field_data["is_required"],          # is_required
+                0,                                  # is_primary_key
+                lookup_filter                       # lookup_filter
+            ),
+        ]
+        insert_field_definition(cursor, params)                 # Create the field_definition
+
+        next_order = get_next_sort_order(cursor, "record_layout_definition", ["object_name"], [object_name])
+        params = [
+            (
+                object_name,            # object_name
+                "master",               # record_type_name
+                field_name,             # field_name
+                next_order+1            # sort_order
+            )
+        ]
+        insert_record_layout_definition(cursor, params)         # Create the record_layout_definition
+
+
+        # Create the ausiliar System object for the special types (ex: radio_checkbox_options, rollup_definition, related_list_definition, ..)
+        data = {
+            "object_name": object_name,
+            "field_name": field_name,
+            "reference_object": reference_object,
+            "reference_object_rt": reference_object_record_type,
+            "reference_field": reference_field,
+            "aggregation_function": aggregation_function,
+            "lookup_filter": lookup_filter,
+            "options_values": options_values,
+        }
+        insert_ausiliar_extra_system_object(cursor, field_type, data)       
+  
+        # Create the actual field
+        add_column(                
+            cursor, 
+            object_name, 
+            field_name, 
+            field_type, 
+            sql_length
+        )  
+        db.commit() 
+        return {"result": 1}
+    except HTTPException as e:
+        db.rollback()
+        raise e
+    except Exception as e:
+        db.rollback()
+
+        print('Error in the table create: ' + str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+def get_length_based_on_field_type(cursor, field_type, field_length, numeric_precision, numeric_scale, reference_object, reference_field):
+    """
+        Determine the logical and SQL-level length of a field based on its type and configuration
+
+        Args:
+            cursor (MySQLCursor): Database cursor used to execute the SQL query
+            field_type (str): The type of the field.
+            field_length (str): The length provided by the user in the UI (can be None).
+            numeric_precision (str): Number of digits before the decimal point provided by the user (can be None).
+            numeric_scale (str): Number of digits after the decimal point provided by the user (can be None).
+            reference_object (str): Name of the table referenced by the field (can be None).
+            reference_field (str): Name of the field referenced by the field (can be None).
+
+        Returns:
+            tuple: A tuple containing:
+                - int | None: The logical field length to store in the `field_definition` table.
+                - int | str: The length definition used in the actual SQL column type. This may be a single integer
+                            or a "precision, scale" pair for numeric fields.
+    """
+    
+
+    if field_type == FieldTypes.TEXT.value:   
+        return (field_length, field_length)                         # A text has already the field length setted from the user input
+    elif field_type == FieldTypes.NUMBER.value:
+        return (None, f'{numeric_precision}, {numeric_scale}')      # A number has a field length empty but an SQL length composed by the precision + scale
+    elif field_type == FieldTypes.CHECKBOX.value:
+        return (1, 1)                                               # A bool needs just one bit
+    elif field_type == FieldTypes.RADIO.value:
+         return (255, 255)                                          # A radio is a text with a specific set of values
+    elif field_type in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value, FieldTypes.ROLLUP.value):
+        query = f'''
+        SELECT 
+            length, 
+            numeric_precision, 
+            numeric_scale
+        FROM field_definition
+        WHERE 
+            object_name = %s 
+            AND field_name = %s;
+        '''
+        cursor.execute(query, (reference_object, reference_field))
+        related_field = cursor.fetchall()[0]
+
+        sql_length = related_field['length'] if related_field['length'] else f'{related_field["numeric_precision"]}, {related_field["numeric_scale"]}'
+        return (related_field['length'], sql_length)                # Pointer fields inherit their length from the reference field
+
+def insert_ausiliar_extra_system_object(cursor, field_type, data):
+    """
+        Create auxiliary system object records based on the field type.
+
+        This method inserts additional system-level records required for specific field types. 
+        For example, RADIO fields generate option entries, while ROLLUP fields create rollup configuration and related list definitions.
+
+        Args:
+            cursor (MySQLCursor): Database cursor used to execute SQL queries.
+            field_type (str): The type of the field.
+            data (dict): A dictionary containing all required values for processing.
+                        Expected keys include:
+                        - "object_name"
+                        - "field_name"
+                        - "reference_object"
+                        - "options_values" (for RADIO fields)
+                        - "reference_field", "aggregation_function",
+                        - "lookup_filter", "reference_object_rt" (for ROLLUP fields)
+
+        Returns:
+            None: The function performs one or more INSERT operations and does not return a value.
+
+        Raises:
+            HTTPException: If a database error occurs
+    """
+
+    object_name = data["object_name"]
+    field_name = data["field_name"]
+    reference_object = data["reference_object"]
+    
+    if field_type == FieldTypes.RADIO.value:
+        radio_checkbox_options_params = []
+        for idx, option in enumerate(data["options_values"]):
+            radio_checkbox_options_params.append(
+                (
+                    object_name,
+                    "master",
+                    field_name,
+                    idx,
+                    option.replace(" ", "_").lower()[:255],
+                    option[:255],
+                    1
+                )
+            )
+
+        insert_radio_checkbox_options(cursor, radio_checkbox_options_params)    # Create the radio options (must be created after the field for FK references)
+    elif field_type == FieldTypes.ROLLUP.value: 
+        query = f'''
+        SELECT 
+            field_name
+        FROM field_definition
+        WHERE 
+            object_name = %s 
+            AND field_type = "lookup"
+            AND reference_object = %s
+            AND is_active = 1
+        '''
+        cursor.execute(query, (reference_object, object_name))
+        detail_join_key = cursor.fetchall()
+        if len(detail_join_key) <= 0:
+            raise HTTPException(status_code=500, detail="Missing lookup field")
+        
+        detail_join_key = detail_join_key[0]["field_name"]
+        primary_key_field = get_primary_keys_from_multiple_objects(cursor, [object_name]).get(object_name)
+        rollup_def_params = [
+            (
+                object_name,
+                'master',
+                primary_key_field,  # master_primary_key
+                field_name,
+                reference_object,
+                detail_join_key,    # detail_join_key
+                data["reference_field"], 
+                data["aggregation_function"],
+                data["lookup_filter"]
+            )
+        ]
+        insert_rollup_definition(cursor, rollup_def_params)                 # Create the structure definition of the rollup field
+
+
+        next_order = get_next_sort_order(
+            cursor, 
+            "related_list_definition", 
+            ["master_object_name", "master_record_type_name", "child_object_name"],
+            [(object_name, 'master', reference_object)]
+        )
+        reference_object_label = get_object_definition_records(cursor, [reference_object])[0]["label"]
+        related_list_def_params = [
+            (
+                object_name,                # master_object_name
+                'master',                   # master_record_type_name
+                primary_key_field,          # master_primary_key
+                reference_object,           # child_object_name
+                data["reference_object_rt"],# child_record_type_name
+                detail_join_key,            # detail_join_key
+                reference_object_label,     # label
+                next_order+1,               # sort_order
+                None,                       # filter_condition
+                1                           # is_active
+            )   
+        ]
+        insert_related_list_definition(cursor, related_list_def_params)     # Create the related list definition
+
+        
+
+
+
+
+
+
+########## END - BASE DML System objects
+def create_table(cursor, object_data, object_name, pk_field_name, pk_field_type, pk_field_length):
+    field_type = convert_into_SQL_field_type(pk_field_type, pk_field_length)     # get the SQL field type
+
     command = f'''
     CREATE TABLE {object_name} (
     {pk_field_name} {field_type} PRIMARY KEY,
     object_name VARCHAR(255) NOT NULL DEFAULT '{object_name}',
     record_type_name VARCHAR(255) NOT NULL DEFAULT 'master'
     );
+    '''
+    cursor.execute(command)
+
+def add_column(cursor, object_name, column_name, field_type, field_length):
+    sql_field_type = convert_into_SQL_field_type(field_type, field_length)     # get the SQL field type
+    
+    # for Lookup fields there isn't a real contraint (from the DB point of view is a simple field unrelated) this because we can link also to non Id field 
+    command = f'''
+    ALTER TABLE {object_name}
+    ADD {column_name} {sql_field_type}
     '''
     cursor.execute(command)
 
@@ -1316,6 +1586,44 @@ def insert_record_layout_definition(cursor, params):
     """
     cursor.executemany(command, params)
 
+def insert_rollup_definition(cursor, params):
+    command = """
+    INSERT INTO rollup_definition (master_object_name, master_record_type_name, master_primary_key, master_field_name, 
+        detail_object_name, detail_join_key, detail_field_name, aggregation_function, filter_condition)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+    """
+    cursor.executemany(command, params)
+
+def insert_related_list_definition(cursor, params):
+    command = """
+    INSERT INTO related_list_definition (master_object_name, master_record_type_name, master_primary_key, child_object_name, 
+        child_record_type_name, child_join_key, label, sort_order, filter_condition, is_active)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+    """
+    cursor.executemany(command, params)
+
+def get_next_sort_order(cursor, system_object_name, field_to_filter, params):
+    where_filter = f'({", ".join(field_to_filter)})'
+    placeholders = f'{", ".join(["%s"] * len(field_to_filter))}'
+    flat_params = params
+
+    if len(field_to_filter) > 1:
+        placeholders = ",".join([f'({placeholders})'] * len(params))
+
+        flat_params = []
+        for t in params:
+            flat_params.extend(t)
+
+    query = f'''
+    SELECT MAX(sort_order) sort_order
+    FROM {system_object_name}
+    WHERE {where_filter} IN ({placeholders});
+    '''
+
+    cursor.execute(query, tuple(flat_params,))
+    order = cursor.fetchone()["sort_order"]
+    return order if order else 1
+
 def delete_record(cursor, table_name, fields_to_filter, params, operator=" AND "):
     if not fields_to_filter:
         raise ValueError("Missing field filters")
@@ -1327,4 +1635,15 @@ def delete_record(cursor, table_name, fields_to_filter, params, operator=" AND "
     WHERE {placeholders}
     '''
     cursor.execute(command, params)
-########## END - BASE Insert Query
+
+def insert_radio_checkbox_options(cursor, params):
+    command = """
+    INSERT INTO radio_checkbox_options(object_name, record_type_name, field_name, sort_order, option_key, option_label, is_active)
+    VALUES (%s, %s, %s, %s, %s, %s, %s);
+    """
+    cursor.executemany(command, params)
+########## END - BASE DML System objects
+
+
+
+    

@@ -34,6 +34,8 @@ export default function FieldNewRecord({
 }) {
   const [listFieldForms, setListFieldForms] = useState(false);
   const [mapObjectFields, setMapObjectFields] = useState();
+  const [mapObjectRt, setMapObjectRt] = useState();
+  const [fieldTypes, setFieldTypes] = useState();
   const [validated, setValidated] = useState(false);
 
   const [showToast, setShowToast] = useState(false);
@@ -85,6 +87,8 @@ export default function FieldNewRecord({
       .then((res) => {
         console.log("Setup new Field structure Received:", res.data);
         setMapObjectFields(res.data.fields_options);
+        setMapObjectRt(res.data.rt_options);
+        setFieldTypes(res.data.field_types);
 
         const field_types = res.data.field_types;
 
@@ -181,9 +185,15 @@ export default function FieldNewRecord({
 
     let new_options = [];
     addOptionsToObject(new_options, mapObjectFields[reference_object_value]);
-
     getCorrectForm().reference_field.options = new_options;
     resetField("reference_field");
+
+    if (field_type_value === fieldTypes.ROLLUP) {
+      let new_rt_options = [];
+      addOptionsToObject(new_rt_options, mapObjectRt[reference_object_value]);
+      getCorrectForm().reference_object_record_type.options = new_rt_options;
+      resetField("reference_object_record_type");
+    }
   }, [reference_object_value]);
 
   const getCorrectForm = () => {

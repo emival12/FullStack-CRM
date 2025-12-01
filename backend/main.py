@@ -254,18 +254,21 @@ async def get_field_types(db = Depends(get_db)):
     fields = utils.get_field_names_grouped_by_objects(
         cursor, 
         tables, 
-        ["object_name", "field_name"],
+        ["object_name", "record_type_name", "field_name"],
         True
     )
     grouped_fields = {}
+    grouped_rt = {}
     for row in fields:
-        grouped_fields.setdefault(row["object_name"], []).append(row["field_name"])
+        grouped_fields.setdefault(row["object_name"], set()).add(row["field_name"])
+        grouped_rt.setdefault(row["object_name"], set()).add(row["record_type_name"])
 
     cursor.close()
     return {
         "field_types": field_types,
         "lookup_options": tables,
-        "fields_options": grouped_fields
+        "fields_options": grouped_fields,
+        "rt_options": grouped_rt
     }
 
 @app.get("/setup/{table_name}/fields")

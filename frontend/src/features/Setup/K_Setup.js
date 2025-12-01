@@ -233,6 +233,40 @@ export const NEW_ROLLUP_FIELD_OBJECT_STRUCTURE = {
     options: [],
     order: 2,
   },
+  reference_object_record_type: {
+    field_type: "lookup",
+    is_editable: 1,
+    is_required: 1,
+    options: [],
+    order: 3,
+  },
+  reference_field: {
+    field_type: "lookup",
+    is_editable: 1,
+    is_required: 1,
+    options: [],
+    order: 4,
+  },
+  aggregation_function: {
+    field_type: "picklist",
+    is_editable: 1,
+    is_required: 1,
+    options: [
+      {
+        reference_field: "Somma",
+        id: "SUM",
+      },
+      {
+        reference_field: "Minimo",
+        id: "MIN",
+      },
+      {
+        reference_field: "Massimo",
+        id: "MAX",
+      },
+    ],
+    order: 5,
+  },
 };
 
 export const NEW_RADIO_FIELD_OBJECT_STRUCTURE = {
