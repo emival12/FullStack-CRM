@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useForm } from "react-hook-form";
 
@@ -38,6 +38,8 @@ export default function SetupNewObject() {
     register,
     handleSubmit,
     formState: { errors },
+    watch,
+    setValue,
     reset,
   } = useForm();
 
@@ -76,6 +78,13 @@ export default function SetupNewObject() {
     setValidated(true);
   };
 
+  //Create the API name of the object
+  const object_label_value = watch("Object_label");
+  useEffect(() => {
+    if (!object_label_value) return;
+    setValue("Object_name", object_label_value.replace(" ", "_").toLowerCase());
+  }, [object_label_value]);
+
   if (loading) return <LoadingScreen />;
 
   return (
@@ -105,8 +114,8 @@ export default function SetupNewObject() {
             selectedTableKey={null}
             errors={errors}
             register={register}
-            isNewForm={true}
-            isEdit={null}
+            isNewForm={false}
+            isEdit={true}
           ></RecordForm>
           <ToastMsg
             showToast={showToast}

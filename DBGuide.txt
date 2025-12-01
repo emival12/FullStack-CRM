@@ -8,6 +8,7 @@ USE MarkotexDB;
 #   La tabella contiene la definizione di tutti le tabelle del database con alcune informazioni chiave: 
 #   la categoria di appartenenza, l'rdinamento, se è una tabella di sistema o se possiede molteplici record type
 CREATE TABLE object_definition (
+    object_label VARCHAR(100) NOT NULL,
     object_name VARCHAR(100) NOT NULL,
     category VARCHAR(50) NOT NULL,
     sort_order SMALLINT,
@@ -192,11 +193,11 @@ VALUES
     ('333333333',   null,       10.75,  1);
 
 
-INSERT INTO object_definition(object_name, category, sort_order, is_system_object, is_single_record_type)
+INSERT INTO object_definition(object_label, object_name, category, sort_order, is_system_object, is_single_record_type)
 VALUES 
-    ('account',     'Anagrafica',   1,  0, 0),
-    ('contatto',    'Anagrafica',   2,  0, 1),
-    ('zone',        'Ausiliari',    10, 0, 1);
+    ('account', 'account',     'Anagrafica',   1,  0, 0),
+    ('contatto','contatto',    'Anagrafica',   2,  0, 1),
+    ('zone',    'zone',        'Ausiliari',    10, 0, 1);
 
 
 INSERT INTO record_type_definition(object_name, record_type_name, is_active)

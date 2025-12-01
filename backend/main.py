@@ -27,6 +27,9 @@ def get_db():
     finally:
         conn.close()
 
+def split_table_name(table_name):
+    t_name, sep, rt_name = table_name.rpartition("_")
+    return t_name, rt_name
 
 # EXPOSED API'S:
 # Get all the tables to show in the sidebar
@@ -56,7 +59,7 @@ def get_table_records(table_name: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
     utils.check_allowed_tables(cursor, table_name)                                                                  # Evaluate input value (Avoid SQLInjection)
-    (table_name, record_type_name) = table_name.split("_")                                                          # table_name == ObjectName_RecordTypeName
+    (table_name, record_type_name) = split_table_name(table_name)                                                   # table_name == ObjectName_RecordTypeName
 
     dict_fields = utils.get_list_view_definition_fields(cursor, [(table_name, record_type_name)])                   # retrieve fields definitions on the list view
     fields = dict_fields.get(utils.get_table_key_from_strings(table_name, record_type_name))
@@ -78,7 +81,7 @@ def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
     utils.check_allowed_tables(cursor, table_name)                                                              # Evaluate input value (Avoid SQLInjection)
-    (table_name, record_type_name) = table_name.split("_")                                                      # table_name == ObjectName_RecordTypeName
+    (table_name, record_type_name) = split_table_name(table_name)                                                       # table_name == ObjectName_RecordTypeName
     fields = utils.get_record_layout_definition_fields(cursor, table_name, record_type_name)                    # retrieve fields definitions on the record Layout
 
     field_structure = utils.get_field_structure_and_value(cursor, table_name, fields, record_id)                # retrive structure and values of the field 
@@ -103,7 +106,7 @@ def get_table_records(table_name: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
     utils.check_allowed_tables(cursor, table_name)
-    (table_name, record_type_name) = table_name.split("_") 
+    (table_name, record_type_name) = split_table_name(table_name)  
 
     fields = utils.get_record_layout_definition_fields(cursor, table_name, record_type_name, True)  # retrieve fields definitions on the record Layout
     field_structure = utils.get_field_structure(cursor, table_name, fields)                         # retrive structure and values of the field 
@@ -123,7 +126,7 @@ async def delete_record(request: Request, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
     utils.check_allowed_tables(cursor, table_name)                                                              # Evaluate input value (Avoid SQLInjection)
-    (table_name, record_type_name) = table_name.split("_")                                                      # table_name == ObjectName_RecordTypeName
+    (table_name, record_type_name) = split_table_name(table_name)                                                       # table_name == ObjectName_RecordTypeName
     primary_key_field = utils.get_primary_keys_from_multiple_objects(cursor, [table_name]).get(table_name)      # get the name of the PK of the object
 
     result = utils.delete_record_by_id(cursor, db, table_name, record_type_name, primary_key_field, record_id)  # execute the actual delete
@@ -142,7 +145,7 @@ async def update_record(request: Request, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
     utils.check_allowed_tables(cursor, table_name)                      # Evaluate input value (Avoid SQLInjection)
-    (table_name, record_type_name) = table_name.split("_")              # table_name == ObjectName_RecordTypeName
+    (table_name, record_type_name) = split_table_name(table_name)               # table_name == ObjectName_RecordTypeName
 
     result = utils.insert_new_record(cursor, db, table_name, [record])  # execute the actual insert
     cursor.close()
@@ -161,7 +164,7 @@ async def update_record(request: Request, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
     utils.check_allowed_tables(cursor, table_name)                                                                              # Evaluate input value (Avoid SQLInjection)
-    (table_name, record_type_name) = table_name.split("_")                                                                      # table_name == ObjectName_RecordTypeName
+    (table_name, record_type_name) = split_table_name(table_name)                                                                       # table_name == ObjectName_RecordTypeName
     primary_key_field = utils.get_primary_keys_from_multiple_objects(cursor, [table_name]).get(table_name)                      # get the name of the PK of the object
     
 

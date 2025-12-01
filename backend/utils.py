@@ -43,7 +43,7 @@ def get_object_definition_records(cursor, object_names=None):
         params = tuple(object_names)
 
     query = f'''
-    SELECT od.object_name, od.category, od.sort_order, od.is_system_object, od.is_single_record_type
+    SELECT od.object_label, od.object_name, od.category, od.sort_order, od.is_system_object, od.is_single_record_type
     FROM object_definition od
     {filter_object_name}
     ORDER BY od.sort_order ASC;
@@ -53,7 +53,7 @@ def get_object_definition_records(cursor, object_names=None):
 
     for table in tables:
         table["key"] =  table["object_name"]
-        table["label"] = table["object_name"].capitalize() 
+        table["label"] = table["object_label"].capitalize() 
 
     return tables
 
@@ -78,7 +78,7 @@ def get_object_definition_records_join_rt(cursor, object_names=None):
         params = tuple(object_names)
 
     query = f'''
-    SELECT od.object_name, rtd.record_type_name, od.category, od.sort_order, od.is_system_object, od.is_single_record_type
+    SELECT od.object_label, od.object_name, rtd.record_type_name, od.category, od.sort_order, od.is_system_object, od.is_single_record_type
     FROM object_definition od
     LEFT JOIN record_type_definition rtd ON od.object_name = rtd.object_name
     WHERE rtd.is_active = 1 {filter_object_name}
@@ -89,7 +89,7 @@ def get_object_definition_records_join_rt(cursor, object_names=None):
 
     for table in tables:
         table["key"] =  get_table_key(table)
-        table["label"] = table["object_name"].capitalize() if table["is_single_record_type"] else table["record_type_name"].capitalize()  
+        table["label"] = table["object_label"].capitalize() if table["is_single_record_type"] else table["record_type_name"].capitalize()  
 
     return tables
 
@@ -1071,7 +1071,8 @@ def create_new_object(cursor, db, object_data):
         Raises:
             HTTPException: If a database error occurs
     """
-
+    
+    object_label = object_data["Object_label"].lower()
     object_name = object_data["Object_name"].lower()
     pk_field_name = object_data["Id_field_name"].lower()
     pk_field_length = 255 if object_data["Id_field_type"] == FieldTypes.TEXT.value else None    # apply default lenght if is a text
@@ -1079,7 +1080,8 @@ def create_new_object(cursor, db, object_data):
 
     try:
         params = [
-            (
+            (   
+                object_label,                   # object_label
                 object_name,                    # object_name
                 object_data["Category"],        # category
                 int(object_data["Sort_order"]), # sort_order
@@ -1264,8 +1266,8 @@ def delete_table(cursor, table_name):
 
 def insert_object_definition_record(cursor, params):
     command = """
-    INSERT INTO object_definition(object_name, category, sort_order, is_system_object, is_single_record_type)
-    VALUES (%s, %s, %s, %s, %s);
+    INSERT INTO object_definition(object_label, object_name, category, sort_order, is_system_object, is_single_record_type)
+    VALUES (%s, %s, %s, %s, %s, %s);
     """
     cursor.executemany(command, params)
 

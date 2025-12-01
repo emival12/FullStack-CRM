@@ -16,10 +16,16 @@ export const SECTIONS = [
 
 //Structure to create a new table
 export const NEW_OBJECT_FIELD_STRUCTURE = {
-  Object_name: {
+  Object_label: {
     field_type: "text",
     length: 100,
     is_editable: 1,
+    is_required: 1,
+  },
+  Object_name: {
+    field_type: "text",
+    length: 100,
+    is_editable: 0,
     is_required: 1,
   },
   Category: {
@@ -62,6 +68,12 @@ export const NEW_OBJECT_FIELD_STRUCTURE = {
 };
 
 export const HOME_OBJECT_FIELD_STRUCTURE = {
+  Object_label: {
+    field_type: "text",
+    length: 100,
+    is_editable: 1,
+    is_required: 1,
+  },
   Object_name: {
     field_type: "text",
     length: 100,
