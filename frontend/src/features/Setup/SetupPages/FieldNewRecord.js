@@ -177,7 +177,7 @@ export default function FieldNewRecord({
     reset(mergedValues);
   }, [field_type_value]);
 
-  //Set the picklist for the reference field fter the reference_object change
+  //Set the picklist for the reference field after the reference_object change
   const reference_object_value = watch("reference_object");
   useEffect(() => {
     if (!reference_object_value || !(reference_object_value in mapObjectFields))
