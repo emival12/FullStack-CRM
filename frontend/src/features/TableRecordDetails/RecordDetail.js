@@ -103,10 +103,10 @@ export default function RecordDetail() {
     let modified_data = {};
     let new_PK = null;
     for (const key in fields.field_structure) {
-      if (fields.field_structure[key].value != data[key]) {
+      if (fields.field_structure[key].value !== data[key]) {
         modified_data[key] = data[key];
         new_PK =
-          key.toLowerCase() == fields.primary_key_name.toLowerCase()
+          key.toLowerCase() === fields.primary_key_name.toLowerCase()
             ? data[key]
             : null;
       }
@@ -124,7 +124,7 @@ export default function RecordDetail() {
           })
           .then((res) => {
             console.log("Updated record results:", res.data);
-            if (res.data.result == 0) {
+            if (res.data.result === 0) {
               setShowToast(true);
               setToastTitle(ERROR_TOAST_TITLE_LABEL);
               setToastBody(ERROR_TOAST_BODY_LABEL);

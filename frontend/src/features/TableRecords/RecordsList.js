@@ -50,7 +50,7 @@ export default function RecordsList({
 
   //Dinamic construction of the body entry
   const tableEntry = (key, value, record) => {
-    if (key == records.primary_key_name) {
+    if (key === records.primary_key_name) {
       return (
         <td
           key={key}
