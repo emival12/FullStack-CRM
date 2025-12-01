@@ -14,6 +14,8 @@ import {
 } from "../../config/IT";
 import {
   API_BASE_URL,
+  ERROR_MISSING_RECORD,
+  ERROR_MISSING_TABLE,
   PATH_DATABASE,
   PATH_DELETE,
   PATH_UPDATE,
@@ -42,6 +44,8 @@ export default function RecordDetail() {
   const [showToast, setShowToast] = useState(false);
   const [toastTitle, setToastTitle] = useState();
   const [toastBody, setToastBody] = useState();
+
+  const [controlledError, setControlledError] = useState(false);
 
   const actualTableKey = selectedTableKey || tableKey;
   const recordKey =
@@ -77,7 +81,16 @@ export default function RecordDetail() {
         );
         reset(formValues);
       })
-      .catch((err) => console.error("Error:", err))
+      .catch((err) => {
+        console.error("Error:", err);
+        const errMsg = err.response.data.detail;
+        if (
+          errMsg === ERROR_MISSING_TABLE.replace("X", actualTableKey) ||
+          errMsg === ERROR_MISSING_RECORD.replace("X", recordKey)
+        ) {
+          setControlledError(true);
+        }
+      })
       .finally(() => setLoading(false));
   };
 
@@ -141,7 +154,7 @@ export default function RecordDetail() {
     }
   };
 
-  if (!actualTableKey && !recordKey) {
+  if (controlledError) {
     return <MissingPage MissingText={MISSING_RECORD_LABEL} />;
   }
 

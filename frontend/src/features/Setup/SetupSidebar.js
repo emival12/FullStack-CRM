@@ -23,6 +23,7 @@ export default function SetupSidebar({
   setSelectedTableKey,
   selectedSection,
   setSelectedSection,
+  setSelectedRecord,
   refreshSidebar,
 }) {
   const navigate = useNavigate();
@@ -62,6 +63,7 @@ export default function SetupSidebar({
               const value = e.target.value ? e.target.value : null;
               setSelectedTableKey(value);
               setSelectedSection(null);
+              setSelectedRecord(null);
               toggleSidebar(); //useful only for the mobile
 
               const path = value ? PATH_SETUP + "/" + value : PATH_SETUP;
@@ -88,6 +90,7 @@ export default function SetupSidebar({
                 active={section.key === selectedSection}
                 onClick={() => {
                   setSelectedSection(section.key);
+                  setSelectedRecord(null);
                   toggleSidebar(); //useful only for the mobile
                 }}
               >

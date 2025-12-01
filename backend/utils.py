@@ -902,7 +902,11 @@ def get_single_record(cursor, table_name, fields, record_id, primary_key_field=N
     WHERE {primary_key_field} = %s {"AND record_type_name = '" + record_type_name + "';"  if record_type_name else ";"}
     '''
     cursor.execute(query, (record_id,))
-    return cursor.fetchone()
+    record = cursor.fetchone()
+
+    if not record:
+        raise HTTPException(status_code=500, detail=f'Record \'{record_id}\' not found')
+    return record
 
 def get_related_list_value(cursor, table_name, record_type_name, related_lists, tables_dict):
     """

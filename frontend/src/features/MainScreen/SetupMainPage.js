@@ -37,6 +37,7 @@ export default function SetupMainPage() {
           setSelectedTableKey={setSelectedTableKey}
           selectedSection={actualSectionKey}
           setSelectedSection={setSelectedSection}
+          setSelectedRecord={setSelectedRecord}
           refreshSidebar={refreshSidebar}
         />
 

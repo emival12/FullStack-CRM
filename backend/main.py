@@ -81,7 +81,7 @@ def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
     utils.check_allowed_tables(cursor, table_name)                                                              # Evaluate input value (Avoid SQLInjection)
-    (table_name, record_type_name) = split_table_name(table_name)                                                       # table_name == ObjectName_RecordTypeName
+    (table_name, record_type_name) = split_table_name(table_name)                                               # table_name == ObjectName_RecordTypeName
     fields = utils.get_record_layout_definition_fields(cursor, table_name, record_type_name)                    # retrieve fields definitions on the record Layout
 
     field_structure = utils.get_field_structure_and_value(cursor, table_name, fields, record_id)                # retrive structure and values of the field 
