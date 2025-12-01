@@ -67,6 +67,7 @@ export const NEW_OBJECT_FIELD_STRUCTURE = {
   },
 };
 
+//Structure to edit a new table
 export const HOME_OBJECT_FIELD_STRUCTURE = {
   Object_label: {
     field_type: "text",
@@ -97,6 +98,7 @@ export const HOME_OBJECT_FIELD_STRUCTURE = {
   },
 };
 
+//Structure to create a new field
 export const NEW_FIELD_OBJECT_STRUCTURE = {
   field_type: {
     field_type: "radio",
@@ -281,3 +283,5 @@ export const NEW_RADIO_FIELD_OBJECT_STRUCTURE = {
 };
 
 export const NEW_CHECKBOX_FIELD_OBJECT_STRUCTURE = {};
+
+//Structure to create

@@ -11,8 +11,9 @@ import {
   NEXT_LABEL,
   PREVIOUS_LABEL,
 } from "../../../config/IT";
-import { API_BASE_URL, PATH_INSERT, PATH_SETUP } from "../../../config/K";
+import { API_BASE_URL, PATH_SETUP } from "../../../config/K";
 import {
+  NEW_FIELD_OBJECT_STRUCTURE as NEW_FIELDS,
   BASE_FIELD_OBJECT_STRUCTURE as BASE_FIELDS,
   NEW_TEXT_FIELD_OBJECT_STRUCTURE as NEW_TEXT_FIELDS,
   NEW_NUMBER_FIELD_OBJECT_STRUCTURE as NEW_NUMBER_FIELDS,
@@ -25,13 +26,22 @@ import {
 import RecordForm from "../../TableRecordDetails/RecordForm";
 import ToastMsg from "../../../components/ToastMsg";
 
-export default function FieldNewRecord({
-  fieldTypeForm,
+/**
+ * Modal used to retrieve the info needed on the field creation
+ *
+ * @param {Object} props.selectedTableKey     - Table currently selected
+ * @param {Object} props.showNewModal         - Flag to show or hide the modal
+ * @param {Function} props.setShowNewModal    - Function to update the flag showNewModal
+ * @param {Function} props.refreshData        - Function to run the refresh on the record list
+ */
+export default function NewFieldRecord({
   selectedTableKey,
   showNewModal,
   setShowNewModal,
   refreshData,
 }) {
+  const [fieldTypeForm, setFieldTypeForm] = useState(NEW_FIELDS);
+
   const [listFieldForms, setListFieldForms] = useState(false);
   const [mapObjectFields, setMapObjectFields] = useState();
   const [mapObjectRt, setMapObjectRt] = useState();
@@ -49,6 +59,7 @@ export default function FieldNewRecord({
     handleSubmit,
     formState: { errors },
     watch,
+    setValue,
     reset,
     resetField,
   } = useForm();
@@ -206,6 +217,8 @@ export default function FieldNewRecord({
         show={showNewModal}
         onHide={() => {
           reset();
+          setValue("field_type", null);
+          setPageNumber(1);
           setShowNewModal(false);
         }}
       >

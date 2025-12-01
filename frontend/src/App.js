@@ -36,6 +36,10 @@ function App() {
           <Route index element={<SetupNewObject />} />
           <Route path=":tableKey" element={<Navigate to="home" replace />} />
           <Route path=":tableKey/:sectionKey" element={<SetupSections />} />
+          <Route
+            path=":tableKey/:sectionKey/:recordId"
+            element={<SetupSections />}
+          />
         </Route>
       </Routes>
     </BrowserRouter>

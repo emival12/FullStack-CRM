@@ -7,8 +7,16 @@ import { API_BASE_URL, PATH_SETUP } from "../../../config/K";
 import { NEW_FIELD_OBJECT_STRUCTURE } from "../K_Setup";
 import LoadingScreen from "../../../components/LoadingScreen";
 import RecordsList from "../../TableRecords/RecordsList";
-import FieldNewRecord from "./FieldNewRecord";
+import NewFieldRecord from "./NewFieldRecord";
 
+/**
+ * Page used for the section Fields of an object in the setup
+ *
+ * @param {Object} props.selectedTableKey       - Table currently selected
+ * @param {Function} props.setSelectedTableKey  - Function to update the selected Table
+ * @param {Object} props.selectedSectionKey     - Section currently selected
+ * @param {Function} props.setSelectedRecord    - Function to update the selected Record
+ */
 export default function SetupSectionFields({
   selectedTableKey,
   setSelectedTableKey,
@@ -61,13 +69,12 @@ export default function SetupSectionFields({
       </div>
       <RecordsList
         records={records}
-        selectedTableKey={selectedTableKey}
+        selectedTableKey={selectedTableKey + "/" + selectedSectionKey}
         onSelectedTable={setSelectedTableKey}
         onSelectedRecord={setSelectedRecord}
         pathRedirect={PATH_SETUP}
       />
-      <FieldNewRecord
-        fieldTypeForm={NEW_FIELD_OBJECT_STRUCTURE}
+      <NewFieldRecord
         selectedTableKey={selectedTableKey}
         showNewModal={showNewModal}
         setShowNewModal={setShowNewModal}

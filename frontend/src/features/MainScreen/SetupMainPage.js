@@ -44,8 +44,8 @@ export default function SetupMainPage() {
           <div className="h-100 pt-3 pb-3 ps-3 ps-md-2 pe-3">
             <Outlet
               context={{
-                actualTableKey,
-                actualSectionKey,
+                selectedTableKey: actualTableKey,
+                selectedSectionKey: actualSectionKey,
                 setSelectedTableKey,
                 setSelectedSection,
                 refreshSidebar,
