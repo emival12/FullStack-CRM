@@ -145,7 +145,7 @@ async def update_record(request: Request, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
     utils.check_allowed_tables(cursor, table_name)                      # Evaluate input value (Avoid SQLInjection)
-    (table_name, record_type_name) = split_table_name(table_name)               # table_name == ObjectName_RecordTypeName
+    (table_name, record_type_name) = split_table_name(table_name)       # table_name == ObjectName_RecordTypeName
 
     result = utils.insert_new_record(cursor, db, table_name, [record])  # execute the actual insert
     cursor.close()
@@ -201,7 +201,7 @@ async def create_new_object(request: Request, db = Depends(get_db)):
         DELETE FROM field_definition WHERE object_name = 'aaa';
     """
 
-# Insert a new table in the database
+# Get the structure of the table
 @app.get("/setup/{table_name}")
 async def get_object_definition(table_name: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
@@ -212,9 +212,9 @@ async def get_object_definition(table_name: str, db = Depends(get_db)):
     cursor.close()
     return tables[0] if len(tables) > 0 else {}
 
-
+# Delete a single table
 @app.post("/setup/home/Delete")
-async def update_record(request: Request, db = Depends(get_db)):
+async def delete_object(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
     table_name = data.get("table")
@@ -227,8 +227,9 @@ async def update_record(request: Request, db = Depends(get_db)):
     cursor.close()
     return result
 
+# Update a single table
 @app.post("/setup/home/Update")
-async def update_record(request: Request, db = Depends(get_db)):
+async def update_object(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
     table_name = data.get("table")
@@ -242,8 +243,9 @@ async def update_record(request: Request, db = Depends(get_db)):
 
     return {}
 
+# Get all the fields structure for the creation of a new field
 @app.get("/setup/field/new/structure")
-async def get_field_types(db = Depends(get_db)):
+async def get_field_creation_structure(db = Depends(get_db)):
     field_types = {}
     for ft in utils.FieldTypes:
         field_types[ft.name] = ft.value
@@ -271,6 +273,7 @@ async def get_field_types(db = Depends(get_db)):
         "rt_options": grouped_rt
     }
 
+# Get all the fields of an object
 @app.get("/setup/{table_name}/fields")
 async def get_object_fields_record(table_name: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
@@ -292,6 +295,7 @@ async def get_object_fields_record(table_name: str, db = Depends(get_db)):
         "records": records
     }
 
+# Insert a new field
 @app.post("/setup/{table_name}/field/new")
 async def create_new_field(request: Request, db = Depends(get_db)):
     # Read the data from the body
