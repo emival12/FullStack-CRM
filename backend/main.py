@@ -77,7 +77,7 @@ def get_table_records(table_name: str, db = Depends(get_db)):
 
 # Get all the fields values with their structure of a single record
 @app.get("/{table_name}/record/{record_id}")
-def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
+def get_record_info(table_name: str, record_id: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
     utils.check_allowed_tables(cursor, table_name)                                                              # Evaluate input value (Avoid SQLInjection)
@@ -102,14 +102,14 @@ def get_table_records(table_name: str, record_id: str, db = Depends(get_db)):
 
 # Get all the fields structure of an object
 @app.get("/{table_name}/new-record")
-def get_table_records(table_name: str, db = Depends(get_db)):
+def get_new_record_structure(table_name: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
     utils.check_allowed_tables(cursor, table_name)
     (table_name, record_type_name) = split_table_name(table_name)  
 
-    fields = utils.get_record_layout_definition_fields(cursor, table_name, record_type_name, True)  # retrieve fields definitions on the record Layout
-    field_structure = utils.get_field_structure(cursor, table_name, fields)                         # retrive structure and values of the field 
+    fields = utils.get_record_layout_definition_fields(cursor, table_name, record_type_name, utils.RLD_VISIBLE_AND_EDITABLE_FILTER)     # retrieve fields definitions on the record Layout
+    field_structure = utils.get_field_structure(cursor, table_name, fields)                                                             # retrive structure and values of the field 
 
     cursor.close()
     return field_structure
@@ -309,3 +309,54 @@ async def create_new_field(request: Request, db = Depends(get_db)):
 
     cursor.close()
     return result
+
+
+
+
+# Get 
+@app.post("/setup/{table_name}/fields/{record_id}")
+async def get_field_info(request: Request, table_name: str, record_id: str, db = Depends(get_db)):
+    # Read the data from the body
+    data = await request.json() 
+    list_fields_by_type = data.get("listFields")
+
+    cursor = db.cursor(dictionary=True)
+    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)                               # Evaluate input value (Avoid SQLInjection
+
+    print('LIST: ')
+    print(list_fields_by_type)
+    field_attributes = utils.get_record_layout_definition_fields(cursor, table_name, "master", utils.RLD_SINGLE_FIELD_NAME_FILTER, [record_id])[0]
+    print('ATTR: ')
+    print(field_attributes)
+    print(field_attributes["field_type"])
+    fields = list_fields_by_type[field_attributes["field_type"]]
+    print('FIELDS: ')
+    print(fields)
+
+    list_fn = ", ".join(fields)
+    query = f'''
+    SELECT 
+        {list_fn}
+    FROM field_definition
+    WHERE 
+        object_name = %s 
+        AND field_name = %s;
+    '''
+    cursor.execute(query, (table_name, record_id))
+    field_values = cursor.fetchall()
+    print('VAL: ')
+    print(field_values)
+
+    field_structure = {}
+    for key, row in fields.items():
+        row["field_name"] = key
+        row["value"] = field_values[0][key]
+        field_structure[key.capitalize()] = row
+
+    print('STRUCT: ')
+    print(field_structure)
+
+    return { 
+        "primary_key_name": "field_name", 
+        "field_structure": field_structure
+    }

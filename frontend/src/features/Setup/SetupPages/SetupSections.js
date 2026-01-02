@@ -4,6 +4,7 @@ import { useOutletContext, useParams } from "react-router-dom";
 import SetupSectionHome from "./SetupSectionHome";
 import { Sections } from "../K_Setup";
 import SetupSectionFields from "./SetupSectionFields";
+import EditFieldRecord from "./EditFieldRecord";
 
 export default function SetupSectionObject() {
   const { tableKey, sectionKey, recordId } = useParams();
@@ -21,13 +22,10 @@ export default function SetupSectionObject() {
   const actualTableKey = selectedTableKey || tableKey;
   const actualSectionKey = selectedSectionKey || sectionKey;
   const actualRecordKey =
-    selectedRecord?.record?.[selectedRecord?.primary_key] || recordId;
+    selectedRecord?.record[selectedRecord?.primary_key] || recordId;
 
   useEffect(() => {
-    if (
-      !recordId ||
-      recordId != selectedRecord?.record?.[selectedRecord?.primary_key]
-    ) {
+    if (!recordId && !actualRecordKey) {
       setSelectedRecord(null);
     }
   }, [recordId]);
@@ -41,7 +39,7 @@ export default function SetupSectionObject() {
           selectedSectionKey={actualSectionKey}
         />
       );
-    } else if (actualSectionKey === Sections.fields && !selectedRecord) {
+    } else if (actualSectionKey === Sections.fields && !actualRecordKey) {
       return (
         <SetupSectionFields
           selectedTableKey={actualTableKey}
@@ -50,8 +48,15 @@ export default function SetupSectionObject() {
           setSelectedRecord={setSelectedRecord}
         />
       );
-    } else if (actualSectionKey === Sections.fields && selectedRecord) {
-      return <p>Here</p>;
+    } else if (actualSectionKey === Sections.fields && actualRecordKey) {
+      return (
+        <EditFieldRecord
+          selectedTableKey={actualTableKey}
+          selectedSectionKey={actualSectionKey}
+          selectedRecord={actualRecordKey}
+          setSelectedRecord={setSelectedRecord}
+        />
+      );
     } else {
       return <p>Altro</p>;
     }

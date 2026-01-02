@@ -61,7 +61,7 @@ export default function RecordDetail() {
   } = useForm();
 
   const fetchData = () => {
-    if (!actualTableKey && !recordKey) return; // Blocks execution if the selected tabel is not correct
+    if (!actualTableKey || !recordKey) return; // Blocks execution if the selected tabel is not correct
 
     setLoading(true);
     setIsEdit(false);

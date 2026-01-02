@@ -158,7 +158,9 @@ def get_list_view_definition_fields(cursor, list_params):
 
     return result
 
-def get_record_layout_definition_fields(cursor, table_name, record_type_name, only_visible=False):
+RLD_VISIBLE_AND_EDITABLE_FILTER = "((fd.is_visible = 1 AND fd.is_editable = 1) OR fd.field_name = 'record_type_name')"
+RLD_SINGLE_FIELD_NAME_FILTER = f'fd.is_visible = 1 AND fd.field_name = %s'
+def get_record_layout_definition_fields(cursor, table_name, record_type_name, where_additional_condition=None, where_additional_params=[]):
     """
         Return all active and visible fields defined in the record layout for a specific object
 
@@ -166,15 +168,15 @@ def get_record_layout_definition_fields(cursor, table_name, record_type_name, on
             cursor (MySQLCursor): Database cursor used to execute SQL queries
             table_name (str): Name of a database table
             record_type_name (str): Name of a record type of the table
-            only_visible (bool): Boolean to change the WHERE "is_visible" condition 
+            where_additional_condition (str): Condition to add in the filter (likely one of the constant on top) 
+            where_additional_params (list): List of values to use add in the condition filter
 
         Returns:
             list[dict]: A list of dictionaries, each containing metadata for fields included in the record layout definition
     """
-    visible_where_condition = "fd.is_visible = 1"
-    if only_visible:
-        visible_where_condition = "((fd.is_visible = 1 AND fd.is_editable = 1) OR fd.field_name = 'record_type_name')"
-        
+
+    if not where_additional_condition:
+        where_additional_condition = "fd.is_visible = 1"
 
     query = f'''
     SELECT 
@@ -200,10 +202,10 @@ def get_record_layout_definition_fields(cursor, table_name, record_type_name, on
         fd.object_name = %s 
         AND fd.record_type_name = %s 
         AND fd.is_active = 1 
-        AND {visible_where_condition}
+        AND {where_additional_condition}
     ORDER BY rvd.sort_order ASC;
     '''
-    cursor.execute(query, (table_name, record_type_name))
+    cursor.execute(query, [table_name, record_type_name, *where_additional_params])
     return cursor.fetchall()
 
 def get_rollup_definition(cursor, fields):
@@ -485,7 +487,7 @@ def get_field_divided_by_type(fields):
     }
     
     for row in fields:
-        if row["field_type"] in (FieldTypes.RADIO.value, FieldTypes.CHECKBOX.value):
+        if row["field_type"] in (FieldTypes.RADIO.value): #, FieldTypes.CHECKBOX.value TODO CHECK
             result["radio_checkbox_fields"].append(row)
         elif row["field_type"] in (FieldTypes.PICKLIST.value, FieldTypes.LOOKUP.value):
             result["picklist_lookup_fields"].append(row)
@@ -1245,6 +1247,7 @@ def get_field_names_grouped_by_objects(cursor, tables, fields, only_active):
     FROM field_definition
     WHERE 
         object_name IN ( {placeholders} ) 
+        AND field_name != 'record_type_name'
         {"AND is_active = 1" if only_active else ""}
     GROUP BY 
         {fields_text}
@@ -1503,11 +1506,6 @@ def insert_ausiliar_extra_system_object(cursor, field_type, data):
             )   
         ]
         insert_related_list_definition(cursor, related_list_def_params)     # Create the related list definition
-
-        
-
-
-
 
 
 

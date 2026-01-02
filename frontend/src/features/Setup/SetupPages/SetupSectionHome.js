@@ -49,7 +49,7 @@ export default function SetupSectionHome({
   } = useForm();
 
   const fetchData = () => {
-    if (!selectedTableKey && !selectedSectionKey) return; // Blocks execution if the selected tabel is not correct
+    if (!selectedTableKey || !selectedSectionKey) return; // Blocks execution if the selected tabel is not correct
 
     setLoading(true);
     setIsEdit(false);

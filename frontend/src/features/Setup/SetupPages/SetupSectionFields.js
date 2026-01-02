@@ -28,7 +28,7 @@ export default function SetupSectionFields({
   const [showNewModal, setShowNewModal] = useState(false);
 
   const fetchData = () => {
-    if (!selectedTableKey && !selectedSectionKey) return; // Blocks execution if the selected tabel is not correct
+    if (!selectedTableKey || !selectedSectionKey) return; // Blocks execution if the selected tabel is not correct
     setSelectedRecord(null);
 
     setLoading(true);
