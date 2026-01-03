@@ -40,7 +40,10 @@ npm install react-hook-form
 ## 6: Istallazione libreria bootstrap icon in locale (Libreria con icone)
 npm install bootstrap-icons
 
-## 7: Istallazione libreria axios in locale (Libreria React per fare richiest HTTP e comunicazione con API)
+## 7: Istallazione libreria bootstrap per le textarea
+npm install react-textarea-autosize
+
+## 8: Istallazione libreria axios in locale (Libreria React per fare richiest HTTP e comunicazione con API)
 npm install axios
 
 ##: Lanciare il Server Frontend
