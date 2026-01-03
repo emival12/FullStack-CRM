@@ -14,7 +14,7 @@ import MissingPage from "../../../components/MissingPage";
 import RecordButtons from "../../TableRecordDetails/RecordButtons";
 import RecordForm from "../../TableRecordDetails/RecordForm";
 import ToastMsg from "../../../components/ToastMsg";
-import { FieldTypes } from "../FieldTypes";
+import { addOptionsToObject, FieldTypes } from "../FieldTypes";
 
 export default function EditFieldRecord({
   selectedTableKey,
@@ -40,6 +40,7 @@ export default function EditFieldRecord({
     fieldTypes,
     listFieldForms,
     getCorrectForm,
+    getCorrectFieldOptions,
   } = FieldTypes();
 
   const {
@@ -47,6 +48,7 @@ export default function EditFieldRecord({
     handleSubmit,
     formState: { errors },
     reset,
+    resetField,
   } = useForm();
 
   const fetchData = () => {
@@ -80,6 +82,13 @@ export default function EditFieldRecord({
           ])
         );
         reset(formValues);
+
+        const refObj = res.data.field_structure?.Reference_object;
+        if (refObj) {
+          res.data.field_structure.Reference_field.options =
+            getCorrectFieldOptions(refObj.value, res.data.field_type);
+          resetField("reference_field");
+        }
       })
       .catch((err) => {
         console.error("Error:", err);

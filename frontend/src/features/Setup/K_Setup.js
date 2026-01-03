@@ -17,24 +17,28 @@ export const SECTIONS = [
 //Structure to create a new table
 export const NEW_OBJECT_FIELD_STRUCTURE = {
   Object_label: {
+    field_name: "object_label",
     field_type: "text",
     length: 100,
     is_editable: 1,
     is_required: 1,
   },
   Object_name: {
+    field_name: "object_name",
     field_type: "text",
     length: 100,
     is_editable: 0,
     is_required: 1,
   },
   Category: {
+    field_name: "category",
     field_type: "text",
     length: 50,
     is_editable: 1,
     is_required: 1,
   },
   Sort_order: {
+    field_name: "sort_order",
     field_type: "number",
     numeric_precision: 5,
     numeric_scale: null,
@@ -44,12 +48,14 @@ export const NEW_OBJECT_FIELD_STRUCTURE = {
     min_limit_value: 1,
   },
   Id_field_name: {
+    field_name: "id_field_name",
     field_type: "text",
     length: 255,
     is_editable: 1,
     is_required: 1,
   },
   Id_field_type: {
+    field_name: "id_field_type",
     field_type: "radio",
     length: 255,
     is_editable: 1,
@@ -70,24 +76,28 @@ export const NEW_OBJECT_FIELD_STRUCTURE = {
 //Structure to edit a new table
 export const HOME_OBJECT_FIELD_STRUCTURE = {
   Object_label: {
+    field_name: "object_label",
     field_type: "text",
     length: 100,
     is_editable: 1,
     is_required: 1,
   },
   Object_name: {
+    field_name: "object_name",
     field_type: "text",
     length: 100,
     is_editable: 0,
     is_required: 1,
   },
   Category: {
+    field_name: "category",
     field_type: "text",
     length: 50,
     is_editable: 1,
     is_required: 1,
   },
   Sort_order: {
+    field_name: "sort_order",
     field_type: "number",
     numeric_precision: 5,
     numeric_scale: null,
@@ -101,6 +111,7 @@ export const HOME_OBJECT_FIELD_STRUCTURE = {
 //Structure to create a new field
 export const NEW_FIELD_OBJECT_STRUCTURE = {
   field_type: {
+    field_name: "field_type",
     field_type: "radio",
     is_editable: 1,
     is_required: 1,
@@ -110,13 +121,16 @@ export const NEW_FIELD_OBJECT_STRUCTURE = {
 
 export const BASE_FIELD_OBJECT_STRUCTURE = {
   field_name: {
+    field_name: "field_name",
     field_type: "text",
     length: 255,
     is_editable: 1,
     is_required: 1,
     order: 1,
+    is_primary_key: 1,
   },
   is_active: {
+    field_name: "is_active",
     field_type: "checkbox",
     is_editable: 0,
     is_required: 1,
@@ -125,6 +139,7 @@ export const BASE_FIELD_OBJECT_STRUCTURE = {
     order: 97,
   },
   is_visible: {
+    field_name: "is_visible",
     field_type: "checkbox",
     is_editable: 0,
     is_required: 1,
@@ -133,6 +148,7 @@ export const BASE_FIELD_OBJECT_STRUCTURE = {
     order: 98,
   },
   is_editable: {
+    field_name: "is_editable",
     field_type: "checkbox",
     is_editable: 1,
     is_required: 0,
@@ -141,6 +157,7 @@ export const BASE_FIELD_OBJECT_STRUCTURE = {
     order: 99,
   },
   is_required: {
+    field_name: "is_required",
     field_type: "checkbox",
     is_editable: 1,
     is_required: 0,
@@ -152,6 +169,7 @@ export const BASE_FIELD_OBJECT_STRUCTURE = {
 
 export const NEW_TEXT_FIELD_OBJECT_STRUCTURE = {
   length: {
+    field_name: "length",
     field_type: "number",
     numeric_precision: 3,
     numeric_scale: null,
@@ -165,6 +183,7 @@ export const NEW_TEXT_FIELD_OBJECT_STRUCTURE = {
 
 export const NEW_NUMBER_FIELD_OBJECT_STRUCTURE = {
   numeric_precision: {
+    field_name: "numeric_precision",
     field_type: "number",
     numeric_precision: 2,
     numeric_scale: null,
@@ -175,6 +194,7 @@ export const NEW_NUMBER_FIELD_OBJECT_STRUCTURE = {
     order: 2,
   },
   numeric_scale: {
+    field_name: "numeric_scale",
     field_type: "number",
     numeric_precision: 2,
     numeric_scale: null,
@@ -188,6 +208,7 @@ export const NEW_NUMBER_FIELD_OBJECT_STRUCTURE = {
 
 export const NEW_LOOKUP_FIELD_OBJECT_STRUCTURE = {
   reference_object: {
+    field_name: "reference_object",
     field_type: "lookup",
     is_editable: 1,
     is_required: 1,
@@ -195,6 +216,7 @@ export const NEW_LOOKUP_FIELD_OBJECT_STRUCTURE = {
     order: 2,
   },
   reference_field: {
+    field_name: "reference_field",
     field_type: "lookup",
     is_editable: 1,
     is_required: 1,
@@ -202,6 +224,7 @@ export const NEW_LOOKUP_FIELD_OBJECT_STRUCTURE = {
     order: 3,
   },
   lookup_filter: {
+    field_name: "lookup_filter",
     field_type: "text",
     length: 1000,
     is_editable: 1,
@@ -212,6 +235,7 @@ export const NEW_LOOKUP_FIELD_OBJECT_STRUCTURE = {
 
 export const NEW_PICKLIST_FIELD_OBJECT_STRUCTURE = {
   reference_object: {
+    field_name: "reference_object",
     field_type: "lookup",
     is_editable: 1,
     is_required: 1,
@@ -219,6 +243,7 @@ export const NEW_PICKLIST_FIELD_OBJECT_STRUCTURE = {
     order: 2,
   },
   reference_field: {
+    field_name: "reference_field",
     field_type: "lookup",
     is_editable: 1,
     is_required: 1,
@@ -229,6 +254,7 @@ export const NEW_PICKLIST_FIELD_OBJECT_STRUCTURE = {
 
 export const NEW_ROLLUP_FIELD_OBJECT_STRUCTURE = {
   reference_object: {
+    field_name: "reference_object",
     field_type: "lookup",
     is_editable: 1,
     is_required: 1,
@@ -236,6 +262,7 @@ export const NEW_ROLLUP_FIELD_OBJECT_STRUCTURE = {
     order: 2,
   },
   reference_object_record_type: {
+    field_name: "reference_object_record_type",
     field_type: "lookup",
     is_editable: 1,
     is_required: 1,
@@ -243,6 +270,7 @@ export const NEW_ROLLUP_FIELD_OBJECT_STRUCTURE = {
     order: 3,
   },
   reference_field: {
+    field_name: "reference_field",
     field_type: "lookup",
     is_editable: 1,
     is_required: 1,
@@ -250,6 +278,7 @@ export const NEW_ROLLUP_FIELD_OBJECT_STRUCTURE = {
     order: 4,
   },
   aggregation_function: {
+    field_name: "aggregation_function",
     field_type: "picklist",
     is_editable: 1,
     is_required: 1,
@@ -273,6 +302,7 @@ export const NEW_ROLLUP_FIELD_OBJECT_STRUCTURE = {
 
 export const NEW_RADIO_FIELD_OBJECT_STRUCTURE = {
   options_values: {
+    field_name: "options_values",
     field_type: "text",
     is_textarea: true,
     length: 1000,

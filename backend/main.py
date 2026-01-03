@@ -1,5 +1,5 @@
 import mysql.connector
-from fastapi import FastAPI, Depends, Request
+from fastapi import FastAPI, Depends, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import utils
 
@@ -256,13 +256,17 @@ async def get_field_creation_structure(db = Depends(get_db)):
     fields = utils.get_field_names_grouped_by_objects(
         cursor, 
         tables, 
-        ["object_name", "record_type_name", "field_name"],
+        ["object_name", "record_type_name", "field_name", "field_type"],
         True
     )
     grouped_fields = {}
+    grouped_fields_rollup = {}
     grouped_rt = {}
     for row in fields:
         grouped_fields.setdefault(row["object_name"], set()).add(row["field_name"])
+
+        if row["field_type"] == utils.FieldTypes.NUMBER.value:
+            grouped_fields_rollup.setdefault(row["object_name"], set()).add(row["field_name"])
         grouped_rt.setdefault(row["object_name"], set()).add(row["record_type_name"])
 
     cursor.close()
@@ -270,6 +274,7 @@ async def get_field_creation_structure(db = Depends(get_db)):
         "field_types": field_types,
         "lookup_options": tables,
         "fields_options": grouped_fields,
+        "fields_options_rollup": grouped_fields_rollup,
         "rt_options": grouped_rt
     }
 
@@ -313,50 +318,42 @@ async def create_new_field(request: Request, db = Depends(get_db)):
 
 
 
-# Get 
-@app.post("/setup/{table_name}/fields/{record_id}")
-async def get_field_info(request: Request, table_name: str, record_id: str, db = Depends(get_db)):
+# Get all the values of the field with their structure
+@app.post("/setup/{table_name}/fields/{field_name}")
+async def get_field_info(request: Request, table_name: str, field_name: str, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
     list_fields_by_type = data.get("listFields")
 
     cursor = db.cursor(dictionary=True)
-    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)                               # Evaluate input value (Avoid SQLInjection
+    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)               # Evaluate input value (Avoid SQLInjection)
 
-    print('LIST: ')
-    print(list_fields_by_type)
-    field_attributes = utils.get_record_layout_definition_fields(cursor, table_name, "master", utils.RLD_SINGLE_FIELD_NAME_FILTER, [record_id])[0]
-    print('ATTR: ')
-    print(field_attributes)
-    print(field_attributes["field_type"])
-    fields = list_fields_by_type[field_attributes["field_type"]]
-    print('FIELDS: ')
-    print(fields)
+    field_attributes = utils.get_record_layout_definition_fields(                           # Get the definition of the field
+        cursor, 
+        table_name, 
+        "master", 
+        utils.RLD_SINGLE_FIELD_NAME_FILTER, 
+        [field_name]
+    )
+    if not len(field_attributes):
+        raise HTTPException(status_code=404, detail=f'Field \'{field_name}\' not found')
+    
+    field_attributes = field_attributes[0]                                                  # Just 1 record expected
+    current_field_type = field_attributes["field_type"]                                     # Get the field type from the field definition
+    fields = list(list_fields_by_type[current_field_type].values())                         # Get the list of fields related to the type (Ex: number has the precision, text has the lenght)
 
-    list_fn = ", ".join(fields)
-    query = f'''
-    SELECT 
-        {list_fn}
-    FROM field_definition
-    WHERE 
-        object_name = %s 
-        AND field_name = %s;
-    '''
-    cursor.execute(query, (table_name, record_id))
-    field_values = cursor.fetchall()
-    print('VAL: ')
-    print(field_values)
-
-    field_structure = {}
-    for key, row in fields.items():
-        row["field_name"] = key
-        row["value"] = field_values[0][key]
-        field_structure[key.capitalize()] = row
-
-    print('STRUCT: ')
-    print(field_structure)
+    field_structure = utils.setup_get_field_structure_and_value_data(
+        cursor, 
+        "field_definition", 
+        fields, 
+        field_name, 
+        current_field_type, 
+        field_attributes
+    )   
 
     return { 
-        "primary_key_name": "field_name", 
+        "field_type": current_field_type,
+        "primary_key_name": utils.get_primary_key_from_fields(fields),
         "field_structure": field_structure
     }
+

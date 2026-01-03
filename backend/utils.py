@@ -1648,4 +1648,79 @@ def insert_radio_checkbox_options(cursor, params):
 
 
 
-    
+def setup_get_field_structure_and_value_data(cursor, table_name, fields, record_id, current_field_type, field_attributes):
+    """
+        Retrieve the full structure and the values for all a specific fields.
+        This function enriches field metadata with the current record values 
+
+        Args:
+            cursor (MySQLCursor): Database cursor used to execute SQL queries.
+            table_name (str): Name of the database table.
+            fields (list[dict]): List of dictionaries containing field metadata
+            record_id (str): Primary key value of the record to retrieve.
+            current_field_type (str): Type of the field
+            field_attributes (dict): Definition of the field on the table field_definition 
+
+        Returns:
+            dict: A mapping of field names (capitalized) to dictionaries containing:
+                - field metadata (type, reference, options, etc.)
+                - current value for the given record
+    """
+    # THOSE ARE THE FIELD NAME USED IN THE K_Setup.js
+    FIELD_NAME_REFERENCE_OBJECT_RECORD_TYPE = "reference_object_record_type"
+    FIELD_NAME_AGGREGATION_FUNCTION = "aggregation_function"
+    FIELD_NAME_OPTIONS_VALUES = "options_values"
+
+    primary_key_field = get_primary_key_from_fields(fields)
+
+    real_fields = fields
+    if current_field_type in (FieldTypes.ROLLUP.value, FieldTypes.RADIO.value):
+        # Calculate the correct set of fields to query
+        # The real fields are the one on the field_definition table, the ausiliar are all the field derivated from other tables
+        ausiliar_record_fields = {FIELD_NAME_REFERENCE_OBJECT_RECORD_TYPE, FIELD_NAME_AGGREGATION_FUNCTION, FIELD_NAME_OPTIONS_VALUES} 
+        real_fields = []
+        ausiliar_fields = []
+        for f in fields:
+            if f["field_name"] in ausiliar_record_fields:
+                ausiliar_fields.append(f)
+            else:
+                real_fields.append(f)
+
+    # Get the record infos
+    record = get_single_record(cursor, table_name, real_fields, record_id, primary_key_field)    
+
+    # Calculate the ausiliar fields
+    if current_field_type == FieldTypes.ROLLUP.value:
+        query = f'''
+        SELECT aggregation_function, master_record_type_name
+        FROM rollup_definition
+        WHERE 
+            master_field_name = '{record_id}';
+        '''
+        cursor.execute(query)
+        result_records = cursor.fetchall()
+        record[FIELD_NAME_AGGREGATION_FUNCTION] = result_records[0]["aggregation_function"]
+        record[FIELD_NAME_REFERENCE_OBJECT_RECORD_TYPE] = result_records[0]["master_record_type_name"]
+
+        reference_object_record_type_options = []
+        for r in result_records:
+            element = {"id": r["master_record_type_name"], "reference_field": r["master_record_type_name"].capitalize()}
+            reference_object_record_type_options.append(element)
+    elif current_field_type == FieldTypes.RADIO.value:
+        map_checkbox_radio_options = get_checkbox_radio_options(cursor, [field_attributes])
+
+        list_values = map_checkbox_radio_options.get(get_options_map_key(field_attributes))
+        values = "\n".join(elem["option_key"] for elem in list_values)
+        record[FIELD_NAME_OPTIONS_VALUES] = values
+
+    field_structure = {}
+    for row in fields:
+        copy_row = row.copy()
+        copy_row["value"] = record[row["field_name"]]
+
+        if row["field_name"] in (FIELD_NAME_REFERENCE_OBJECT_RECORD_TYPE, ):
+            copy_row['options'] = reference_object_record_type_options
+            
+        field_structure[row["field_name"].capitalize()] = copy_row
+
+    return field_structure

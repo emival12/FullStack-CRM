@@ -19,6 +19,7 @@ export function FieldTypes() {
   const [listFieldForms, setListFieldForms] = useState(false);
 
   const [mapObjectFields, setMapObjectFields] = useState();
+  const [mapObjectFieldsRollup, setMapObjectFieldsRollup] = useState();
   const [mapObjectRt, setMapObjectRt] = useState();
   const [fieldTypes, setFieldTypes] = useState();
 
@@ -28,6 +29,7 @@ export function FieldTypes() {
       .then((res) => {
         console.log("Setup new Field structure Received:", res.data);
         setMapObjectFields(res.data.fields_options);
+        setMapObjectFieldsRollup(res.data.fields_options_rollup);
         setMapObjectRt(res.data.rt_options);
         setFieldTypes(res.data.field_types);
 
@@ -73,6 +75,17 @@ export function FieldTypes() {
     return listFieldForms[field_type_value];
   };
 
+  const getCorrectFieldOptions = (reference_object_value, field_type_value) => {
+    let correctMap =
+      field_type_value === fieldTypes.ROLLUP
+        ? mapObjectFieldsRollup
+        : mapObjectFields;
+
+    let new_options = [];
+    addOptionsToObject(new_options, correctMap[reference_object_value]);
+    return new_options;
+  };
+
   return {
     fieldTypeForm,
     mapObjectFields,
@@ -80,6 +93,7 @@ export function FieldTypes() {
     fieldTypes,
     listFieldForms,
     getCorrectForm,
+    getCorrectFieldOptions,
   };
 }
 

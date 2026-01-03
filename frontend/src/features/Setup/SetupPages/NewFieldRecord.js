@@ -14,7 +14,7 @@ import {
 import { API_BASE_URL, PATH_SETUP } from "../../../config/K";
 import RecordForm from "../../TableRecordDetails/RecordForm";
 import ToastMsg from "../../../components/ToastMsg";
-import { FieldTypes, mergeDict, addOptionsToObject } from "../FieldTypes";
+import { FieldTypes, addOptionsToObject } from "../FieldTypes";
 
 /**
  * Modal used to retrieve the info needed on the field creation
@@ -44,6 +44,7 @@ export default function NewFieldRecord({
     fieldTypes,
     listFieldForms,
     getCorrectForm,
+    getCorrectFieldOptions,
   } = FieldTypes();
 
   const {
@@ -111,9 +112,8 @@ export default function NewFieldRecord({
     if (!reference_object_value || !(reference_object_value in mapObjectFields))
       return;
 
-    let new_options = [];
-    addOptionsToObject(new_options, mapObjectFields[reference_object_value]);
-    getCorrectForm(field_type_value).reference_field.options = new_options;
+    getCorrectForm(field_type_value).reference_field.options =
+      getCorrectFieldOptions(reference_object_value, field_type_value);
     resetField("reference_field");
 
     if (field_type_value === fieldTypes.ROLLUP) {
