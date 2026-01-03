@@ -1,4 +1,5 @@
 import { Form, FloatingLabel } from "react-bootstrap";
+import TextareaAutosize from "react-textarea-autosize";
 import {
   MANDATORY_FIELD_LABEL,
   MAX_FIELD_LABEL,
@@ -162,7 +163,7 @@ export default function RecordForm({
       <>
         <Form.Control
           type={info.field_type}
-          as={info?.is_textarea ? "textarea" : undefined}
+          as={info?.is_textarea ? TextareaAutosize : undefined}
           required={info.is_required}
           defaultValue={isNewForm ? null : info?.value}
           disabled={isNewForm ? false : !info.is_editable || !isEdit}
