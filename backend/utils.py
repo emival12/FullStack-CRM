@@ -1294,6 +1294,15 @@ def create_new_field(cursor, db, object_name, field_data):
     options_values = field_data["options_values"].split("\n") if "options_values" in field_data else None
     try:
         field_length, sql_length = get_length_based_on_field_type(cursor, field_type, field_length, numeric_precision, numeric_scale, reference_object, reference_field)
+        # Create the actual field
+        add_column(                
+            cursor, 
+            object_name, 
+            field_name, 
+            field_type, 
+            sql_length
+        )  
+        
         params = [
             (
                 object_name,                        # object_name
@@ -1326,7 +1335,6 @@ def create_new_field(cursor, db, object_name, field_data):
         ]
         insert_record_layout_definition(cursor, params)         # Create the record_layout_definition
 
-
         # Create the ausiliar System object for the special types (ex: radio_checkbox_options, rollup_definition, related_list_definition, ..)
         data = {
             "object_name": object_name,
@@ -1339,15 +1347,7 @@ def create_new_field(cursor, db, object_name, field_data):
             "options_values": options_values,
         }
         insert_ausiliar_extra_system_object(cursor, field_type, data)       
-  
-        # Create the actual field
-        add_column(                
-            cursor, 
-            object_name, 
-            field_name, 
-            field_type, 
-            sql_length
-        )  
+
         db.commit() 
         return {"result": 1}
     except HTTPException as e:
@@ -1535,6 +1535,13 @@ def add_column(cursor, object_name, column_name, field_type, field_length):
 
 def delete_table(cursor, table_name):
     command = f'DROP TABLE IF EXISTS {table_name}'
+    cursor.execute(command)
+
+def delete_field(cursor, table_name, column_name):
+    command = f'''
+    ALTER TABLE {table_name}
+    DROP COLUMN {column_name};
+    '''
     cursor.execute(command)
 
 def insert_object_definition_record(cursor, params):
@@ -1739,15 +1746,13 @@ def setup_get_field_structure_and_value_data(cursor, table_name, fields, record_
 
     return field_structure
 
-def delete_field(cursor, db, table_name, field_name, current_field_type):
+def delete_field_from_table(cursor, db, table_name, field_name, current_field_type):
     try:
         fields_to_filter = ["object_name", "field_name"]
         params = [table_name, field_name]
         delete_record(cursor, "field_definition", fields_to_filter, params)
 
-        if current_field_type == FieldTypes.RADIO.value:
-            delete_record(cursor, "radio_checkbox_options", fields_to_filter, params)
-
+        delete_field(cursor, table_name, field_name)
         db.commit() 
         return {"result": 1}
     except Exception as e:

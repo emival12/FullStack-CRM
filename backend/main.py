@@ -359,6 +359,6 @@ async def delete_field(request: Request, db = Depends(get_db)):
     field_attributes = utils.get_field_definition_by_field_name(cursor, table_name, field_name)   # Get the definition of the field
     current_field_type = field_attributes["field_type"]                                     # Get the field type from the field definition
 
-    result = utils.delete_field(cursor, db, table_name, field_name, current_field_type)
+    result = utils.delete_field_from_table(cursor, db, table_name, field_name, current_field_type)
     cursor.close()
     return result
