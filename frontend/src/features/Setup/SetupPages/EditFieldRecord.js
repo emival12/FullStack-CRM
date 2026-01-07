@@ -6,6 +6,7 @@ import {
   API_BASE_URL,
   ERROR_MISSING_RECORD,
   ERROR_MISSING_TABLE,
+  PATH_DELETE,
   PATH_SETUP,
 } from "../../../config/K";
 import { EDIT_LABEL, MISSING_RECORD_LABEL } from "../../../config/IT";
@@ -130,13 +131,16 @@ export default function EditFieldRecord({
         setToastTitle={setToastTitle}
         setToastBody={setToastBody}
         hasDeleteButton={true}
-        pathAPI={API_BASE_URL + "TODO"} // TODO
-        // TODO
+        pathAPI={
+          API_BASE_URL + PATH_SETUP + "/" + selectedSectionKey + PATH_DELETE
+        }
         payloadAPI={{
           table: selectedTableKey,
-          id: selectedRecord,
+          fieldName: selectedRecord,
         }}
-        redirectAPI={PATH_SETUP + "/TODO/" + selectedTableKey} // TODO
+        redirectAPI={
+          PATH_SETUP + "/" + selectedTableKey + "/" + selectedSectionKey
+        }
         extraDescription={null}
       ></RecordButtons>
       <RecordForm

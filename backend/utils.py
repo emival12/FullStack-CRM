@@ -821,7 +821,7 @@ def get_field_structure_and_value_data(cursor, table_name, fields, mode, record_
     # If is needed only the structure the Rollup (readOnly fields) and the record values are useless
     if mode == FieldStructureMode.STRUCTURE_AND_DATA:
         primary_key_field = get_primary_key_from_fields(fields)
-        record = get_single_record(cursor, table_name, fields, record_id, primary_key_field)
+        record = get_single_record(cursor, table_name, fields, [primary_key_field], [record_id])
 
         map_record_info_rollup_record = get_rollup_definition(cursor, map_field_by_type["rollup_fields"])
 
@@ -879,7 +879,7 @@ def get_field_structure_and_value_data(cursor, table_name, fields, mode, record_
         
     return field_structure
 
-def get_single_record(cursor, table_name, fields, record_id, primary_key_field=None, record_type_name=None):
+def get_single_record(cursor, table_name, fields, filter_fields, params):
     """
         Return a single database record by its primary key
 
@@ -888,26 +888,27 @@ def get_single_record(cursor, table_name, fields, record_id, primary_key_field=N
             table_name (str): Name of a database table
             fields (list[dict]): List of dictionaries containing field metadata
             record_id (str): Primary key value of the record to retrieve
-            primary_key_field (str): Name of the field Primary key
-            record_type_name (str, optional): Record type name to further filter the query
+            filter_fields (list[str]): List of name of field to use in the where clause
+            params (list[str]): List of values to use in the where clause
 
         Returns:
             dict: Dictionary representing the record, or None if not found
     """
 
     fields_text = ", ".join(row["field_name"] for row in fields)
-    primary_key_field = get_primary_key_from_fields(fields) if not primary_key_field else primary_key_field
+    filters = " AND ".join(f'{f} = %s' for f in filter_fields)
 
     query = f'''
     SELECT {fields_text}
     FROM {table_name}
-    WHERE {primary_key_field} = %s {"AND record_type_name = '" + record_type_name + "';"  if record_type_name else ";"}
+    WHERE {filters}
     '''
-    cursor.execute(query, (record_id,))
+    cursor.execute(query, params)
     record = cursor.fetchone()
 
     if not record:
-        raise HTTPException(status_code=500, detail=f'Record \'{record_id}\' not found')
+        print(query, params)
+        raise HTTPException(status_code=500, detail=f'Record not found')
     return record
 
 def get_related_list_value(cursor, table_name, record_type_name, related_lists, tables_dict):
@@ -1647,6 +1648,19 @@ def insert_radio_checkbox_options(cursor, params):
 ########## END - BASE DML System objects
 
 
+def get_field_definition_by_field_name(cursor, table_name, field_name):
+    # Get the definition of the field
+    field_attributes = get_record_layout_definition_fields(        
+        cursor, 
+        table_name, 
+        "master", 
+        RLD_SINGLE_FIELD_NAME_FILTER, 
+        [field_name]
+    )
+    if not len(field_attributes):
+        raise HTTPException(status_code=404, detail=f'Field \'{field_name}\' not found')
+
+    return field_attributes[0]
 
 def setup_get_field_structure_and_value_data(cursor, table_name, fields, record_id, current_field_type, field_attributes):
     """
@@ -1687,7 +1701,7 @@ def setup_get_field_structure_and_value_data(cursor, table_name, fields, record_
                 real_fields.append(f)
 
     # Get the record infos
-    record = get_single_record(cursor, table_name, real_fields, record_id, primary_key_field)    
+    record = get_single_record(cursor, table_name, real_fields, [primary_key_field, "object_name"], [record_id, field_attributes["object_name"]])    
 
     # Calculate the ausiliar fields
     if current_field_type == FieldTypes.ROLLUP.value:
@@ -1724,3 +1738,20 @@ def setup_get_field_structure_and_value_data(cursor, table_name, fields, record_
         field_structure[row["field_name"].capitalize()] = copy_row
 
     return field_structure
+
+def delete_field(cursor, db, table_name, field_name, current_field_type):
+    try:
+        fields_to_filter = ["object_name", "field_name"]
+        params = [table_name, field_name]
+        delete_record(cursor, "field_definition", fields_to_filter, params)
+
+        if current_field_type == FieldTypes.RADIO.value:
+            delete_record(cursor, "radio_checkbox_options", fields_to_filter, params)
+
+        db.commit() 
+        return {"result": 1}
+    except Exception as e:
+        db.rollback()
+        
+        print('Error in the field table delete: ' + str(e))
+        raise HTTPException(status_code=500, detail=str(e))

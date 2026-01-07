@@ -1,5 +1,5 @@
 import mysql.connector
-from fastapi import FastAPI, Depends, Request, HTTPException
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 import utils
 
@@ -315,9 +315,6 @@ async def create_new_field(request: Request, db = Depends(get_db)):
     cursor.close()
     return result
 
-
-
-
 # Get all the values of the field with their structure
 @app.post("/setup/{table_name}/fields/{field_name}")
 async def get_field_info(request: Request, table_name: str, field_name: str, db = Depends(get_db)):
@@ -326,22 +323,12 @@ async def get_field_info(request: Request, table_name: str, field_name: str, db 
     list_fields_by_type = data.get("listFields")
 
     cursor = db.cursor(dictionary=True)
-    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)               # Evaluate input value (Avoid SQLInjection)
+    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)                       # Evaluate input value (Avoid SQLInjection)
 
-    field_attributes = utils.get_record_layout_definition_fields(                           # Get the definition of the field
-        cursor, 
-        table_name, 
-        "master", 
-        utils.RLD_SINGLE_FIELD_NAME_FILTER, 
-        [field_name]
-    )
-    if not len(field_attributes):
-        raise HTTPException(status_code=404, detail=f'Field \'{field_name}\' not found')
-    
-    field_attributes = field_attributes[0]                                                  # Just 1 record expected
-    current_field_type = field_attributes["field_type"]                                     # Get the field type from the field definition
-    fields = list(list_fields_by_type[current_field_type].values())                         # Get the list of fields related to the type (Ex: number has the precision, text has the lenght)
+    field_attributes = utils.get_field_definition_by_field_name(cursor, table_name, field_name)     # Get the definition of the field
+    current_field_type = field_attributes["field_type"]                                             # Get the field type from the field definition
 
+    fields = list(list_fields_by_type[current_field_type].values())                                 # Get the list of fields related to the type (Ex: number has the precision, text has the lenght)
     field_structure = utils.setup_get_field_structure_and_value_data(
         cursor, 
         "field_definition", 
@@ -351,9 +338,27 @@ async def get_field_info(request: Request, table_name: str, field_name: str, db 
         field_attributes
     )   
 
+    cursor.close()
     return { 
         "field_type": current_field_type,
         "primary_key_name": utils.get_primary_key_from_fields(fields),
         "field_structure": field_structure
     }
 
+# Delete a field from an object
+@app.post("/setup/fields/Delete")
+async def delete_field(request: Request, db = Depends(get_db)):
+    # Read the data from the body
+    data = await request.json() 
+    table_name = data.get("table")
+    field_name = data.get("fieldName")
+
+    cursor = db.cursor(dictionary=True)
+    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)               # Evaluate input value (Avoid SQLInjection)
+
+    field_attributes = utils.get_field_definition_by_field_name(cursor, table_name, field_name)   # Get the definition of the field
+    current_field_type = field_attributes["field_type"]                                     # Get the field type from the field definition
+
+    result = utils.delete_field(cursor, db, table_name, field_name, current_field_type)
+    cursor.close()
+    return result
