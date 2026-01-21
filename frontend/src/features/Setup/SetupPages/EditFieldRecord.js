@@ -109,7 +109,7 @@ export default function EditFieldRecord({
   }, [listFieldForms]);
 
   const onSubmit = (data) => {
-    console.log("submit"); // TODO
+    console.log("TODO submit"); // TODO when we work on the setup implementations
   };
 
   if (controlledError) {

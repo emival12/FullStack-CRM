@@ -475,20 +475,20 @@ def get_field_divided_by_type(fields):
 
         Returns:
             dict: A dictionary with three keys:
-                - "radio_checkbox_fields": all fields of type RADIO or CHECKBOX
+                - "radio_fields": all fields of type RADIO or CHECKBOX
                 - "picklist_lookup_fields": all fields of type PICKLIST or LOOKUP
                 - "rollup_fields": all fields of type ROLLUP
     """
 
     result = {
-        "radio_checkbox_fields": [],
+        "radio_fields": [],
         "picklist_lookup_fields": [],
         "rollup_fields": [],
     }
     
     for row in fields:
-        if row["field_type"] in (FieldTypes.RADIO.value): #, FieldTypes.CHECKBOX.value TODO CHECK
-            result["radio_checkbox_fields"].append(row)
+        if row["field_type"] in (FieldTypes.RADIO.value):
+            result["radio_fields"].append(row)
         elif row["field_type"] in (FieldTypes.PICKLIST.value, FieldTypes.LOOKUP.value):
             result["picklist_lookup_fields"].append(row)
         elif row["field_type"] == FieldTypes.ROLLUP.value:
@@ -815,7 +815,7 @@ def get_field_structure_and_value_data(cursor, table_name, fields, mode, record_
     # Preprocess all the checkbox/radio to get the option values
     map_field_by_type = get_field_divided_by_type(fields)
 
-    map_checkbox_radio_options = get_checkbox_radio_options(cursor, map_field_by_type["radio_checkbox_fields"])
+    map_checkbox_radio_options = get_checkbox_radio_options(cursor, map_field_by_type["radio_fields"])
     map_picklist_lookup_options = get_picklist_lookup_options(cursor, map_field_by_type["picklist_lookup_fields"], map_object_primary_key_names)
     
     # If is needed only the structure the Rollup (readOnly fields) and the record values are useless
