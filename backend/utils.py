@@ -528,7 +528,7 @@ def convert_into_SQL_field_type(field_type, length):
     if field_type in (FieldTypes.TEXT.value, FieldTypes.RADIO.value, FieldTypes.CHECKBOX.value, FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value):
         return f'VARCHAR ({length})'
     elif field_type in (FieldTypes.NUMBER.value, FieldTypes.ROLLUP.value):
-        return f'FLOAT ({length})'
+        return f'DECIMAL ({length})'
     else:
         return f'INT AUTO_INCREMENT'
 
@@ -833,7 +833,10 @@ def get_field_structure_and_value_data(cursor, table_name, fields, mode, record_
         copy_row = row.copy()
 
         if row["field_type"] in (FieldTypes.NUMBER.value):
-            limit_value = f'{"9" * row["numeric_precision"]}.{"9" * row["numeric_scale"] if row["numeric_scale"] else ""}'
+            int_part = "9" * (row["numeric_precision"] - (row["numeric_scale"] or 0))
+            dec_part = "9" * (row["numeric_scale"] or 0)
+            limit_value = int_part + "." + dec_part if dec_part else int_part
+            
             copy_row["max_limit_value"] = limit_value
             copy_row["min_limit_value"] = "-" + limit_value
         elif row["field_type"] in (FieldTypes.RADIO.value):
