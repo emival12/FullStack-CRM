@@ -39,15 +39,15 @@ export function FieldTypes() {
         let obj_lookup_options = res.data.lookup_options;
         addOptionsToObject(
           NEW_LOOKUP_FIELDS.reference_object.options,
-          obj_lookup_options
+          obj_lookup_options,
         );
         addOptionsToObject(
           NEW_PICKLIST_FIELDS.reference_object.options,
-          obj_lookup_options
+          obj_lookup_options,
         );
         addOptionsToObject(
           NEW_ROLLUP_FIELDS.reference_object.options,
-          obj_lookup_options
+          obj_lookup_options,
         );
 
         setListFieldForms({
@@ -58,13 +58,14 @@ export function FieldTypes() {
           [field_types.ROLLUP]: mergeDict(BASE_FIELDS, NEW_ROLLUP_FIELDS),
           [field_types.RADIO]: mergeDict(BASE_FIELDS, NEW_RADIO_FIELDS),
           [field_types.CHECKBOX]: mergeDict(BASE_FIELDS, NEW_CHECKBOX_FIELDS),
+          ["auto_number"]: { ["field_name"]: BASE_FIELDS["field_name"] },
         });
 
         //Set the possible field type possibilities
         addOptionsToObject(
           fieldTypeForm.field_type.options,
           field_types,
-          false
+          false,
         );
       })
       .catch((err) => console.error("Error:", err))
@@ -104,7 +105,7 @@ export const mergeDict = (dict1, dict2) => {
   };
 
   return Object.fromEntries(
-    Object.entries(merged).sort(([, a], [, b]) => a.order - b.order)
+    Object.entries(merged).sort(([, a], [, b]) => a.order - b.order),
   );
 };
 
