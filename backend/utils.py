@@ -529,6 +529,8 @@ def convert_into_SQL_field_type(field_type, length):
         return f'VARCHAR ({length})'
     elif field_type in (FieldTypes.NUMBER.value, FieldTypes.ROLLUP.value):
         return f'FLOAT ({length})'
+    else:
+        return f'INT AUTO_INCREMENT'
 
 
 ########## END - HELP Method

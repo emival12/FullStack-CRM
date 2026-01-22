@@ -67,7 +67,7 @@ export const NEW_OBJECT_FIELD_STRUCTURE = {
       },
       {
         option_label: "Auto number",
-        option_key: "number",
+        option_key: "auto_number",
       },
     ],
   },
