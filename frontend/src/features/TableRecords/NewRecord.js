@@ -88,7 +88,13 @@ export default function NewRecord({
 
   return (
     <>
-      <Modal show={showNewModal} onHide={() => setShowNewModal(false)}>
+      <Modal
+        show={showNewModal}
+        onHide={() => {
+          setShowNewModal(false);
+          reset();
+        }}
+      >
         <Modal.Header closeButton>
           <Modal.Title>{NEW_RECORD_TITLE_LABEL}</Modal.Title>
         </Modal.Header>
