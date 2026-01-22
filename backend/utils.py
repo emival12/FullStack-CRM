@@ -836,7 +836,7 @@ def get_field_structure_and_value_data(cursor, table_name, fields, mode, record_
             int_part = "9" * (row["numeric_precision"] - (row["numeric_scale"] or 0))
             dec_part = "9" * (row["numeric_scale"] or 0)
             limit_value = int_part + "." + dec_part if dec_part else int_part
-            
+
             copy_row["max_limit_value"] = limit_value
             copy_row["min_limit_value"] = "-" + limit_value
         elif row["field_type"] in (FieldTypes.RADIO.value):
@@ -1113,6 +1113,7 @@ def create_new_object(cursor, db, object_data):
         ]
         insert_record_type_definition(cursor, params)           #Create the record_type_definition
 
+        is_primary_key_text = 1 if pk_field_type != 'auto_number' else 0
         params = [
             (
                 object_name,                        # object_name
@@ -1126,8 +1127,8 @@ def create_new_object(cursor, db, object_data):
                 None,                               # reference_field
                 1,                                  # is_active
                 1,                                  # is_visible
-                1,                                  # is_editable
-                1,                                  # is_required
+                is_primary_key_text,                # is_editable
+                is_primary_key_text,                # is_required
                 1,                                  # is_primary_key
                 None                                # lookup_filter
             ),
