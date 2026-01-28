@@ -3,13 +3,14 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import NavBar from "./components/NavBar";
 
 import "./App.css";
-import { PATH_DATABASE, PATH_SETUP } from "./config/K";
+import { PATH_DATABASE, PATH_IMPORT, PATH_SETUP } from "./config/K";
 import DatabaseMainPage from "./features/MainScreen/DatabaseMainPage";
 import RecordsListView from "./features/TableRecords/RecordsListView";
 import RecordDetail from "./features/TableRecordDetails/RecordDetail";
 import SetupMainPage from "./features/MainScreen/SetupMainPage";
 import SetupNewObject from "./features/Setup/SetupPages/SetupNewObject";
 import SetupSections from "./features/Setup/SetupPages/SetupSections";
+import MassiveImport from "./features/MassiveImport/MassiveImport";
 
 function App() {
   return (
@@ -31,7 +32,7 @@ function App() {
           <Route path=":tableKey" element={<RecordsListView />} />
           <Route path=":tableKey/:recordId" element={<RecordDetail />} />
         </Route>
-        <Route path="/TOBE" element={<div>Pagina TOBE</div>} />
+        <Route path={PATH_IMPORT} element={<MassiveImport />} />
         <Route path={PATH_SETUP} element={<SetupMainPage />}>
           <Route index element={<SetupNewObject />} />
           <Route path=":tableKey" element={<Navigate to="home" replace />} />

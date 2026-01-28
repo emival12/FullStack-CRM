@@ -1,7 +1,7 @@
 import { Navbar, Nav, Container } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { PATH_DATABASE, PATH_SETUP } from "../config/K";
-import { DATABASE_LABEL } from "../config/IT";
+import { PATH_DATABASE, PATH_IMPORT, PATH_SETUP } from "../config/K";
+import { DATABASE_LABEL, IMPORT_LABEL } from "../config/IT";
 import "../App.css";
 
 export default function NavBar() {
@@ -23,8 +23,8 @@ export default function NavBar() {
             <Nav.Link as={Link} to={PATH_DATABASE}>
               {DATABASE_LABEL}
             </Nav.Link>
-            <Nav.Link as={Link} to="/TOBE">
-              TOBE
+            <Nav.Link as={Link} to={PATH_IMPORT}>
+              {IMPORT_LABEL}
             </Nav.Link>
           </Nav>
           <Nav>

@@ -1,7 +1,8 @@
 import mysql.connector
-from fastapi import FastAPI, Depends, Request
+from fastapi import FastAPI, Depends, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 import utils
+import massiveImport
 
 app = FastAPI()
 
@@ -52,6 +53,40 @@ def get_tables(db = Depends(get_db)):
     cursor.close()
     return structure
 
+
+# Get the list of all the tables in options syntax
+@app.get("/import")
+async def get_list_of_importable_objects(db = Depends(get_db)):
+    cursor = db.cursor(dictionary=True)
+        
+    tables = utils.get_object_definition_records(cursor)
+
+    options_tables = []
+    for t in tables:
+        options_tables.append({
+            "reference_field": t["label"],
+            "id": t["key"],
+        })
+
+    cursor.close()
+    return options_tables
+
+# Import records from a CSV file
+@app.post("/import/Upload")
+async def import_records_from_csv(
+    operation_type: str = Form(...),
+    object_name: str = Form(...),
+    file: UploadFile = File(...),
+    db = Depends(get_db)
+):
+    file_contents = await file.read()
+    file_decoded = file_contents.decode('utf-8')
+
+    cursor = db.cursor(dictionary=True)
+    massiveImport.elaborate_import_file(db, cursor, operation_type, object_name, file_decoded)
+    cursor.close()
+
+    return {"result": 1}
 
 # Get all the records of an object
 @app.get("/{table_name}")
@@ -362,3 +397,8 @@ async def delete_field(request: Request, db = Depends(get_db)):
     result = utils.delete_field_from_table(cursor, db, table_name, field_name, current_field_type)
     cursor.close()
     return result
+
+
+
+
+
