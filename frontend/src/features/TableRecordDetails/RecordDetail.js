@@ -77,7 +77,7 @@ export default function RecordDetail() {
           Object.entries(res.data.field_structure).map(([key, info]) => [
             key,
             info.value,
-          ])
+          ]),
         );
         reset(formValues);
       })
@@ -211,7 +211,7 @@ export default function RecordDetail() {
               <div className="border border-2 p-3 pt-2 rounded-4" key={key}>
                 <div className="fw-bold mb-2">{related_list.label}</div>
                 <RecordsList
-                  records={related_list}
+                  recordsList={related_list}
                   selectedTableKey={actualTableKey}
                   onSelectedTable={setSelectedTableKey}
                   onSelectedRecord={setSelectedRecord}

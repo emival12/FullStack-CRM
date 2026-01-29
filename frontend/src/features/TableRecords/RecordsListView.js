@@ -66,7 +66,7 @@ export default function RecordsListView() {
         </Button>
       </div>
       <RecordsList
-        records={records}
+        recordsList={records}
         selectedTableKey={actualTableKey}
         onSelectedTable={setSelectedTableKey}
         onSelectedRecord={setSelectedRecord}
