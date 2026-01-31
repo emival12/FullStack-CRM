@@ -5,14 +5,12 @@ import reportWebVitals from "./reportWebVitals";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./index.css";
-import NavBar from "./components/NavBar";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <App />
-  </React.StrictMode> //TODO rimuovere la strictMode alla fine degli sviluppi, fa partire tutte le query il doppio delle volte
+  </React.StrictMode>,
 );
 
-// If you want to start measuring performance in your app, pass a function (for example: reportWebVitals(console.log))
 reportWebVitals();

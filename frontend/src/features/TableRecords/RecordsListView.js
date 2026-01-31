@@ -4,7 +4,7 @@ import { useOutletContext, useParams } from "react-router-dom";
 import { Button } from "react-bootstrap";
 
 import { MISSING_TABLE_LABEL, NEW_LABEL } from "../../config/IT";
-import { API_BASE_URL } from "../../config/K";
+import { API_BASE_URL, ERROR_MISSING_TABLE } from "../../config/K";
 import MissingPage from "../../components/MissingPage";
 import LoadingScreen from "../../components/LoadingScreen";
 import RecordsList from "./RecordsList";
@@ -22,6 +22,7 @@ export default function RecordsListView() {
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState([]);
   const [showNewModal, setShowNewModal] = useState(false);
+  const [controlledError, setControlledError] = useState(false);
 
   const actualTableKey = selectedTableKey || tableKey;
 
@@ -35,7 +36,13 @@ export default function RecordsListView() {
         console.log("Record List Received:", res.data);
         setRecords(res.data);
       })
-      .catch((err) => console.error("Error:", err))
+      .catch((err) => {
+        console.error("Error:", err);
+        const errMsg = err.response.data.detail;
+        if (errMsg === ERROR_MISSING_TABLE(actualTableKey)) {
+          setControlledError(true);
+        }
+      })
       .finally(() => setLoading(false));
   };
 
@@ -43,11 +50,11 @@ export default function RecordsListView() {
     fetchData();
   }, [selectedTableKey, tableKey]);
 
-  if (!actualTableKey) {
+  if (loading) return <LoadingScreen />;
+
+  if (controlledError) {
     return <MissingPage MissingText={MISSING_TABLE_LABEL} />;
   }
-
-  if (loading) return <LoadingScreen />;
 
   return (
     <div>

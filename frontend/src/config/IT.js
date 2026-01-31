@@ -1,3 +1,5 @@
+//App
+export const DB_INTRO_LABEL = "Seleziona una tabella dalla sidebar";
 //LoadingScreen
 export const LOADING_LABEL = "Caricamento...";
 

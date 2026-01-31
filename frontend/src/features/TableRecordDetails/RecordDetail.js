@@ -15,7 +15,6 @@ import {
 import {
   API_BASE_URL,
   ERROR_MISSING_RECORD,
-  ERROR_MISSING_TABLE,
   PATH_DATABASE,
   PATH_DELETE,
   PATH_UPDATE,
@@ -84,10 +83,7 @@ export default function RecordDetail() {
       .catch((err) => {
         console.error("Error:", err);
         const errMsg = err.response.data.detail;
-        if (
-          errMsg === ERROR_MISSING_TABLE.replace("X", actualTableKey) ||
-          errMsg === ERROR_MISSING_RECORD.replace("X", recordKey)
-        ) {
+        if (errMsg === ERROR_MISSING_RECORD(recordKey)) {
           setControlledError(true);
         }
       })
@@ -154,11 +150,11 @@ export default function RecordDetail() {
     }
   };
 
+  if (loading) return <LoadingScreen />;
+
   if (controlledError) {
     return <MissingPage MissingText={MISSING_RECORD_LABEL} />;
   }
-
-  if (loading) return <LoadingScreen />;
 
   return (
     <div>

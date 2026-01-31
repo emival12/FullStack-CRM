@@ -68,7 +68,7 @@ export default function EditFieldRecord({
           selectedRecord,
         {
           listFields: listFieldForms,
-        }
+        },
       )
       .then((res) => {
         console.log(res);
@@ -80,7 +80,7 @@ export default function EditFieldRecord({
           Object.entries(res.data.field_structure).map(([key, info]) => [
             key,
             info.value,
-          ])
+          ]),
         );
         reset(formValues);
 
@@ -95,8 +95,8 @@ export default function EditFieldRecord({
         console.error("Error:", err);
         const errMsg = err.response.data.detail;
         if (
-          errMsg === ERROR_MISSING_TABLE.replace("X", selectedTableKey) ||
-          errMsg === ERROR_MISSING_RECORD.replace("X", selectedRecord)
+          errMsg === ERROR_MISSING_TABLE(selectedTableKey) ||
+          errMsg === ERROR_MISSING_RECORD(selectedRecord)
         ) {
           setControlledError(true);
         }

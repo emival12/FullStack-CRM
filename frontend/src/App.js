@@ -4,6 +4,7 @@ import NavBar from "./components/NavBar";
 
 import "./App.css";
 import { PATH_DATABASE, PATH_IMPORT, PATH_SETUP } from "./config/K";
+import { DB_INTRO_LABEL } from "./config/IT";
 import DatabaseMainPage from "./features/MainScreen/DatabaseMainPage";
 import RecordsListView from "./features/TableRecords/RecordsListView";
 import RecordDetail from "./features/TableRecordDetails/RecordDetail";
@@ -27,8 +28,7 @@ function App() {
           */}
 
         <Route path={PATH_DATABASE} element={<DatabaseMainPage />}>
-          {/*TODO Improv */}
-          <Route index element={<p>Seleziona una tabella dalla sidebar</p>} />
+          <Route index element={DB_INTRO_LABEL} />
           <Route path=":tableKey" element={<RecordsListView />} />
           <Route path=":tableKey/:recordId" element={<RecordDetail />} />
         </Route>
