@@ -12,6 +12,7 @@ import SetupMainPage from "./features/MainScreen/SetupMainPage";
 import SetupNewObject from "./features/Setup/SetupPages/SetupNewObject";
 import SetupSections from "./features/Setup/SetupPages/SetupSections";
 import MassiveImport from "./features/MassiveImport/MassiveImport";
+import MissingPage from "./components/MissingPage";
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
             element={<SetupSections />}
           />
         </Route>
+        <Route path="*" element={<MissingPage />} />
       </Routes>
     </BrowserRouter>
   );
