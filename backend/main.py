@@ -1,15 +1,18 @@
 import mysql.connector
 from fastapi import FastAPI, Depends, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import utils
 import massiveImport
+import os
+
 
 app = FastAPI()
-
 # Enable CORS to allow React to access APIs
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # React frontend
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8000", "http://127.0.0.1:8000"],  # React frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -34,7 +37,7 @@ def split_table_name(table_name):
 
 # EXPOSED API'S:
 # Get all the tables to show in the sidebar
-@app.get("/plain_tables")
+@app.get("/api/plain_tables")
 def get_tables_plain(db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
@@ -43,7 +46,7 @@ def get_tables_plain(db = Depends(get_db)):
     cursor.close()
     return tables
 
-@app.get("/tables")
+@app.get("/api/tables")
 def get_tables(db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
@@ -55,7 +58,7 @@ def get_tables(db = Depends(get_db)):
 
 
 # Get the list of all the tables in options syntax
-@app.get("/import")
+@app.get("/api/import")
 async def get_list_of_importable_objects(db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
         
@@ -72,7 +75,7 @@ async def get_list_of_importable_objects(db = Depends(get_db)):
     return options_tables
 
 # Import records from a CSV file
-@app.post("/import/Upload")
+@app.post("/api/import/Upload")
 async def import_records_from_csv(
     operation_type: str = Form(...),
     object_name: str = Form(...),
@@ -89,7 +92,7 @@ async def import_records_from_csv(
     return {"result": 1}
 
 # Get all the records of an object
-@app.get("/{table_name}")
+@app.get("/api/{table_name}")
 def get_table_records(table_name: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
@@ -111,7 +114,7 @@ def get_table_records(table_name: str, db = Depends(get_db)):
 
 
 # Get all the fields values with their structure of a single record
-@app.get("/{table_name}/record/{record_id}")
+@app.get("/api/{table_name}/record/{record_id}")
 def get_record_info(table_name: str, record_id: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
@@ -136,7 +139,7 @@ def get_record_info(table_name: str, record_id: str, db = Depends(get_db)):
 
 
 # Get all the fields structure of an object
-@app.get("/{table_name}/new-record")
+@app.get("/api/{table_name}/new-record")
 def get_new_record_structure(table_name: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
@@ -151,7 +154,7 @@ def get_new_record_structure(table_name: str, db = Depends(get_db)):
 
 
 # Delete a single record
-@app.post("/Delete")
+@app.post("/api/Delete")
 async def delete_record(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -170,7 +173,7 @@ async def delete_record(request: Request, db = Depends(get_db)):
 
 
 # Insert a new record
-@app.post("/Insert")
+@app.post("/api/Insert")
 async def update_record(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -188,7 +191,7 @@ async def update_record(request: Request, db = Depends(get_db)):
 
 
 # Update a single record
-@app.post("/Update")
+@app.post("/api/Update")
 async def update_record(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -214,7 +217,7 @@ async def update_record(request: Request, db = Depends(get_db)):
 ###############################################
 
 # Insert a new table in the database
-@app.post("/new-object")
+@app.post("/api/new-object")
 async def create_new_object(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -237,7 +240,7 @@ async def create_new_object(request: Request, db = Depends(get_db)):
     """
 
 # Get the structure of the table
-@app.get("/setup/{table_name}")
+@app.get("/api/setup/{table_name}")
 async def get_object_definition(table_name: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
         
@@ -248,7 +251,7 @@ async def get_object_definition(table_name: str, db = Depends(get_db)):
     return tables[0] if len(tables) > 0 else {}
 
 # Delete a single table
-@app.post("/setup/home/Delete")
+@app.post("/api/setup/home/Delete")
 async def delete_object(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -263,7 +266,7 @@ async def delete_object(request: Request, db = Depends(get_db)):
     return result
 
 # Update a single table
-@app.post("/setup/home/Update")
+@app.post("/api/setup/home/Update")
 async def update_object(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -279,7 +282,7 @@ async def update_object(request: Request, db = Depends(get_db)):
     return {}
 
 # Get all the fields structure for the creation of a new field
-@app.get("/setup/field/new/structure")
+@app.get("/api/setup/field/new/structure")
 async def get_field_creation_structure(db = Depends(get_db)):
     field_types = {}
     for ft in utils.FieldTypes:
@@ -314,7 +317,7 @@ async def get_field_creation_structure(db = Depends(get_db)):
     }
 
 # Get all the fields of an object
-@app.get("/setup/{table_name}/fields")
+@app.get("/api/setup/{table_name}/fields")
 async def get_object_fields_record(table_name: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
         
@@ -336,7 +339,7 @@ async def get_object_fields_record(table_name: str, db = Depends(get_db)):
     }
 
 # Insert a new field
-@app.post("/setup/{table_name}/field/new")
+@app.post("/api/setup/{table_name}/field/new")
 async def create_new_field(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -351,7 +354,7 @@ async def create_new_field(request: Request, db = Depends(get_db)):
     return result
 
 # Get all the values of the field with their structure
-@app.post("/setup/{table_name}/fields/{field_name}")
+@app.post("/api/setup/{table_name}/fields/{field_name}")
 async def get_field_info(request: Request, table_name: str, field_name: str, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -381,7 +384,7 @@ async def get_field_info(request: Request, table_name: str, field_name: str, db 
     }
 
 # Delete a field from an object
-@app.post("/setup/fields/Delete")
+@app.post("/api/setup/fields/Delete")
 async def delete_field(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -402,3 +405,21 @@ async def delete_field(request: Request, db = Depends(get_db)):
 
 
 
+
+
+BUILD_DIR = "../frontend/build"
+
+# 1. Mount per i file statici (JS/CSS) - Obbligatorio per React
+app.mount("/static", StaticFiles(directory=os.path.join(BUILD_DIR, "static")), name="static")
+
+@app.get("/{catchall:path}")
+async def serve_react_app(request: Request, catchall: str):
+    # Costruiamo il percorso del file richiesto
+    file_path = os.path.join(BUILD_DIR, catchall)
+    
+    # Se il file esiste (immagine, favicon, ecc.), lo restituiamo
+    if os.path.isfile(file_path):
+        return FileResponse(file_path)
+    
+    # Se non esiste, restituiamo index.html (per il routing di React)
+    return FileResponse(os.path.join(BUILD_DIR, "index.html"))

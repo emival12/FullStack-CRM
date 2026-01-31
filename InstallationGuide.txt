@@ -67,3 +67,53 @@ pip install pyinstaller
 pyinstaller --onefile start_servers.py
 
 ## 5: L'eseguibile è salvato dentro la folder dist
+
+
+
+
+
+
+
+
+
+
+
+
+
+SUL MIO PC -> Lanciare nella cartella Backend il comando (Otterrai un file con tutte le librerie e le loro versioni esatte):
+pip freeze > requirements.txt
+
+SUL PC CLIENTE -> Lanciare nella cartella Backend:
+pip install -r requirements.txt
+
+SUL MIO PC -> Lanciare nella cartella Frontedn il comando (crea la vera build del sito):
+npm run build
+
+
+Spunto per l'eseguibile:
+import pystray
+from PIL import Image
+import threading
+import uvicorn
+import sys
+
+# 1. Funzione per l'azione "Apri"
+def open_browser():
+    import webbrowser
+    webbrowser.open("http://localhost:8000")
+
+# 2. Funzione per l'azione "Esci"
+def quit_window(icon, item):
+    icon.stop()
+    sys.exit() # Chiude tutto il processo
+
+# 3. Creazione dell'icona
+image = Image.open("icona_tuo_logo.png")
+menu = pystray.Menu(
+    pystray.MenuItem("Apri Gestionale", open_browser),
+    pystray.MenuItem("Esci", quit_window)
+)
+icon = pystray.Icon("NomeApp", image, "Gestionale Cliente", menu)
+
+Comando per compilarlo:
+pyinstaller --onefile --noconsole start_app.py
