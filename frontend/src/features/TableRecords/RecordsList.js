@@ -6,7 +6,6 @@ import MissingPage from "../../components/MissingPage";
 import { MISSING_RECORD_LABEL } from "../../config/IT";
 import { PATH_DATABASE } from "../../config/K";
 import "../../App.css";
-import LoadingScreen from "../../components/LoadingScreen";
 
 /**
  * Shows a table of record
@@ -41,56 +40,41 @@ export default function RecordsList({
   onSelectedRecord,
   pathRedirect = PATH_DATABASE,
 }) {
+  const navigate = useNavigate();
+
   const NUM_RECORD_TO_SHOW = 10;
   const MAX_VISIBLE_PAGES = 3;
-  const [loading, setLoading] = useState(true);
 
-  const [pages, setPages] = useState([]);
-  const [numPages, setNumPages] = useState(1);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [recordsToShow, setRecordsToShow] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  // Calculate the total page number
+  const numPages = recordsList
+    ? Math.ceil(recordsList.records.length / NUM_RECORD_TO_SHOW)
+    : 0;
 
-  const navigate = useNavigate();
+  // Calculate the slice of the data to show
+  const start = (currentPage - 1) * NUM_RECORD_TO_SHOW;
+  const end = currentPage * NUM_RECORD_TO_SHOW;
+  const recordsToShow = recordsList
+    ? {
+        ...recordsList,
+        records: recordsList.records.slice(start, end),
+      }
+    : null;
+
+  // Calculate the pages number to show in the pagination component
+  const pageNumbers = [];
+  const startPage = Math.max(
+    1,
+    currentPage - Math.floor(MAX_VISIBLE_PAGES / 2),
+  );
+  const endPage = Math.min(numPages, startPage + MAX_VISIBLE_PAGES - 1);
+  for (let i = startPage; i <= endPage; i++) {
+    pageNumbers.push(i);
+  }
 
   useEffect(() => {
     setCurrentPage(1);
-    setNumPages(Math.ceil(recordsList?.records.length / NUM_RECORD_TO_SHOW));
   }, [recordsList]);
-
-  useEffect(() => {
-    if (!recordsList) return;
-    setLoading(true);
-
-    // Handle the record to show change
-    const start = (currentPage - 1) * NUM_RECORD_TO_SHOW;
-    const end = currentPage * NUM_RECORD_TO_SHOW;
-    setRecordsToShow({
-      ...recordsList,
-      records: recordsList.records.slice(start, end),
-    });
-
-    // Handle the Pagination element change
-    const startPage = Math.max(
-      1,
-      currentPage - Math.floor(MAX_VISIBLE_PAGES / 2),
-    );
-    const endPage = Math.min(numPages, startPage + MAX_VISIBLE_PAGES - 1);
-    const pages = [];
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(
-        <Pagination.Item
-          key={i}
-          active={i === currentPage}
-          onClick={() => goToPage(i)}
-        >
-          {i}
-        </Pagination.Item>,
-      );
-    }
-    setPages(pages);
-
-    setLoading(false);
-  }, [currentPage]);
 
   const goToPage = (page) => {
     if (page < 1 || page > numPages) return;
@@ -133,8 +117,6 @@ export default function RecordsList({
     }
   };
 
-  if (loading) return <LoadingScreen />;
-
   return (
     <>
       <Table bordered hover className="m-0">
@@ -166,7 +148,15 @@ export default function RecordsList({
           onClick={() => goToPage(currentPage - 1)}
         />
 
-        {pages}
+        {pageNumbers.map((number) => (
+          <Pagination.Item
+            key={number}
+            active={number === currentPage}
+            onClick={() => goToPage(number)}
+          >
+            {number}
+          </Pagination.Item>
+        ))}
 
         <Pagination.Next
           disabled={currentPage === numPages}
