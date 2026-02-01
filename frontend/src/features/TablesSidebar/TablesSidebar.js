@@ -25,7 +25,7 @@ export default function TablesSidebar({ tableKey }) {
     axios
       .get(`${API_BASE_URL}/tables`)
       .then((res) => {
-        console.log("Tables List Received:", res.data);
+        console.log("TablesSidebar - List of Tables Received:", res.data);
         setTablesData(res.data);
       })
       .catch((err) => console.error("Error:", err))
