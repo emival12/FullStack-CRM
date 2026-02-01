@@ -3,17 +3,17 @@ import { Link } from "react-router-dom";
 import { PATH_DATABASE } from "../../config/K";
 
 /**
- * Shows a list of record
+ * Shows a list of options, each option is a tables
  *
- * @param {Object[]} props.objectElem       - Record to show
- * @param {Object} props.selectedElement    - Element Key currently selected
- * @param {Function} props.onSelectElement  - Function to update the selected element
- * @param {string} props.displayField       - Field to show in the frontend
+ * @param {Object[]} props.tableItem        - Record to show
+ * @param {String} props.tableKey           - Table Key currently selected
+ * @param {Function} props.toggleSidebar    - Function to close the Sidebar (phone sidebar only)
+ * @param {String} props.displayField       - Field to show in the frontend
  */
 export default function TablesSidebarList({
-  objectElem,
-  selectedElement,
-  onSelectElement,
+  tableItem,
+  tableKey,
+  toggleSidebar,
   displayField = "label",
 }) {
   return (
@@ -21,12 +21,12 @@ export default function TablesSidebarList({
       <ListGroup.Item
         action
         as={Link}
-        to={PATH_DATABASE + "/" + objectElem.key}
-        key={objectElem.key}
-        active={objectElem.key === selectedElement}
-        onClick={() => onSelectElement(objectElem.key)}
+        to={`${PATH_DATABASE}/${tableItem.key}`}
+        key={tableItem.key}
+        active={tableItem.key === tableKey}
+        onClick={toggleSidebar}
       >
-        {objectElem[displayField]}
+        {tableItem[displayField]}
       </ListGroup.Item>
     </ListGroup>
   );

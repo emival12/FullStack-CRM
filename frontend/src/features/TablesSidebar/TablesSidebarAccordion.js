@@ -3,20 +3,20 @@ import TablesSidebarList from "./TablesSidebarList";
 
 /**
  * Shows a series of accordion, continues to shows accordion until it reach the deepes level
- * On the deepest level there is a list of record
+ * On the deepest level there is a list of options, each option is a tables
  *
- * @param {Object[]} props.data             - Contains the data retrieved from the query
- * @param {Object} props.selectedElement    - Element currently selected
- * @param {Function} props.onSelectElement  - Function to update the selected element
+ * @param {Object[]} props.tablesData             - Contains the data retrieved from the query
+ * @param {String} props.tableKey                 - TableKey currently selected
+ * @param {Function} props.toggleSidebar          - Function to close the Sidebar (phone sidebar only)
  */
 export default function TablesSidebarAccordion({
-  data,
-  selectedElement,
-  onSelectElement,
+  tablesData,
+  tableKey,
+  toggleSidebar,
 }) {
   return (
     <Accordion alwaysOpen>
-      {Object.entries(data).map(([key, value]) => (
+      {Object.entries(tablesData).map(([key, value]) => (
         <Accordion.Item eventKey={key} key={key}>
           <Accordion.Header>{key}</Accordion.Header>
           <Accordion.Body>
@@ -26,9 +26,9 @@ export default function TablesSidebarAccordion({
                 return (
                   <TablesSidebarAccordion
                     key={idx}
-                    data={item}
-                    selectedElement={selectedElement}
-                    onSelectElement={onSelectElement}
+                    tablesData={item}
+                    tableKey={tableKey}
+                    toggleSidebar={toggleSidebar}
                   />
                 );
               }
@@ -36,9 +36,9 @@ export default function TablesSidebarAccordion({
               return (
                 <TablesSidebarList
                   key={idx}
-                  objectElem={item}
-                  selectedElement={selectedElement}
-                  onSelectElement={onSelectElement}
+                  tableItem={item}
+                  tableKey={tableKey}
+                  toggleSidebar={toggleSidebar}
                 />
               );
             })}
