@@ -1,6 +1,6 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
-import { useOutletContext, useParams } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+import { useOutletContext } from "react-router-dom";
 import { Button } from "react-bootstrap";
 
 import { MISSING_TABLE_LABEL, NEW_LABEL } from "../../config/IT";
@@ -10,58 +10,61 @@ import LoadingScreen from "../../components/LoadingScreen";
 import RecordsList from "./RecordsList";
 import NewRecord from "./NewRecord";
 
+const getDisplayTitle = (key) => {
+  if (!key) return "";
+
+  const splittedKey = key.split("_");
+  const tableName = splittedKey[0];
+  const recordTypeName = splittedKey[1];
+
+  const title =
+    recordTypeName.toLowerCase() !== "master" ? recordTypeName : tableName;
+
+  return title.charAt(0).toUpperCase() + title.slice(1);
+};
+
 export default function RecordsListView() {
-  const { tableKey } = useParams();
-  const {
-    selectedTableKey,
-    setSelectedTableKey,
-    selectedRecord,
-    setSelectedRecord,
-  } = useOutletContext();
+  const { tableKey } = useOutletContext();
 
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState([]);
   const [showNewModal, setShowNewModal] = useState(false);
   const [controlledError, setControlledError] = useState(false);
 
-  const actualTableKey = selectedTableKey || tableKey;
-
-  const fetchData = () => {
-    if (!actualTableKey) return; // Blocks execution if the selected tabel is not correct
+  const fetchData = useCallback(() => {
+    if (!tableKey) return; // Blocks execution if the selected table is missing
 
     setLoading(true);
+    setControlledError(false);
     axios
-      .get(API_BASE_URL + "/" + actualTableKey)
+      .get(`${API_BASE_URL}/${tableKey}`)
       .then((res) => {
-        console.log("Record List Received:", res.data);
+        console.log("RecordsListView - List of Records Received:", res.data);
         setRecords(res.data);
       })
       .catch((err) => {
-        console.error("Error:", err);
+        console.error("RecordsListView - Error:", err);
         const errMsg = err.response.data.detail;
-        if (errMsg === ERROR_MISSING_TABLE(actualTableKey)) {
+        if (errMsg === ERROR_MISSING_TABLE(tableKey)) {
           setControlledError(true);
         }
       })
       .finally(() => setLoading(false));
-  };
+  }, [tableKey]);
 
   useEffect(() => {
     fetchData();
-  }, [selectedTableKey, tableKey]);
+  }, [fetchData]);
 
   if (loading) return <LoadingScreen />;
 
   if (controlledError) {
-    return <MissingPage MissingText={MISSING_TABLE_LABEL} />;
+    return <MissingPage missingText={MISSING_TABLE_LABEL} />;
   }
 
   return (
     <div>
-      <div className="fs-3 fw-bold">
-        {actualTableKey.split("_")[0].charAt(0).toUpperCase() +
-          actualTableKey.split("_")[0].slice(1)}
-      </div>
+      <div className="fs-3 fw-bold">{getDisplayTitle(tableKey)}</div>
       <div className="d-flex flex-row-reverse pb-2 pt-2">
         <Button
           size="sm"
@@ -72,14 +75,9 @@ export default function RecordsListView() {
           {NEW_LABEL}
         </Button>
       </div>
-      <RecordsList
-        recordsList={records}
-        selectedTableKey={actualTableKey}
-        onSelectedTable={setSelectedTableKey}
-        onSelectedRecord={setSelectedRecord}
-      />
+      <RecordsList recordsList={records} tableKey={tableKey} />
       <NewRecord
-        selectedTableKey={actualTableKey}
+        tableKey={tableKey}
         showNewModal={showNewModal}
         setShowNewModal={setShowNewModal}
         refreshData={fetchData}

@@ -11,18 +11,18 @@ import {
 } from "../../config/IT";
 import { API_BASE_URL, PATH_INSERT } from "../../config/K";
 import ToastMsg from "../../components/ToastMsg";
-import RecordForm from "../TableRecordDetails/RecordForm";
+import DynamicForm from "../../components/DynamicForm";
 
 /**
- * Shows a table of record
+ * Shows a modal with all the field of the object in order to create a new record
  *
- * @param {Object} props.selectedTable          - Table currently selected
- * @param {Object} props.showNewModal           - Flag to show or hide the modal
+ * @param {String} props.tableKey               - Table currently selected
+ * @param {Boolean} props.showNewModal          - Flag to show or hide the modal
  * @param {Function} props.setShowNewModal      - Function to update flag to show or hide the modal
  * @param {Function} props.refreshData          - Function to run the refresh on the record list
  */
 export default function NewRecord({
-  selectedTableKey,
+  tableKey,
   showNewModal,
   setShowNewModal,
   refreshData,
@@ -30,9 +30,11 @@ export default function NewRecord({
   const [fields, setFields] = useState([]);
   const [validated, setValidated] = useState(false);
 
-  const [showToast, setShowToast] = useState(false);
-  const [toastTitle, setToastTitle] = useState();
-  const [toastBody, setToastBody] = useState();
+  const [toastConfig, setToastConfig] = useState({
+    show: false,
+    title: "",
+    body: "",
+  });
 
   const {
     register,
@@ -42,46 +44,50 @@ export default function NewRecord({
   } = useForm();
 
   useEffect(() => {
-    if (!selectedTableKey) return; // Blocks execution if the selected tabel is not correct
+    if (!tableKey) return; // Blocks execution if the selected tabel is not correct
 
     axios
-      .get(API_BASE_URL + "/" + selectedTableKey + "/new-record")
+      .get(`${API_BASE_URL}/${tableKey}/new-record`)
       .then((res) => {
-        console.log("Structure Record Received:", res.data);
+        console.log("NewRecord - Structure Record Received:", res.data);
         setFields(res.data);
       })
-      .catch((err) => console.error("Error:", err))
+      .catch((err) => console.error("NewRecord - Error:", err))
       .finally(() => {});
-  }, []);
+  }, [tableKey]);
 
   //Method fired when the button Save is pressed
   const onSubmit = (data) => {
-    const formPointer = document.getElementById("recordDetailForm");
-    if (formPointer.checkValidity()) {
-      axios
-        .post(API_BASE_URL + PATH_INSERT, {
-          table: selectedTableKey,
-          record: data,
-        })
-        .then((res) => {
-          console.log("Uploaded new record results:", res.data);
-          if (res.data.result == 0) {
-            setShowToast(true);
-            setToastTitle(ERROR_TOAST_TITLE_LABEL);
-            setToastBody(ERROR_TOAST_BODY_LABEL);
-          } else {
-            setShowNewModal(false);
-            refreshData();
-          }
-        })
-        .catch((err) => {
-          console.error("Error:", err);
-
-          setShowToast(true);
-          setToastTitle(ERROR_TOAST_TITLE_LABEL);
-          setToastBody(err.response.data.detail);
+    axios
+      .post(`${API_BASE_URL}${PATH_INSERT}`, {
+        table: tableKey,
+        record: data,
+      })
+      .then((res) => {
+        console.log(
+          "NewRecord - Sumbit - Uploaded new record results:",
+          res.data,
+        );
+        if (res.data.result === 0) {
+          setToastConfig({
+            show: true,
+            title: ERROR_TOAST_TITLE_LABEL,
+            body: ERROR_TOAST_BODY_LABEL,
+          });
+        } else {
+          setShowNewModal(false);
+          refreshData();
+          reset();
+        }
+      })
+      .catch((err) => {
+        console.error("NewRecord - Sumbit - Error:", err);
+        setToastConfig({
+          show: true,
+          title: ERROR_TOAST_TITLE_LABEL,
+          body: err.response.data.detail,
         });
-    }
+      });
 
     setValidated(true);
   };
@@ -100,35 +106,30 @@ export default function NewRecord({
         </Modal.Header>
 
         <Modal.Body>
-          <RecordForm
+          <DynamicForm
             fields={fields}
             validated={validated}
             onSubmit={handleSubmit(onSubmit)}
-            selectedTableKey={selectedTableKey}
+            tableKey={tableKey}
             errors={errors}
             register={register}
             isNewForm={true}
             isEdit={null}
-          ></RecordForm>
+          />
         </Modal.Body>
 
         <Modal.Footer>
-          <Button
-            variant="primary"
-            onClick={() =>
-              document.getElementById("recordDetailForm").requestSubmit()
-            }
-          >
+          <Button variant="primary" type="submit" form="recordDetailForm">
             {SAVE_LABEL}
           </Button>
         </Modal.Footer>
       </Modal>
       <ToastMsg
-        showToast={showToast}
-        setShowToast={setShowToast}
+        showToast={toastConfig.show}
+        setShowToast={(val) => setToastConfig({ ...toastConfig, show: val })}
         color="danger"
-        title={toastTitle}
-        body={toastBody}
+        title={toastConfig.title}
+        body={toastConfig.body}
       ></ToastMsg>
     </>
   );

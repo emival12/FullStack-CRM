@@ -1,18 +1,33 @@
 import { useEffect, useState } from "react";
-import { Table, Pagination } from "react-bootstrap";
+import { Table } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import MissingPage from "../../components/MissingPage";
 import { MISSING_RECORD_LABEL } from "../../config/IT";
 import { PATH_DATABASE } from "../../config/K";
 import "../../App.css";
+import PaginationControl from "../../components/PaginationControl";
+
+//Dinamic construction of the body entry
+const RecordCell = ({ value, isPrimaryKey, onNavigate }) => {
+  if (isPrimaryKey) {
+    return (
+      <td
+        className="cursor-pointer text-primary"
+        onClick={() => onNavigate(value)}
+      >
+        {value}
+      </td>
+    );
+  }
+  return <td>{value}</td>;
+};
 
 /**
- * Shows a table of record
+ * Shows a table with all the records
  *
- * @param {Object[]} props.recordsList                - List of the record to show
- * @param {Object} props.selectedTable            - Table currently selected
- * @param {Function} props.onSelectedRecord       - Function to update the selected record
+ * @param {Object[]} props.recordsList       - List of the record retrieved
+ * @param {String} props.tableKey            - Table currently selected
  */
 /**
  * Records structure:
@@ -35,87 +50,33 @@ import "../../App.css";
  */
 export default function RecordsList({
   recordsList,
-  selectedTableKey,
-  onSelectedTable,
-  onSelectedRecord,
+  tableKey,
   pathRedirect = PATH_DATABASE,
 }) {
   const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
 
   const NUM_RECORD_TO_SHOW = 10;
-  const MAX_VISIBLE_PAGES = 3;
-
-  const [currentPage, setCurrentPage] = useState(1);
-  // Calculate the total page number
-  const numPages = recordsList
-    ? Math.ceil(recordsList.records.length / NUM_RECORD_TO_SHOW)
-    : 0;
+  const primary_key_name = recordsList?.primary_key_name;
 
   // Calculate the slice of the data to show
-  const start = (currentPage - 1) * NUM_RECORD_TO_SHOW;
-  const end = currentPage * NUM_RECORD_TO_SHOW;
+  const dataStart = (currentPage - 1) * NUM_RECORD_TO_SHOW;
+  const dataEnd = currentPage * NUM_RECORD_TO_SHOW;
   const recordsToShow = recordsList
     ? {
         ...recordsList,
-        records: recordsList.records.slice(start, end),
+        records: recordsList.records.slice(dataStart, dataEnd),
       }
     : null;
 
-  // Calculate the pages number to show in the pagination component
-  const pageNumbers = [];
-  const startPage = Math.max(
-    1,
-    currentPage - Math.floor(MAX_VISIBLE_PAGES / 2),
-  );
-  const endPage = Math.min(numPages, startPage + MAX_VISIBLE_PAGES - 1);
-  for (let i = startPage; i <= endPage; i++) {
-    pageNumbers.push(i);
-  }
+  // Calculate the total page number
+  const numTotPages = recordsList
+    ? Math.ceil(recordsList.records.length / NUM_RECORD_TO_SHOW)
+    : 0;
 
   useEffect(() => {
     setCurrentPage(1);
   }, [recordsList]);
-
-  const goToPage = (page) => {
-    if (page < 1 || page > numPages) return;
-    setCurrentPage(page);
-  };
-
-  //Message shown in case of missing recordsList
-  const missingRecordsMsg = () => {
-    if (recordsList.records.length === 0) {
-      return <MissingPage MissingText={MISSING_RECORD_LABEL} ShowImg={false} />;
-    }
-  };
-
-  //Dinamic construction of the body entry
-  const tableEntry = (key, value, record) => {
-    if (key === recordsList.primary_key_name) {
-      return (
-        <td
-          key={key}
-          className="cursor-pointer text-primary"
-          onClick={() => {
-            let tableKey = selectedTableKey;
-            if (record?.table && selectedTableKey !== record.table.key) {
-              tableKey = record.table.key;
-              onSelectedTable(tableKey);
-            }
-
-            onSelectedRecord({
-              record: record,
-              primary_key: recordsList.primary_key_name,
-            });
-            navigate(pathRedirect + "/" + tableKey + "/" + value);
-          }}
-        >
-          {value}
-        </td>
-      );
-    } else {
-      return <td key={key}>{value}</td>;
-    }
-  };
 
   return (
     <>
@@ -123,52 +84,35 @@ export default function RecordsList({
         <thead>
           <tr>
             {Object.values(recordsList.fields).map((fieldName, i) => (
-              <th key={i}>{fieldName.toUpperCase()}</th>
+              <th key={i}>{fieldName.label.toUpperCase()}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {recordsToShow.records.map((record, index) => (
             <tr key={index}>
-              {Object.entries(record).map(([key, value]) =>
-                tableEntry(key, value, record),
-              )}
+              {recordsList.fields.map((fieldName) => (
+                <RecordCell
+                  key={fieldName.key}
+                  value={record[fieldName.key]}
+                  isPrimaryKey={fieldName.key === primary_key_name}
+                  onNavigate={(val) =>
+                    navigate(`${pathRedirect}/${tableKey}/${val}`)
+                  }
+                />
+              ))}
             </tr>
           ))}
         </tbody>
       </Table>
-      <Pagination className="mt-2 mb-0 justify-content-center">
-        <Pagination.First
-          disabled={currentPage === 1}
-          onClick={() => goToPage(1)}
-        />
-
-        <Pagination.Prev
-          disabled={currentPage === 1}
-          onClick={() => goToPage(currentPage - 1)}
-        />
-
-        {pageNumbers.map((number) => (
-          <Pagination.Item
-            key={number}
-            active={number === currentPage}
-            onClick={() => goToPage(number)}
-          >
-            {number}
-          </Pagination.Item>
-        ))}
-
-        <Pagination.Next
-          disabled={currentPage === numPages}
-          onClick={() => goToPage(currentPage + 1)}
-        />
-
-        <Pagination.Last
-          disabled={currentPage === numPages}
-          onClick={() => goToPage(numPages)}
-        />
-      </Pagination>
-      {missingRecordsMsg()}
+      <PaginationControl
+        numTotPages={numTotPages}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+      />
+      {recordsList.records.length === 0 && (
+        <MissingPage missingText={MISSING_RECORD_LABEL} ShowImg={false} />
+      )}
     </>
   );
 }

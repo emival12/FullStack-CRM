@@ -173,7 +173,7 @@ async def delete_record(request: Request, db = Depends(get_db)):
 
 
 # Insert a new record
-@app.post("/api/Insert")
+@app.post("/api/insert")
 async def update_record(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 

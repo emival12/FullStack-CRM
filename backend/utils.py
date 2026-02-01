@@ -406,7 +406,7 @@ def get_primary_key_from_fields(fields):
     return next((field["field_name"] for field in fields if field["is_primary_key"]), None)
 
 def get_clean_field_names_from_fields(fields):
-    return [field["field_name"].replace("_", " ") for field in fields]
+    return [{ "key": field["field_name"], "label": field["field_name"].replace("_", " ")} for field in fields]
 
 def check_allowed_tables(cursor, table_name, key_function=get_table_key):
     """

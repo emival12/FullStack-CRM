@@ -6,7 +6,7 @@ import {
   MAX_NUMBER_LABEL,
   MIN_NUMBER_LABEL,
   TEXT_AREA_HELP_LABEL,
-} from "../../config/IT";
+} from "../config/IT";
 
 /**
  * Shows a form with some fields
@@ -14,7 +14,7 @@ import {
  * @param {Object[]} props.fields               - Fields to show
  * @param {Object} props.validated              - Flag to show or hide the validations
  * @param {Function} props.onSubmit             - Function to use on submit
- * @param {Object} props.selectedTableKey       - Key of the selected table
+ * @param {Object} props.tableKey               - Key of the selected table
  * @param {Object[]} props.errors               - Collection of errors messages (standard of react-hook-form)
  * @param {Function} props.register             - Function to register the form element (standard of react-hook-form)
  * @param {Object} props.isNewForm              - Flag to understand which form is
@@ -41,11 +41,11 @@ import {
  *   ....
  * }
  */
-export default function RecordForm({
+export default function DynamicForm({
   fields,
   validated,
   onSubmit,
-  selectedTableKey,
+  tableKey,
   errors,
   register,
   isNewForm,
@@ -69,14 +69,14 @@ export default function RecordForm({
         <Form.Select
           defaultValue={
             isNewForm
-              ? info.reference_field == "record_type_name"
-                ? selectedTableKey.split("_")[1]
+              ? info.reference_field === "record_type_name"
+                ? tableKey.split("_")[1]
                 : null
               : info?.value
           }
           disabled={
             isNewForm
-              ? info.reference_field == "record_type_name"
+              ? info.reference_field === "record_type_name"
               : !info.is_editable || !isEdit
           }
           isInvalid={errors[key]}
@@ -211,7 +211,7 @@ export default function RecordForm({
     >
       {Object.entries(fields).map(([key, info]) => {
         const isFloatingAllowed = !["radio", "checkbox"].includes(
-          info.field_type
+          info.field_type,
         );
         return isFloatingAllowed ? (
           <FloatingLabel
@@ -225,7 +225,7 @@ export default function RecordForm({
         ) : (
           <Form.Group
             key={key}
-            className={info.field_type == "radio" ? "mb-3" : "mb-3 d-flex"}
+            className={info.field_type === "radio" ? "mb-3" : "mb-3 d-flex"}
           >
             <Form.Label>
               {key.replaceAll("_", " ") + (info.is_required ? " *" : "")}
