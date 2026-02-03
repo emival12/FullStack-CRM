@@ -405,8 +405,16 @@ def get_options_map_key(row):
 def get_primary_key_from_fields(fields):
     return next((field["field_name"] for field in fields if field["is_primary_key"]), None)
 
-def get_clean_field_names_from_fields(fields):
-    return [{ "key": field["field_name"], "label": field["field_name"].replace("_", " ")} for field in fields]
+def get_clean_field_names_from_fields(fields, is_object=True):
+    new_fields = []
+    for field in fields:
+        field_name = field["field_name"] if is_object else field
+        new_fields.append({ 
+            "key": field_name, 
+            "label": field_name.replace("_", " ")
+        })
+
+    return new_fields
 
 def check_allowed_tables(cursor, table_name, key_function=get_table_key):
     """

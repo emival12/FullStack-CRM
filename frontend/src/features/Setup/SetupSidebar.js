@@ -10,24 +10,14 @@ import LoadingScreen from "../../components/LoadingScreen";
 import ScreenAdaptiveSidebar from "../../components/ScreenAdaptiveSidebar";
 
 /**
- * Shows a list of objects
+ * Shows a list of options, each option is a tables
  *
- * @param {Object} props.selectedTableKey       - Table currently selected
- * @param {Function} props.setSelectedTableKey  - Function to update the selected Table
- * @param {Object} props.selectedSection        - Section currently selected
- * @param {Function} props.setSelectedSection   - Function to update the selected Section
- * @param {Object} props.refreshSidebar         - Boolean to understand if is need a refresh of the list of objects
+ * @param {String} props.tableKey             - Table currently selected
+ * @param {String} props.sectionKey           - Section currently selected
+ * @param {Boolean} props.refreshSidebar      - Boolean to understand if is need a refresh of the list of objects
  */
-export default function SetupSidebar({
-  selectedTableKey,
-  setSelectedTableKey,
-  selectedSection,
-  setSelectedSection,
-  setSelectedRecord,
-  refreshSidebar,
-}) {
+export default function SetupSidebar({ tableKey, sectionKey, refreshSidebar }) {
   const navigate = useNavigate();
-
   const [loading, setLoading] = useState(true);
   const [tables, setTables] = useState([]);
 
@@ -38,12 +28,12 @@ export default function SetupSidebar({
   useEffect(() => {
     setLoading(true);
     axios
-      .get(API_BASE_URL + "/plain_tables")
+      .get(`${API_BASE_URL}/plain_tables`)
       .then((res) => {
-        console.log("Plain Tables List Received:", res.data);
+        console.log("SetupSidebar - List of Plain Tables Received:", res.data);
         setTables(res.data);
       })
-      .catch((err) => console.error("Error:", err))
+      .catch((err) => console.error("SetupSidebar - Error:", err))
       .finally(() => setLoading(false));
   }, [refreshSidebar]);
 
@@ -58,15 +48,12 @@ export default function SetupSidebar({
           className="mb-3"
         >
           <Form.Select
-            value={selectedTableKey || ""}
+            value={tableKey || ""}
             onChange={(e) => {
-              const value = e.target.value ? e.target.value : null;
-              setSelectedTableKey(value);
-              setSelectedSection(null);
-              setSelectedRecord(null);
               toggleSidebar(); //useful only for the mobile
 
-              const path = value ? PATH_SETUP + "/" + value : PATH_SETUP;
+              const value = e.target.value || null;
+              const path = value ? `${PATH_SETUP}/${value}` : PATH_SETUP;
               navigate(path);
             }}
           >
@@ -79,18 +66,16 @@ export default function SetupSidebar({
           </Form.Select>
         </FloatingLabel>
 
-        {selectedTableKey ? (
+        {tableKey ? (
           <ListGroup className="mt-2" variant="pills">
             {SECTIONS.map((section) => (
               <ListGroup.Item
                 action
                 as={Link}
-                to={PATH_SETUP + "/" + selectedTableKey + "/" + section.key}
+                to={`${PATH_SETUP}/${tableKey}/${section.key}`}
                 key={section.key}
-                active={section.key === selectedSection}
+                active={section.key === sectionKey}
                 onClick={() => {
-                  setSelectedSection(section.key);
-                  setSelectedRecord(null);
                   toggleSidebar(); //useful only for the mobile
                 }}
               >

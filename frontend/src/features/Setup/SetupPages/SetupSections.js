@@ -1,65 +1,44 @@
-import { useEffect } from "react";
-import { useOutletContext, useParams } from "react-router-dom";
+import { useOutletContext } from "react-router-dom";
 
-import SetupSectionHome from "./SetupSectionHome";
 import { Sections } from "../K_Setup";
-import SetupSectionFields from "./SetupSectionFields";
-import EditFieldRecord from "./EditFieldRecord";
+import SetupSectionHome from "./Sections/SetupSectionHome";
+import SetupSectionFields from "./Sections/SetupSectionFields";
+import EditFieldRecord from "./Sections/EditFieldRecord";
 
 export default function SetupSectionObject() {
-  const { tableKey, sectionKey, recordId } = useParams();
-  const {
-    selectedTableKey,
-    selectedSectionKey,
-    setSelectedTableKey,
-    setSelectedSection,
-    refreshSidebar,
-    setRefreshSidebar,
-    selectedRecord,
-    setSelectedRecord,
-  } = useOutletContext();
-
-  const actualTableKey = selectedTableKey || tableKey;
-  const actualSectionKey = selectedSectionKey || sectionKey;
-  const actualRecordKey =
-    selectedRecord?.record[selectedRecord?.primary_key] || recordId;
-
-  useEffect(() => {
-    if (!recordId && !actualRecordKey) {
-      setSelectedRecord(null);
-    }
-  }, [recordId]);
+  const { tableKey, sectionKey, recordId } = useOutletContext();
 
   const pickScreen = () => {
-    if (actualSectionKey === Sections.home) {
-      return (
-        <SetupSectionHome
-          selectedTableKey={actualTableKey}
-          setSelectedTableKey={setSelectedTableKey}
-          selectedSectionKey={actualSectionKey}
-        />
-      );
-    } else if (actualSectionKey === Sections.fields && !actualRecordKey) {
-      return (
-        <SetupSectionFields
-          selectedTableKey={actualTableKey}
-          setSelectedTableKey={setSelectedTableKey}
-          selectedSectionKey={actualSectionKey}
-          setSelectedRecord={setSelectedRecord}
-        />
-      );
-    } else if (actualSectionKey === Sections.fields && actualRecordKey) {
-      return (
-        <EditFieldRecord
-          selectedTableKey={actualTableKey}
-          selectedSectionKey={actualSectionKey}
-          selectedRecord={actualRecordKey}
-          setSelectedRecord={setSelectedRecord}
-        />
-      );
-    } else {
-      return <p>Altro</p>;
+    const screens = {
+      [Sections.home]: (
+        <SetupSectionHome tableKey={tableKey} sectionKey={sectionKey} />
+      ),
+      [Sections.layout]: <p>Layout TODO</p>,
+      [Sections.record_types]: <p>Record Types TODO</p>,
+      [Sections.related_lists]: <p>Related Lists TODO</p>,
+    };
+
+    if (sectionKey === Sections.fields) {
+      if (!recordId) {
+        return (
+          <SetupSectionFields
+            tableKey={tableKey}
+            sectionKey={sectionKey}
+            recordId={recordId}
+          />
+        );
+      } else {
+        return (
+          <EditFieldRecord
+            tableKey={tableKey}
+            sectionKey={sectionKey}
+            recordId={recordId}
+          />
+        );
+      }
     }
+
+    return screens[sectionKey] || <p>Sezione non trovata</p>;
   };
 
   return pickScreen();

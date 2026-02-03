@@ -9,30 +9,25 @@ import {
   ERROR_TOAST_TITLE_LABEL,
   SETUP_MSG_SELECT_TABLE_LABEL,
 } from "../../../config/IT";
-import { API_BASE_URL, PATH_SETUP } from "../../../config/K";
+import { API_BASE_URL } from "../../../config/K";
 import { NEW_OBJECT_FIELD_STRUCTURE } from "../K_Setup";
-import RecordForm from "../../TableRecordDetails/RecordForm";
 import LoadingScreen from "../../../components/LoadingScreen";
 import ToastMsg from "../../../components/ToastMsg";
-import RecordButtons from "../../TableRecordDetails/RecordButtons";
+import DynamicForm from "../../../components/dynamicUI/DynamicForm";
+import DynamicRecordActions from "../../../components/dynamicUI/DynamicRecordActions";
 
 export default function SetupNewObject() {
-  const {
-    selectedTableKey,
-    selectedSectionKey,
-    setSelectedTableKey,
-    setSelectedSection,
-    refreshSidebar,
-    setRefreshSidebar,
-  } = useOutletContext();
+  const { refreshSidebar, setRefreshSidebar } = useOutletContext();
 
   const [loading, setLoading] = useState(false);
   const [validated, setValidated] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
 
-  const [showToast, setShowToast] = useState(false);
-  const [toastTitle, setToastTitle] = useState();
-  const [toastBody, setToastBody] = useState();
+  const [toastConfig, setToastConfig] = useState({
+    show: false,
+    title: "",
+    body: "",
+  });
 
   const {
     register,
@@ -45,35 +40,37 @@ export default function SetupNewObject() {
 
   //Method fired when the button Save is pressed
   const onSubmit = (data) => {
-    const formPointer = document.getElementById("recordDetailForm");
-    if (formPointer.checkValidity()) {
-      setLoading(true);
-      axios
-        .post(API_BASE_URL + "/new-object", {
-          data: data,
-        })
-        .then((res) => {
-          console.log("Insert object results:", res.data);
-          if (res.data.result == 0) {
-            setShowToast(true);
-            setToastTitle(ERROR_TOAST_TITLE_LABEL);
-            setToastBody(ERROR_TOAST_BODY_LABEL);
-          } else {
-            setShowNewForm(false);
-            setValidated(false);
-            setRefreshSidebar(!refreshSidebar);
-            reset();
-          }
-        })
-        .catch((err) => {
-          console.error("Error:", err);
+    setLoading(true);
 
-          setShowToast(true);
-          setToastTitle(ERROR_TOAST_TITLE_LABEL);
-          setToastBody(err.response.data.detail);
-        })
-        .finally(() => setLoading(false));
-    }
+    const apiData = {
+      data: data,
+    };
+    axios
+      .post(`${API_BASE_URL}/new-object`, apiData)
+      .then((res) => {
+        console.log("SetupNewObject - Insert object results:", res.data);
+        if (res.data.result === 0) {
+          setToastConfig({
+            show: true,
+            title: ERROR_TOAST_TITLE_LABEL,
+            body: ERROR_TOAST_BODY_LABEL,
+          });
+        } else {
+          setShowNewForm(false);
+          setValidated(false);
+          setRefreshSidebar(!refreshSidebar);
+          reset();
+        }
+      })
+      .catch((err) => {
+        console.error("SetupNewObject - Error:", err);
+        setToastConfig({
+          show: true,
+          title: ERROR_TOAST_TITLE_LABEL,
+          body: err.response.data.detail,
+        });
+      })
+      .finally(() => setLoading(false));
 
     setValidated(true);
   };
@@ -83,47 +80,46 @@ export default function SetupNewObject() {
   useEffect(() => {
     if (!object_label_value) return;
     setValue("Object_name", object_label_value.replace(" ", "_").toLowerCase());
-  }, [object_label_value]);
+  }, [object_label_value, setValue]);
 
   if (loading) return <LoadingScreen />;
 
   return (
     <>
-      <RecordButtons
+      <DynamicRecordActions
         setLoading={setLoading}
-        setSelectedRecord={() => {}}
         editLabel={NEW_LABEL}
         isEdit={showNewForm}
-        onEditClick={setShowNewForm}
+        setIsEdit={setShowNewForm}
         reset={reset}
-        setShowToast={setShowToast}
-        setToastTitle={setToastTitle}
-        setToastBody={setToastBody}
+        setToastConfig={setToastConfig}
         hasDeleteButton={false}
         pathAPI={null}
         payloadAPI={null}
         redirectAPI={null}
         extraDescription={SETUP_MSG_SELECT_TABLE_LABEL}
-      ></RecordButtons>
+      />
       {showNewForm ? (
         <>
-          <RecordForm
+          <DynamicForm
             fields={NEW_OBJECT_FIELD_STRUCTURE}
             validated={validated}
             onSubmit={handleSubmit(onSubmit)}
-            selectedTableKey={null}
+            tableKey={null}
             errors={errors}
             register={register}
             isNewForm={false}
             isEdit={true}
-          ></RecordForm>
+          />
           <ToastMsg
-            showToast={showToast}
-            setShowToast={setShowToast}
+            showToast={toastConfig.show}
+            setShowToast={(val) =>
+              setToastConfig({ ...toastConfig, show: val })
+            }
             color="danger"
-            title={toastTitle}
-            body={toastBody}
-          ></ToastMsg>
+            title={toastConfig.title}
+            body={toastConfig.body}
+          />
         </>
       ) : (
         ""

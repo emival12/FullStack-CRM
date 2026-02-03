@@ -75,7 +75,7 @@ async def get_list_of_importable_objects(db = Depends(get_db)):
     return options_tables
 
 # Import records from a CSV file
-@app.post("/api/import/Upload")
+@app.post("/api/import/upload")
 async def import_records_from_csv(
     operation_type: str = Form(...),
     object_name: str = Form(...),
@@ -333,7 +333,7 @@ async def get_object_fields_record(table_name: str, db = Depends(get_db)):
 
     cursor.close()
     return {
-        "fields": [field.replace("_", " ") for field in fields],
+        "fields": utils.get_clean_field_names_from_fields(fields, False),
         "primary_key_name": "field_name",
         "records": records
     }

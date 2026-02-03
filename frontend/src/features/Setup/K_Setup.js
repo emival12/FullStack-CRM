@@ -313,5 +313,3 @@ export const NEW_RADIO_FIELD_OBJECT_STRUCTURE = {
 };
 
 export const NEW_CHECKBOX_FIELD_OBJECT_STRUCTURE = {};
-
-//Structure to create
