@@ -6,7 +6,7 @@ import {
   MAX_NUMBER_LABEL,
   MIN_NUMBER_LABEL,
   TEXT_AREA_HELP_LABEL,
-} from "../config/IT";
+} from "../../config/IT";
 
 /**
  * Shows a form with some fields

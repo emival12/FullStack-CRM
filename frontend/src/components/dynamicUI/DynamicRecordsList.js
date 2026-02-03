@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import { Table } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
-import MissingPage from "../../components/MissingPage";
+import MissingPage from "../MissingPage";
 import { MISSING_RECORD_LABEL } from "../../config/IT";
 import { PATH_DATABASE } from "../../config/K";
-import "../../App.css";
-import PaginationControl from "../../components/PaginationControl";
+import PaginationControl from "../PaginationControl";
 
 //Dinamic construction of the body entry
 const RecordCell = ({ value, isPrimaryKey, onNavigate }) => {
@@ -26,8 +25,8 @@ const RecordCell = ({ value, isPrimaryKey, onNavigate }) => {
 /**
  * Shows a table with all the records
  *
- * @param {Object[]} props.recordsList       - List of the record retrieved
- * @param {String} props.tableKey            - Table currently selected
+ * @param {Object[]} props.data                 - List of the record retrieved
+ * @param {String} props.redirectKey            - Table currently selected
  */
 /**
  * Records structure:
@@ -48,42 +47,42 @@ const RecordCell = ({ value, isPrimaryKey, onNavigate }) => {
  *   ]
  * }
  */
-export default function RecordsList({
-  recordsList,
-  tableKey,
+export default function DynamicRecordsList({
+  data,
+  redirectKey,
   pathRedirect = PATH_DATABASE,
 }) {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
 
   const NUM_RECORD_TO_SHOW = 10;
-  const primary_key_name = recordsList?.primary_key_name;
+  const primary_key_name = data?.primary_key_name;
 
   // Calculate the slice of the data to show
   const dataStart = (currentPage - 1) * NUM_RECORD_TO_SHOW;
   const dataEnd = currentPage * NUM_RECORD_TO_SHOW;
-  const recordsToShow = recordsList
+  const recordsToShow = data
     ? {
-        ...recordsList,
-        records: recordsList.records.slice(dataStart, dataEnd),
+        ...data,
+        records: data.records.slice(dataStart, dataEnd),
       }
     : null;
 
   // Calculate the total page number
-  const numTotPages = recordsList
-    ? Math.ceil(recordsList.records.length / NUM_RECORD_TO_SHOW)
+  const numTotPages = data
+    ? Math.ceil(data.records.length / NUM_RECORD_TO_SHOW)
     : 0;
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [recordsList]);
+  }, [data]);
 
   return (
     <>
       <Table bordered hover className="m-0">
         <thead>
           <tr>
-            {Object.values(recordsList.fields).map((fieldName, i) => (
+            {Object.values(data.fields).map((fieldName, i) => (
               <th key={i}>{fieldName.label.toUpperCase()}</th>
             ))}
           </tr>
@@ -91,13 +90,13 @@ export default function RecordsList({
         <tbody>
           {recordsToShow.records.map((record, index) => (
             <tr key={index}>
-              {recordsList.fields.map((fieldName) => (
+              {data.fields.map((fieldName) => (
                 <RecordCell
                   key={fieldName.key}
                   value={record[fieldName.key]}
                   isPrimaryKey={fieldName.key === primary_key_name}
                   onNavigate={(val) =>
-                    navigate(`${pathRedirect}/${tableKey}/${val}`)
+                    navigate(`${pathRedirect}/${redirectKey}/${val}`)
                   }
                 />
               ))}
@@ -110,7 +109,7 @@ export default function RecordsList({
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
       />
-      {recordsList.records.length === 0 && (
+      {data.records.length === 0 && (
         <MissingPage missingText={MISSING_RECORD_LABEL} ShowImg={false} />
       )}
     </>

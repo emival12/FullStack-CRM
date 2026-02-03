@@ -11,7 +11,7 @@ import {
 } from "../../config/IT";
 import { API_BASE_URL, PATH_INSERT } from "../../config/K";
 import ToastMsg from "../../components/ToastMsg";
-import DynamicForm from "../../components/DynamicForm";
+import DynamicForm from "../../components/dynamicUI/DynamicForm";
 
 /**
  * Shows a modal with all the field of the object in order to create a new record

@@ -7,7 +7,7 @@ import { MISSING_TABLE_LABEL, NEW_LABEL } from "../../config/IT";
 import { API_BASE_URL, ERROR_MISSING_TABLE } from "../../config/K";
 import MissingPage from "../../components/MissingPage";
 import LoadingScreen from "../../components/LoadingScreen";
-import RecordsList from "./RecordsList";
+import DynamicRecordsList from "../../components/dynamicUI/DynamicRecordsList";
 import NewRecord from "./NewRecord";
 
 const getDisplayTitle = (key) => {
@@ -75,7 +75,7 @@ export default function RecordsListView() {
           {NEW_LABEL}
         </Button>
       </div>
-      <RecordsList recordsList={records} tableKey={tableKey} />
+      <DynamicRecordsList data={records} redirectKey={tableKey} />
       <NewRecord
         tableKey={tableKey}
         showNewModal={showNewModal}
