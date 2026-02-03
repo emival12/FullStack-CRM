@@ -22,6 +22,7 @@ export default function EditFieldRecord({ tableKey, sectionKey, recordId }) {
   const [fields, setFields] = useState([]);
   const [isEdit, setIsEdit] = useState(false);
   const [validated, setValidated] = useState(false);
+  const [isDeletable, setIsDeletable] = useState(true);
 
   const [controlledError, setControlledError] = useState(false);
   const [toastConfig, setToastConfig] = useState({
@@ -60,6 +61,7 @@ export default function EditFieldRecord({ tableKey, sectionKey, recordId }) {
         console.log(res);
         console.log("EditFieldRecord - Edit Field Received:", res.data);
         setFields(res.data);
+        setIsDeletable(res.data.object_primary_key_name !== recordId); // prevent delete of PrimaryKey
 
         //Insert the values retrieved into the form and redraw it
         const formValues = Object.fromEntries(
@@ -122,7 +124,7 @@ export default function EditFieldRecord({ tableKey, sectionKey, recordId }) {
         setIsEdit={setIsEdit}
         reset={reset}
         setToastConfig={setToastConfig}
-        hasDeleteButton={true}
+        hasDeleteButton={isDeletable}
         pathAPI={`${API_BASE_URL}${PATH_SETUP}/${sectionKey}${PATH_DELETE}`}
         payloadAPI={{
           table: tableKey,

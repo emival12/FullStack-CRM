@@ -376,8 +376,10 @@ async def get_field_info(request: Request, table_name: str, field_name: str, db 
         field_attributes
     )   
 
+    object_primary_key_name = utils.get_primary_keys_from_multiple_objects(cursor, [table_name]).get(table_name)
     cursor.close()
     return { 
+        "object_primary_key_name": object_primary_key_name,
         "field_type": current_field_type,
         "primary_key_name": utils.get_primary_key_from_fields(fields),
         "field_structure": field_structure
