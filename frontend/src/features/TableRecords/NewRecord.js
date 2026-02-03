@@ -75,6 +75,7 @@ export default function NewRecord({
             body: ERROR_TOAST_BODY_LABEL,
           });
         } else {
+          setValidated(false);
           setShowNewModal(false);
           refreshData();
           reset();
@@ -130,7 +131,7 @@ export default function NewRecord({
         color="danger"
         title={toastConfig.title}
         body={toastConfig.body}
-      ></ToastMsg>
+      />
     </>
   );
 }
