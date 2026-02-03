@@ -57,7 +57,7 @@ export default function RecordDetail() {
     axios
       .get(`${API_BASE_URL}/${tableKey}/record/${recordId}`)
       .then((res) => {
-        console.log("RecordDetail - List of Fields Received::", res.data);
+        console.log("RecordDetail - List of Fields Received:", res.data);
         setFields(res.data);
 
         //use to handle the values and redraw it
@@ -70,7 +70,7 @@ export default function RecordDetail() {
         reset(formValues);
       })
       .catch((err) => {
-        console.error("Error:", err);
+        console.error("RecordDetail - Error:", err);
         const errMsg = err.response.data.detail;
         if (errMsg === ERROR_MISSING_RECORD(recordId)) {
           setControlledError(true);

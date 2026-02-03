@@ -154,7 +154,7 @@ def get_new_record_structure(table_name: str, db = Depends(get_db)):
 
 
 # Delete a single record
-@app.post("/api/Delete")
+@app.post("/api/delete")
 async def delete_record(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -191,7 +191,7 @@ async def update_record(request: Request, db = Depends(get_db)):
 
 
 # Update a single record
-@app.post("/api/Update")
+@app.post("/api/update")
 async def update_record(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -251,7 +251,7 @@ async def get_object_definition(table_name: str, db = Depends(get_db)):
     return tables[0] if len(tables) > 0 else {}
 
 # Delete a single table
-@app.post("/api/setup/home/Delete")
+@app.post("/api/setup/home/delete")
 async def delete_object(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -266,7 +266,7 @@ async def delete_object(request: Request, db = Depends(get_db)):
     return result
 
 # Update a single table
-@app.post("/api/setup/home/Update")
+@app.post("/api/setup/home/update")
 async def update_object(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -384,7 +384,7 @@ async def get_field_info(request: Request, table_name: str, field_name: str, db 
     }
 
 # Delete a field from an object
-@app.post("/api/setup/fields/Delete")
+@app.post("/api/setup/fields/delete")
 async def delete_field(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 

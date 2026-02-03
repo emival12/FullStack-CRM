@@ -3,8 +3,8 @@ export const PATH_DATABASE = "/database";
 export const PATH_IMPORT = "/import";
 export const PATH_SETUP = "/setup";
 
-export const PATH_DELETE = "/Delete";
-export const PATH_UPDATE = "/Update";
+export const PATH_DELETE = "/delete";
+export const PATH_UPDATE = "/update";
 export const PATH_INSERT = "/insert";
 
 export const ERROR_MISSING_TABLE = (data) => `Table '${data}' not found`;
