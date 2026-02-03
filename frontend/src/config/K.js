@@ -6,6 +6,7 @@ export const PATH_SETUP = "/setup";
 export const PATH_DELETE = "/delete";
 export const PATH_UPDATE = "/update";
 export const PATH_INSERT = "/insert";
+export const PATH_UPLOAD = "/upload";
 
 export const ERROR_MISSING_TABLE = (data) => `Table '${data}' not found`;
 export const ERROR_MISSING_RECORD = (data) => `Record '${data}' not found`;
