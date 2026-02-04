@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { Form, FloatingLabel, ListGroup } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 
-import { SETUP_TABLE_SELECTION_LABEL, TABLES_LABEL } from "../../config/IT";
 import { API_BASE_URL, PATH_SETUP } from "../../config/K";
 import { SECTIONS } from "./K_Setup";
+import { getLabel } from "../../config/Label";
 import LoadingScreen from "../../components/LoadingScreen";
 import ScreenAdaptiveSidebar from "../../components/ScreenAdaptiveSidebar";
 
@@ -44,7 +44,7 @@ export default function SetupSidebar({ tableKey, sectionKey, refreshSidebar }) {
       <>
         <FloatingLabel
           controlId="floatingInput"
-          label={SETUP_TABLE_SELECTION_LABEL}
+          label={getLabel("GENERIC.SETUP_TABLE_SELECTION_LABEL")}
           className="mb-3"
         >
           <Form.Select
@@ -91,7 +91,7 @@ export default function SetupSidebar({ tableKey, sectionKey, refreshSidebar }) {
   return (
     <ScreenAdaptiveSidebar
       sidebarComponent={sidebar()}
-      labelPhoneButton={TABLES_LABEL}
+      labelPhoneButton={getLabel("MOBILE.TABLES_LABEL")}
     />
   );
 }

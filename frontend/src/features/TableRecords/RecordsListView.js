@@ -3,8 +3,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Button } from "react-bootstrap";
 
-import { MISSING_TABLE_LABEL, NEW_LABEL } from "../../config/IT";
 import { API_BASE_URL, ERROR_MISSING_TABLE } from "../../config/K";
+import { getLabel } from "../../config/Label";
 import MissingPage from "../../components/MissingPage";
 import LoadingScreen from "../../components/LoadingScreen";
 import DynamicRecordsList from "../../components/dynamicUI/DynamicRecordsList";
@@ -59,7 +59,9 @@ export default function RecordsListView() {
   if (loading) return <LoadingScreen />;
 
   if (controlledError) {
-    return <MissingPage missingText={MISSING_TABLE_LABEL} />;
+    return (
+      <MissingPage missingText={getLabel("MISSING.MISSING_TABLE_LABEL")} />
+    );
   }
 
   return (
@@ -72,7 +74,7 @@ export default function RecordsListView() {
             setShowNewModal(true);
           }}
         >
-          {NEW_LABEL}
+          {getLabel("BUTTONS.NEW_LABEL")}
         </Button>
       </div>
       <DynamicRecordsList data={records} redirectKey={tableKey} />

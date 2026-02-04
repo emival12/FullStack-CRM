@@ -1,8 +1,8 @@
+import "../App.css";
 import { Navbar, Nav, Container } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { PATH_DATABASE, PATH_IMPORT, PATH_SETUP } from "../config/K";
-import { DATABASE_LABEL, IMPORT_LABEL } from "../config/IT";
-import "../App.css";
+import { getLabel } from "../config/Label";
 
 export default function NavBar() {
   return (
@@ -21,10 +21,10 @@ export default function NavBar() {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             <Nav.Link as={Link} to={PATH_DATABASE}>
-              {DATABASE_LABEL}
+              {getLabel("NAVBAR.DATABASE_LABEL")}
             </Nav.Link>
             <Nav.Link as={Link} to={PATH_IMPORT}>
-              {IMPORT_LABEL}
+              {getLabel("NAVBAR.IMPORT_LABEL")}
             </Nav.Link>
           </Nav>
           <Nav>

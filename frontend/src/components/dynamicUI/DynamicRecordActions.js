@@ -3,15 +3,7 @@ import { useState } from "react";
 import { Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
-import {
-  BODY_MODAL_DELETE_LABEL,
-  CANCEL_LABEL,
-  DELETE_LABEL,
-  ERROR_TOAST_BODY_LABEL,
-  ERROR_TOAST_TITLE_LABEL,
-  SAVE_LABEL,
-  TITLE_MODAL_DELETE_LABEL,
-} from "../../config/IT";
+import { getLabel } from "../../config/Label";
 import ModalScreen from "../ModalScreen";
 
 /**
@@ -58,8 +50,8 @@ export default function DynamicRecordActions({
         if (res.data.result === 0) {
           setToastConfig({
             show: true,
-            title: ERROR_TOAST_TITLE_LABEL,
-            body: ERROR_TOAST_BODY_LABEL,
+            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
+            body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
           });
         } else {
           navigate(redirectAPI);
@@ -69,7 +61,7 @@ export default function DynamicRecordActions({
         console.error("DynamicRecordActions - Error:", err);
         setToastConfig({
           show: true,
-          title: ERROR_TOAST_TITLE_LABEL,
+          title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
           body: err.response.data.detail,
         });
       })
@@ -94,12 +86,12 @@ export default function DynamicRecordActions({
             onClick={() => {
               setModalConfig({
                 show: true,
-                title: TITLE_MODAL_DELETE_LABEL,
-                body: BODY_MODAL_DELETE_LABEL,
+                title: getLabel("MODAL.DELETE.TITLE_MODAL_DELETE_LABEL"),
+                body: getLabel("MODAL.DELETE.BODY_MODAL_DELETE_LABEL"),
               });
             }}
           >
-            {DELETE_LABEL}
+            {getLabel("BUTTONS.DELETE_LABEL")}
           </Button>
         </span>
         <span>{extraDescription}</span>
@@ -116,7 +108,7 @@ export default function DynamicRecordActions({
           type="submit"
           form="recordDetailForm"
         >
-          {SAVE_LABEL}
+          {getLabel("BUTTONS.SAVE_LABEL")}
         </Button>
         <Button
           className="ms-3 fw-medium"
@@ -126,7 +118,7 @@ export default function DynamicRecordActions({
             reset();
           }}
         >
-          {CANCEL_LABEL}
+          {getLabel("BUTTONS.CANCEL_LABEL")}
         </Button>
       </span>
     );

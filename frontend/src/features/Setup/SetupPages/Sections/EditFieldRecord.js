@@ -9,7 +9,7 @@ import {
   PATH_DELETE,
   PATH_SETUP,
 } from "../../../../config/K";
-import { EDIT_LABEL, MISSING_RECORD_LABEL } from "../../../../config/IT";
+import { getLabel } from "../../../../config/Label";
 import LoadingScreen from "../../../../components/LoadingScreen";
 import MissingPage from "../../../../components/MissingPage";
 import ToastMsg from "../../../../components/ToastMsg";
@@ -110,7 +110,9 @@ export default function EditFieldRecord({ tableKey, sectionKey, recordId }) {
   };
 
   if (controlledError) {
-    return <MissingPage missingText={MISSING_RECORD_LABEL} />;
+    return (
+      <MissingPage missingText={getLabel("MISSING.MISSING_RECORD_LABEL")} />
+    );
   }
 
   if (loading || loadingFieldType) return <LoadingScreen />;
@@ -119,7 +121,7 @@ export default function EditFieldRecord({ tableKey, sectionKey, recordId }) {
     <>
       <DynamicRecordActions
         setLoading={setLoading}
-        editLabel={EDIT_LABEL}
+        editLabel={getLabel("BUTTONS.EDIT_LABEL")}
         isEdit={isEdit}
         setIsEdit={setIsEdit}
         reset={reset}

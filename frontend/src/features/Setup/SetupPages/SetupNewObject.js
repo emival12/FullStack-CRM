@@ -3,14 +3,9 @@ import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useForm } from "react-hook-form";
 
-import {
-  NEW_LABEL,
-  ERROR_TOAST_BODY_LABEL,
-  ERROR_TOAST_TITLE_LABEL,
-  SETUP_MSG_SELECT_TABLE_LABEL,
-} from "../../../config/IT";
 import { API_BASE_URL } from "../../../config/K";
 import { NEW_OBJECT_FIELD_STRUCTURE } from "../K_Setup";
+import { getLabel } from "../../../config/Label";
 import LoadingScreen from "../../../components/LoadingScreen";
 import ToastMsg from "../../../components/ToastMsg";
 import DynamicForm from "../../../components/dynamicUI/DynamicForm";
@@ -52,8 +47,8 @@ export default function SetupNewObject() {
         if (res.data.result === 0) {
           setToastConfig({
             show: true,
-            title: ERROR_TOAST_TITLE_LABEL,
-            body: ERROR_TOAST_BODY_LABEL,
+            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
+            body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
           });
         } else {
           setShowNewForm(false);
@@ -66,7 +61,7 @@ export default function SetupNewObject() {
         console.error("SetupNewObject - Error:", err);
         setToastConfig({
           show: true,
-          title: ERROR_TOAST_TITLE_LABEL,
+          title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
           body: err.response.data.detail,
         });
       })
@@ -88,7 +83,7 @@ export default function SetupNewObject() {
     <>
       <DynamicRecordActions
         setLoading={setLoading}
-        editLabel={NEW_LABEL}
+        editLabel={getLabel("BUTTONS.NEW_LABEL")}
         isEdit={showNewForm}
         setIsEdit={setShowNewForm}
         reset={reset}
@@ -97,7 +92,7 @@ export default function SetupNewObject() {
         pathAPI={null}
         payloadAPI={null}
         redirectAPI={null}
-        extraDescription={SETUP_MSG_SELECT_TABLE_LABEL}
+        extraDescription={getLabel("GENERIC.SETUP_MSG_SELECT_TABLE_LABEL")}
       />
       {showNewForm ? (
         <>

@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { Table } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
-import MissingPage from "../MissingPage";
-import { MISSING_RECORD_LABEL } from "../../config/IT";
 import { PATH_DATABASE } from "../../config/K";
+import { getLabel } from "../../config/Label";
+import MissingPage from "../MissingPage";
 import PaginationControl from "../PaginationControl";
 
 //Dinamic construction of the body entry
@@ -110,7 +110,10 @@ export default function DynamicRecordsList({
         setCurrentPage={setCurrentPage}
       />
       {data.records.length === 0 && (
-        <MissingPage missingText={MISSING_RECORD_LABEL} ShowImg={false} />
+        <MissingPage
+          missingText={getLabel("MISSING.MISSING_RECORD_LABEL")}
+          ShowImg={false}
+        />
       )}
     </>
   );

@@ -1,12 +1,6 @@
 import { Form, FloatingLabel } from "react-bootstrap";
 import TextareaAutosize from "react-textarea-autosize";
-import {
-  MANDATORY_FIELD_LABEL,
-  MAX_FIELD_LABEL,
-  MAX_NUMBER_LABEL,
-  MIN_NUMBER_LABEL,
-  TEXT_AREA_HELP_LABEL,
-} from "../../config/IT";
+import { getLabel } from "../../config/Label";
 
 /**
  * Shows a form with some fields
@@ -82,7 +76,9 @@ export default function DynamicForm({
           isInvalid={errors[key]}
           {...register(key, {
             validate: (value) =>
-              !info.is_required || value !== "NULL" || MANDATORY_FIELD_LABEL,
+              !info.is_required ||
+              value !== "NULL" ||
+              getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
           })}
         >
           <option value="NULL"></option>
@@ -116,7 +112,7 @@ export default function DynamicForm({
               {...register(key, {
                 required: {
                   value: info.is_required,
-                  message: MANDATORY_FIELD_LABEL,
+                  message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
                 },
               })}
             />
@@ -146,7 +142,7 @@ export default function DynamicForm({
             {...register(key, {
               required: {
                 value: info.is_required && !disabled,
-                message: MANDATORY_FIELD_LABEL,
+                message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
               },
             })}
           />
@@ -178,26 +174,36 @@ export default function DynamicForm({
           {...register(key, {
             required: {
               value: info.is_required,
-              message: MANDATORY_FIELD_LABEL,
+              message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
             },
             maxLength: {
               value: info.length,
-              message: MAX_FIELD_LABEL.replace("X", info.length),
+              message: getLabel("FORM_ERRORS.MAX_FIELD_LABEL", info.length),
             },
             min: {
               value: Number(info?.min_limit_value),
-              message: MIN_NUMBER_LABEL.replace("X", info?.min_limit_value),
+              message: getLabel(
+                "FORM_ERRORS.MIN_NUMBER_LABEL",
+                info?.min_limit_value,
+              ),
             },
             max: {
               value: Number(info?.max_limit_value),
-              message: MAX_NUMBER_LABEL.replace("X", info?.max_limit_value),
+              message: getLabel(
+                "FORM_ERRORS.MAX_NUMBER_LABEL",
+                info?.max_limit_value,
+              ),
             },
           })}
         />
         <Form.Control.Feedback type="invalid">
           {errors[key]?.message}
         </Form.Control.Feedback>
-        {info?.is_textarea ? <div>{TEXT_AREA_HELP_LABEL}</div> : <></>}
+        {info?.is_textarea ? (
+          <div>{getLabel("GENERIC.TEXT_AREA_HELP_LABEL")}</div>
+        ) : (
+          <></>
+        )}
       </>
     );
   };

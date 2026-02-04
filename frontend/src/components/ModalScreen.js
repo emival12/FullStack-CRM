@@ -1,5 +1,5 @@
 import { Button, Modal } from "react-bootstrap";
-import { CANCEL_LABEL, CONFIRM_LABEL } from "../config/IT";
+import { getLabel } from "../config/Label";
 
 /**
  * Shows a modal with a message and two buttons: one to confirm, the other one to cancel
@@ -29,10 +29,10 @@ export default function ModalScreen({
 
       <Modal.Footer>
         <Button variant="secondary" onClick={() => setShowModal(false)}>
-          {CANCEL_LABEL}
+          {getLabel("BUTTONS.CANCEL_LABEL")}
         </Button>
         <Button variant="primary" onClick={() => successFunction()}>
-          {CONFIRM_LABEL}
+          {getLabel("BUTTONS.CONFIRM_LABEL")}
         </Button>
       </Modal.Footer>
     </Modal>

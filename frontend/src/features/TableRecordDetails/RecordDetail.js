@@ -5,20 +5,13 @@ import { useOutletContext, useNavigate } from "react-router-dom";
 import { Tab, Tabs } from "react-bootstrap";
 
 import {
-  DETAIL_TAB_LABEL,
-  EDIT_LABEL,
-  ERROR_TOAST_BODY_LABEL,
-  ERROR_TOAST_TITLE_LABEL,
-  MISSING_RECORD_LABEL,
-  RELATED_TAB_LABEL,
-} from "../../config/IT";
-import {
   API_BASE_URL,
   ERROR_MISSING_RECORD,
   PATH_DATABASE,
   PATH_DELETE,
   PATH_UPDATE,
 } from "../../config/K";
+import { getLabel } from "../../config/Label";
 import MissingPage from "../../components/MissingPage";
 import LoadingScreen from "../../components/LoadingScreen";
 import ToastMsg from "../../components/ToastMsg";
@@ -115,8 +108,8 @@ export default function RecordDetail() {
           if (res.data.result === 0) {
             setToastConfig({
               show: true,
-              title: ERROR_TOAST_TITLE_LABEL,
-              body: ERROR_TOAST_BODY_LABEL,
+              title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
+              body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
             });
           } else {
             if (new_PK) {
@@ -132,7 +125,7 @@ export default function RecordDetail() {
           console.error("RecordDetail - Error:", err);
           setToastConfig({
             show: true,
-            title: ERROR_TOAST_TITLE_LABEL,
+            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
             body: err.response.data.detail,
           });
         })
@@ -145,7 +138,9 @@ export default function RecordDetail() {
   if (loading) return <LoadingScreen />;
 
   if (controlledError) {
-    return <MissingPage missingText={MISSING_RECORD_LABEL} />;
+    return (
+      <MissingPage missingText={getLabel("MISSING.MISSING_RECORD_LABEL")} />
+    );
   }
 
   return (
@@ -155,10 +150,10 @@ export default function RecordDetail() {
         id="uncontrolled-tab-example"
         className="mb-3"
       >
-        <Tab eventKey="details" title={DETAIL_TAB_LABEL}>
+        <Tab eventKey="details" title={getLabel("GENERIC.DETAIL_TAB_LABEL")}>
           <DynamicRecordActions
             setLoading={setLoading}
-            editLabel={EDIT_LABEL}
+            editLabel={getLabel("BUTTONS.EDIT_LABEL")}
             isEdit={isEdit}
             setIsEdit={setIsEdit}
             reset={reset}
@@ -193,7 +188,10 @@ export default function RecordDetail() {
           />
         </Tab>
         {fields.related_list.length > 0 ? (
-          <Tab eventKey="relatedLists" title={RELATED_TAB_LABEL}>
+          <Tab
+            eventKey="relatedLists"
+            title={getLabel("GENERIC.RELATED_TAB_LABEL")}
+          >
             {Object.entries(fields.related_list).map(([key, related_list]) => (
               <div className="border border-2 p-3 pt-2 rounded-4" key={key}>
                 <div className="fw-bold mb-2">{related_list.label}</div>

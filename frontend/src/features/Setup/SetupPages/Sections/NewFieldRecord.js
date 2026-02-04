@@ -3,19 +3,12 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Modal } from "react-bootstrap";
 
-import {
-  SAVE_LABEL,
-  ERROR_TOAST_BODY_LABEL,
-  ERROR_TOAST_TITLE_LABEL,
-  NEW_FIELD_TITLE_LABEL,
-  NEXT_LABEL,
-  PREVIOUS_LABEL,
-} from "../../../../config/IT";
 import { API_BASE_URL, PATH_SETUP } from "../../../../config/K";
-import ToastMsg from "../../../../components/ToastMsg";
+import { getLabel } from "../../../../config/Label";
 import { FieldTypes } from "../../FieldTypes";
-import DynamicForm from "../../../../components/dynamicUI/DynamicForm";
+import ToastMsg from "../../../../components/ToastMsg";
 import LoadingScreen from "../../../../components/LoadingScreen";
+import DynamicForm from "../../../../components/dynamicUI/DynamicForm";
 
 /**
  * Modal used to retrieve the info needed on the field creation
@@ -70,8 +63,8 @@ export default function NewFieldRecord({
         if (res.data.result === 0) {
           setToastConfig({
             show: true,
-            title: ERROR_TOAST_TITLE_LABEL,
-            body: ERROR_TOAST_BODY_LABEL,
+            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
+            body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
           });
         } else {
           setShowNewModal(false);
@@ -83,7 +76,7 @@ export default function NewFieldRecord({
         console.error("NewFieldRecord - Error:", err);
         setToastConfig({
           show: true,
-          title: ERROR_TOAST_TITLE_LABEL,
+          title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
           body: err.response.data.detail,
         });
       });
@@ -145,7 +138,9 @@ export default function NewFieldRecord({
         }}
       >
         <Modal.Header closeButton>
-          <Modal.Title>{NEW_FIELD_TITLE_LABEL}</Modal.Title>
+          <Modal.Title>
+            {getLabel("NEW_FIELD.NEW_FIELD_TITLE_LABEL")}
+          </Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
@@ -171,7 +166,7 @@ export default function NewFieldRecord({
             variant="primary"
             onClick={() => setPageNumber(1)}
           >
-            {PREVIOUS_LABEL}
+            {getLabel("BUTTONS.PREVIOUS_LABEL")}
           </Button>
           <Button
             hidden={pageNumber === 1}
@@ -179,7 +174,7 @@ export default function NewFieldRecord({
             type="submit"
             form="recordDetailForm"
           >
-            {SAVE_LABEL}
+            {getLabel("BUTTONS.SAVE_LABEL")}
           </Button>
           <Button
             hidden={pageNumber !== 1}
@@ -187,7 +182,7 @@ export default function NewFieldRecord({
             variant="primary"
             onClick={() => setPageNumber(2)}
           >
-            {NEXT_LABEL}
+            {getLabel("BUTTONS.NEXT_LABEL")}
           </Button>
         </Modal.Footer>
       </Modal>

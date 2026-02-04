@@ -3,13 +3,8 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Modal } from "react-bootstrap";
 
-import {
-  NEW_RECORD_TITLE_LABEL,
-  SAVE_LABEL,
-  ERROR_TOAST_BODY_LABEL,
-  ERROR_TOAST_TITLE_LABEL,
-} from "../../config/IT";
 import { API_BASE_URL, PATH_INSERT } from "../../config/K";
+import { getLabel } from "../../config/Label";
 import ToastMsg from "../../components/ToastMsg";
 import DynamicForm from "../../components/dynamicUI/DynamicForm";
 
@@ -71,8 +66,8 @@ export default function NewRecord({
         if (res.data.result === 0) {
           setToastConfig({
             show: true,
-            title: ERROR_TOAST_TITLE_LABEL,
-            body: ERROR_TOAST_BODY_LABEL,
+            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
+            body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
           });
         } else {
           setValidated(false);
@@ -85,7 +80,7 @@ export default function NewRecord({
         console.error("NewRecord - Sumbit - Error:", err);
         setToastConfig({
           show: true,
-          title: ERROR_TOAST_TITLE_LABEL,
+          title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
           body: err.response.data.detail,
         });
       });
@@ -103,7 +98,9 @@ export default function NewRecord({
         }}
       >
         <Modal.Header closeButton>
-          <Modal.Title>{NEW_RECORD_TITLE_LABEL}</Modal.Title>
+          <Modal.Title>
+            {getLabel("GENERIC.NEW_RECORD_TITLE_LABEL")}
+          </Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
@@ -121,7 +118,7 @@ export default function NewRecord({
 
         <Modal.Footer>
           <Button variant="primary" type="submit" form="recordDetailForm">
-            {SAVE_LABEL}
+            {getLabel("BUTTONS.SAVE_LABEL")}
           </Button>
         </Modal.Footer>
       </Modal>

@@ -3,17 +3,13 @@ import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 
 import {
-  EDIT_LABEL,
-  ERROR_TOAST_BODY_LABEL,
-  ERROR_TOAST_TITLE_LABEL,
-} from "../../../../config/IT";
-import {
   API_BASE_URL,
   PATH_DELETE,
   PATH_SETUP,
   PATH_UPDATE,
 } from "../../../../config/K";
 import { HOME_OBJECT_FIELD_STRUCTURE } from "../../K_Setup";
+import { getLabel } from "../../../../config/Label";
 import ToastMsg from "../../../../components/ToastMsg";
 import LoadingScreen from "../../../../components/LoadingScreen";
 import DynamicForm from "../../../../components/dynamicUI/DynamicForm";
@@ -100,8 +96,8 @@ export default function SetupSectionHome({ tableKey, sectionKey }) {
           if (res.data.result === 0) {
             setToastConfig({
               show: true,
-              title: ERROR_TOAST_TITLE_LABEL,
-              body: ERROR_TOAST_BODY_LABEL,
+              title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
+              body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
             });
           } else {
             fetchData();
@@ -113,7 +109,7 @@ export default function SetupSectionHome({ tableKey, sectionKey }) {
           console.error("Error:", err);
           setToastConfig({
             show: true,
-            title: ERROR_TOAST_TITLE_LABEL,
+            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
             body: err.response.data.detail,
           });
         })
@@ -129,7 +125,7 @@ export default function SetupSectionHome({ tableKey, sectionKey }) {
     <>
       <DynamicRecordActions
         setLoading={setLoading}
-        editLabel={EDIT_LABEL}
+        editLabel={getLabel("BUTTONS.EDIT_LABEL")}
         isEdit={isEdit}
         setIsEdit={setIsEdit}
         reset={reset}

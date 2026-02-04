@@ -3,17 +3,9 @@ import { useEffect, useState, useCallback } from "react";
 import { Container, Row, Form, Button, Col } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 
-import {
-  API_ERROR_MESSAGES,
-  CONFIRM_LABEL,
-  ERROR_TOAST_TITLE_LABEL,
-  MANDATORY_FIELD_LABEL,
-  SUCCESS_TOAST_BODY_LABEL,
-  SUCCESS_TOAST_TITLE_LABEL,
-  UPLOAD_FILE_LABEL,
-} from "../../config/IT";
 import { API_BASE_URL, PATH_IMPORT, PATH_UPLOAD } from "../../config/K";
 import { IMPORT_FIELD_STRUCTURE } from "./K_Import";
+import { getLabel } from "../../config/Label";
 import LoadingScreen from "../../components/LoadingScreen";
 import ToastMsg from "../../components/ToastMsg";
 import DynamicForm from "../../components/dynamicUI/DynamicForm";
@@ -62,7 +54,7 @@ export default function MassiveImport() {
         console.error("MassiveImport - Error:", err);
         setToastConfig({
           show: true,
-          title: ERROR_TOAST_TITLE_LABEL,
+          title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
           body: err.message,
           color: "danger",
         });
@@ -94,8 +86,8 @@ export default function MassiveImport() {
         console.log("MassiveImport - Updated record results:", res.data);
         setToastConfig({
           show: true,
-          title: SUCCESS_TOAST_TITLE_LABEL,
-          body: SUCCESS_TOAST_BODY_LABEL,
+          title: getLabel("TOAST.SUCCESS_TOAST_TITLE_LABEL"),
+          body: getLabel("TOAST.SUCCESS_TOAST_BODY_LABEL"),
           color: "success",
         });
         setValidated(false);
@@ -105,16 +97,19 @@ export default function MassiveImport() {
         if (err.response.status === 400) {
           const errorCode = err.response.data.detail.error_code;
           const errorData = err.response.data.detail.error_data;
-          const messageBuilder = API_ERROR_MESSAGES[errorCode];
+          const message = getLabel(
+            `API_ERROR_MESSAGES.${errorCode}`,
+            errorData,
+          );
 
           setError("file", {
             type: "manual",
-            message: messageBuilder(errorData),
+            message: message,
           });
         } else {
           setToastConfig({
             show: true,
-            title: ERROR_TOAST_TITLE_LABEL,
+            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
             body: err.response.data.detail,
             color: "danger",
           });
@@ -145,7 +140,7 @@ export default function MassiveImport() {
           </Col>
           <Col>
             <Form.Group controlId="formFile">
-              <Form.Label>{UPLOAD_FILE_LABEL}</Form.Label>
+              <Form.Label>{getLabel("MASSIVE.UPLOAD_FILE_LABEL")}</Form.Label>
               <Form.Control
                 type="file"
                 accept=".csv"
@@ -154,7 +149,7 @@ export default function MassiveImport() {
                 {...register("file", {
                   required: {
                     value: true,
-                    message: MANDATORY_FIELD_LABEL,
+                    message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
                   },
                 })}
               />
@@ -172,7 +167,7 @@ export default function MassiveImport() {
               type="submit"
               form="recordDetailForm"
             >
-              {CONFIRM_LABEL}
+              {getLabel("BUTTONS.CONFIRM_LABEL")}
             </Button>
           </div>
         </Row>

@@ -2,8 +2,8 @@ import axios from "axios";
 import { useEffect, useState, useCallback } from "react";
 import { Button } from "react-bootstrap";
 
-import { NEW_LABEL } from "../../../../config/IT";
 import { API_BASE_URL, PATH_SETUP } from "../../../../config/K";
+import { getLabel } from "../../../../config/Label";
 import LoadingScreen from "../../../../components/LoadingScreen";
 import NewFieldRecord from "./NewFieldRecord";
 import DynamicRecordsList from "../../../../components/dynamicUI/DynamicRecordsList";
@@ -51,7 +51,7 @@ export default function SetupSectionFields({ tableKey, sectionKey }) {
             setShowNewModal(true);
           }}
         >
-          {NEW_LABEL}
+          {getLabel("BUTTONS.NEW_LABEL")}
         </Button>
       </div>
       <DynamicRecordsList
