@@ -2,19 +2,25 @@ import React from "react";
 import { ENG } from "./Languages/ENG";
 import { IT } from "./Languages/IT";
 
+const labelNotFound = "Label Not Found";
 const dictionaries = {
   it: IT,
-  eng: ENG,
+  en: ENG,
 };
+dictionaries["it-IT"] = dictionaries.it;
+dictionaries["en-US"] = dictionaries.en;
+dictionaries["en-GB"] = dictionaries.en;
 
-const labelNotFound = "Label Not Found";
-const userLanguage = "it";
+const getBrowserLanguage = () => {
+  const browserLang = navigator.language;
+  return dictionaries[browserLang] ? browserLang : "eng";
+};
 
 export const getLabel = (labelName, params = null) => {
   if (!labelName) return labelNotFound;
   const path = labelName.split(".");
 
-  let currentStep = dictionaries[userLanguage];
+  let currentStep = dictionaries[getBrowserLanguage()];
   for (const key of path) {
     if (currentStep && currentStep[key] !== undefined) {
       currentStep = currentStep[key];
