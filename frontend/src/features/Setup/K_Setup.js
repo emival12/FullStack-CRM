@@ -1,3 +1,27 @@
+import {
+  AGGREGATION_FUNCTION_BASE,
+  CATEGORY_BASE,
+  FIELD_NAME_BASE,
+  FIELD_TYPE_BASE,
+  ID_FIELD_NAME_BASE,
+  ID_FIELD_TYPE_BASE,
+  IS_ACTIVE_BASE,
+  IS_EDITABLE_BASE,
+  IS_REQUIRED_BASE,
+  IS_VISIBLE_BASE,
+  LENGTH_BASE,
+  LOOKUP_FILTER_BASE,
+  NUMERIC_PRECISION_BASE,
+  NUMERIC_SCALE_BASE,
+  OBJECT_LABEL_BASE,
+  OBJECT_NAME_BASE,
+  OPTION_VALUES_BASE,
+  REFERENCE_FIELD_BASE,
+  REFERENCE_OBJECT_BASE,
+  REFERENCE_OBJECT_RECORD_TYPE_BASE,
+  SORT_ORDER_BASE,
+} from "./K_FieldBaseStructure";
+
 export const Sections = {
   home: "home",
   fields: "fields",
@@ -14,302 +38,79 @@ export const SECTIONS = [
   { key: Sections.related_lists, label: "Related List" },
 ];
 
-//Structure to create a new table
-export const NEW_OBJECT_FIELD_STRUCTURE = {
-  Object_label: {
-    field_name: "object_label",
-    field_type: "text",
-    length: 100,
-    is_editable: 1,
-    is_required: 1,
-  },
-  Object_name: {
-    field_name: "object_name",
-    field_type: "text",
-    length: 100,
-    is_editable: 0,
-    is_required: 1,
-  },
-  Category: {
-    field_name: "category",
-    field_type: "text",
-    length: 50,
-    is_editable: 1,
-    is_required: 1,
-  },
-  Sort_order: {
-    field_name: "sort_order",
-    field_type: "number",
-    numeric_precision: 5,
-    numeric_scale: null,
-    is_editable: 1,
-    is_required: 1,
-    max_limit_value: 99999,
-    min_limit_value: 1,
-  },
-  Id_field_name: {
-    field_name: "id_field_name",
-    field_type: "text",
-    length: 255,
-    is_editable: 1,
-    is_required: 1,
-  },
-  Id_field_type: {
-    field_name: "id_field_type",
-    field_type: "radio",
-    length: 255,
-    is_editable: 1,
-    is_required: 1,
-    options: [
-      {
-        option_label: "Text",
-        option_key: "text",
-      },
-      {
-        option_label: "Auto number",
-        option_key: "auto_number",
-      },
-    ],
-  },
-};
-
 //Structure to edit a new table
 export const HOME_OBJECT_FIELD_STRUCTURE = {
-  Object_label: {
-    field_name: "object_label",
-    field_type: "text",
-    length: 100,
-    is_editable: 1,
-    is_required: 1,
-  },
-  Object_name: {
-    field_name: "object_name",
-    field_type: "text",
-    length: 100,
-    is_editable: 0,
-    is_required: 1,
-  },
-  Category: {
-    field_name: "category",
-    field_type: "text",
-    length: 50,
-    is_editable: 1,
-    is_required: 1,
-  },
-  Sort_order: {
-    field_name: "sort_order",
-    field_type: "number",
-    numeric_precision: 5,
-    numeric_scale: null,
-    is_editable: 1,
-    is_required: 1,
-    max_limit_value: 99999,
-    min_limit_value: 1,
-  },
+  object_label: OBJECT_LABEL_BASE,
+  object_name: OBJECT_NAME_BASE,
+  category: CATEGORY_BASE,
+  sort_order: SORT_ORDER_BASE,
+};
+
+//Structure to create a new table
+export const NEW_OBJECT_FIELD_STRUCTURE = {
+  ...HOME_OBJECT_FIELD_STRUCTURE,
+  id_field_name: ID_FIELD_NAME_BASE,
+  id_field_type: ID_FIELD_TYPE_BASE,
 };
 
 //Structure to create a new field
 export const NEW_FIELD_OBJECT_STRUCTURE = {
-  field_type: {
-    field_name: "field_type",
-    field_type: "radio",
-    is_editable: 1,
-    is_required: 1,
-    options: [],
-  },
+  field_type: FIELD_TYPE_BASE,
 };
 
 export const BASE_FIELD_OBJECT_STRUCTURE = {
-  field_name: {
-    field_name: "field_name",
-    field_type: "text",
-    length: 255,
-    is_editable: 1,
-    is_required: 1,
-    order: 1,
-    is_primary_key: 1,
-  },
-  is_active: {
-    field_name: "is_active",
-    field_type: "checkbox",
-    is_editable: 0,
-    is_required: 1,
-    label: "",
-    value: 1,
-    order: 97,
-  },
-  is_visible: {
-    field_name: "is_visible",
-    field_type: "checkbox",
-    is_editable: 0,
-    is_required: 1,
-    label: "",
-    value: 1,
-    order: 98,
-  },
-  is_editable: {
-    field_name: "is_editable",
-    field_type: "checkbox",
-    is_editable: 1,
-    is_required: 0,
-    label: "",
-    value: 1,
-    order: 99,
-  },
-  is_required: {
-    field_name: "is_required",
-    field_type: "checkbox",
-    is_editable: 1,
-    is_required: 0,
-    label: "",
-    value: 0,
-    order: 100,
-  },
+  field_name: FIELD_NAME_BASE,
+  is_active: IS_ACTIVE_BASE,
+  is_visible: IS_VISIBLE_BASE,
+  is_editable: IS_EDITABLE_BASE,
+  is_required: IS_REQUIRED_BASE,
 };
 
 export const NEW_TEXT_FIELD_OBJECT_STRUCTURE = {
-  length: {
-    field_name: "length",
-    field_type: "number",
-    numeric_precision: 3,
-    numeric_scale: null,
-    is_editable: 1,
-    is_required: 1,
-    max_limit_value: 255,
-    min_limit_value: 1,
-    order: 2,
-  },
+  ...BASE_FIELD_OBJECT_STRUCTURE,
+  length: LENGTH_BASE,
 };
 
 export const NEW_NUMBER_FIELD_OBJECT_STRUCTURE = {
-  numeric_precision: {
-    field_name: "numeric_precision",
-    field_type: "number",
-    numeric_precision: 2,
-    numeric_scale: null,
-    is_editable: 1,
-    is_required: 1,
-    max_limit_value: 18,
-    min_limit_value: 1,
-    order: 2,
-  },
-  numeric_scale: {
-    field_name: "numeric_scale",
-    field_type: "number",
-    numeric_precision: 2,
-    numeric_scale: null,
-    is_editable: 1,
-    is_required: 1,
-    max_limit_value: 17,
-    min_limit_value: 0,
-    order: 3,
-  },
+  ...BASE_FIELD_OBJECT_STRUCTURE,
+  numeric_precision: NUMERIC_PRECISION_BASE,
+  numeric_scale: NUMERIC_SCALE_BASE,
 };
 
 export const NEW_LOOKUP_FIELD_OBJECT_STRUCTURE = {
-  reference_object: {
-    field_name: "reference_object",
-    field_type: "lookup",
-    is_editable: 1,
-    is_required: 1,
-    options: [],
-    order: 2,
-  },
-  reference_field: {
-    field_name: "reference_field",
-    field_type: "lookup",
-    is_editable: 1,
-    is_required: 1,
-    options: [],
-    order: 3,
-  },
-  lookup_filter: {
-    field_name: "lookup_filter",
-    field_type: "text",
-    length: 1000,
-    is_editable: 1,
-    is_required: 0,
-    order: 4,
-  },
+  ...BASE_FIELD_OBJECT_STRUCTURE,
+  reference_object: REFERENCE_OBJECT_BASE,
+  reference_field: REFERENCE_FIELD_BASE,
+  lookup_filter: LOOKUP_FILTER_BASE,
 };
 
 export const NEW_PICKLIST_FIELD_OBJECT_STRUCTURE = {
-  reference_object: {
-    field_name: "reference_object",
-    field_type: "lookup",
-    is_editable: 1,
-    is_required: 1,
-    options: [],
-    order: 2,
-  },
-  reference_field: {
-    field_name: "reference_field",
-    field_type: "lookup",
-    is_editable: 1,
-    is_required: 1,
-    options: [],
-    order: 3,
-  },
+  ...BASE_FIELD_OBJECT_STRUCTURE,
+  reference_object: REFERENCE_OBJECT_BASE,
+  reference_field: REFERENCE_FIELD_BASE,
 };
 
 export const NEW_ROLLUP_FIELD_OBJECT_STRUCTURE = {
-  reference_object: {
-    field_name: "reference_object",
-    field_type: "lookup",
-    is_editable: 1,
-    is_required: 1,
-    options: [],
-    order: 2,
-  },
-  reference_object_record_type: {
-    field_name: "reference_object_record_type",
-    field_type: "lookup",
-    is_editable: 1,
-    is_required: 1,
-    options: [],
-    order: 3,
-  },
-  reference_field: {
-    field_name: "reference_field",
-    field_type: "lookup",
-    is_editable: 1,
-    is_required: 1,
-    options: [],
-    order: 4,
-  },
-  aggregation_function: {
-    field_name: "aggregation_function",
-    field_type: "picklist",
-    is_editable: 1,
-    is_required: 1,
-    options: [
-      {
-        reference_field: "Somma",
-        id: "SUM",
-      },
-      {
-        reference_field: "Minimo",
-        id: "MIN",
-      },
-      {
-        reference_field: "Massimo",
-        id: "MAX",
-      },
-    ],
-    order: 5,
-  },
+  ...BASE_FIELD_OBJECT_STRUCTURE,
+  reference_object: REFERENCE_OBJECT_BASE,
+  reference_object_record_type: REFERENCE_OBJECT_RECORD_TYPE_BASE,
+  reference_field: REFERENCE_FIELD_BASE,
+  aggregation_function: AGGREGATION_FUNCTION_BASE,
 };
 
 export const NEW_RADIO_FIELD_OBJECT_STRUCTURE = {
-  options_values: {
-    field_name: "options_values",
-    field_type: "text",
-    is_textarea: true,
-    length: 1000,
-    is_editable: 1,
-    is_required: 1,
-    order: 2,
-  },
+  ...BASE_FIELD_OBJECT_STRUCTURE,
+  options_values: OPTION_VALUES_BASE,
 };
 
-export const NEW_CHECKBOX_FIELD_OBJECT_STRUCTURE = {};
+export const NEW_CHECKBOX_FIELD_OBJECT_STRUCTURE = {
+  ...BASE_FIELD_OBJECT_STRUCTURE,
+};
+
+// this is used only on the primary key (the autonumber type is not available)
+export const FULL_AUTO_NUMBER_FIELD_STRUCTURE = {
+  field_name: {
+    ...FIELD_NAME_BASE,
+    is_editable: 0,
+  },
+};

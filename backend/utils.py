@@ -1092,20 +1092,20 @@ def create_new_object(cursor, db, object_data):
             HTTPException: If a database error occurs
     """
     
-    object_label = object_data["Object_label"].lower()
-    object_name = object_data["Object_name"].lower()
-    pk_field_name = object_data["Id_field_name"].lower()
-    pk_field_length = 255 if object_data["Id_field_type"] == FieldTypes.TEXT.value else None        # apply default lenght if is a text
-    pk_numeric_precision = 5 if object_data["Id_field_type"] == FieldTypes.NUMBER.value else None   # apply default lenght if is a number
-    pk_field_type = object_data["Id_field_type"]
+    object_label = object_data["object_label"].lower()
+    object_name = object_data["object_name"].lower()
+    pk_field_name = object_data["id_field_name"].lower()
+    pk_field_length = 255 if object_data["id_field_type"] == FieldTypes.TEXT.value else None        # apply default lenght if is a text
+    pk_numeric_precision = 5 if object_data["id_field_type"] == FieldTypes.NUMBER.value else None   # apply default lenght if is a number
+    pk_field_type = object_data["id_field_type"]
     
     try:
         params = [
             (   
                 object_label,                   # object_label
                 object_name,                    # object_name
-                object_data["Category"],        # category
-                int(object_data["Sort_order"]), # sort_order
+                object_data["category"],        # category
+                int(object_data["sort_order"]), # sort_order
                 0,                              # is_system_object
                 1                               # is_single_record_type
             )

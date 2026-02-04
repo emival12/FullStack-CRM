@@ -46,7 +46,7 @@ export default function MassiveImport() {
       .then((res) => {
         console.log("MassiveImport - Data Received:", res.data);
         let clonedFieldStructure = structuredClone(IMPORT_FIELD_STRUCTURE);
-        clonedFieldStructure.Object_name.options = res.data;
+        clonedFieldStructure.object_name.options = res.data;
         setFieldStructure(clonedFieldStructure);
 
         //Insert the options retrieved into the form and redraw it
@@ -78,8 +78,8 @@ export default function MassiveImport() {
     setLoading(true);
 
     const formData = new FormData();
-    formData.append("operation_type", data["Operation_type"]);
-    formData.append("object_name", data["Object_name"]);
+    formData.append("operation_type", data["operation_type"]);
+    formData.append("object_name", data["object_name"]);
     formData.append("file", data["file"][0]);
 
     const headers = {

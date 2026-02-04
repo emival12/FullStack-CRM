@@ -76,10 +76,10 @@ export default function SetupNewObject() {
   };
 
   //Create the API name of the object
-  const object_label_value = watch("Object_label");
+  const object_label_value = watch("object_label");
   useEffect(() => {
     if (!object_label_value) return;
-    setValue("Object_name", object_label_value.replace(" ", "_").toLowerCase());
+    setValue("object_name", object_label_value.replace(" ", "_").toLowerCase());
   }, [object_label_value, setValue]);
 
   if (loading) return <LoadingScreen />;

@@ -4,7 +4,6 @@ import { API_BASE_URL, PATH_SETUP } from "../../config/K";
 
 import {
   NEW_FIELD_OBJECT_STRUCTURE as NEW_FIELDS,
-  BASE_FIELD_OBJECT_STRUCTURE as BASE_FIELDS,
   NEW_TEXT_FIELD_OBJECT_STRUCTURE as NEW_TEXT_FIELDS,
   NEW_NUMBER_FIELD_OBJECT_STRUCTURE as NEW_NUMBER_FIELDS,
   NEW_LOOKUP_FIELD_OBJECT_STRUCTURE as NEW_LOOKUP_FIELDS,
@@ -12,6 +11,7 @@ import {
   NEW_ROLLUP_FIELD_OBJECT_STRUCTURE as NEW_ROLLUP_FIELDS,
   NEW_RADIO_FIELD_OBJECT_STRUCTURE as NEW_RADIO_FIELDS,
   NEW_CHECKBOX_FIELD_OBJECT_STRUCTURE as NEW_CHECKBOX_FIELDS,
+  FULL_AUTO_NUMBER_FIELD_STRUCTURE,
 } from "./K_Setup";
 
 export function FieldTypes() {
@@ -48,6 +48,7 @@ export function FieldTypes() {
 
     const { field_types, lookup_options } = databaseMetadata;
 
+    //Complete the configuration with the options retrieved from the DB
     const commonLookupOptions = generateOptions(lookup_options);
     const COMPLETE_LOOKUP_FIELDS = cloneAndAddOptions(
       NEW_LOOKUP_FIELDS,
@@ -72,19 +73,14 @@ export function FieldTypes() {
     );
 
     const formsByType = {
-      [field_types.TEXT]: mergeDict(BASE_FIELDS, NEW_TEXT_FIELDS),
-      [field_types.NUMBER]: mergeDict(BASE_FIELDS, NEW_NUMBER_FIELDS),
-      [field_types.LOOKUP]: mergeDict(BASE_FIELDS, COMPLETE_LOOKUP_FIELDS),
-      [field_types.PICKLIST]: mergeDict(BASE_FIELDS, COMPLETE_PICKLIST_FIELDS),
-      [field_types.ROLLUP]: mergeDict(BASE_FIELDS, COMPLETE_ROLLUP_FIELDS),
-      [field_types.RADIO]: mergeDict(BASE_FIELDS, NEW_RADIO_FIELDS),
-      [field_types.CHECKBOX]: mergeDict(BASE_FIELDS, NEW_CHECKBOX_FIELDS),
-      ["auto_number"]: {
-        field_name: {
-          ...BASE_FIELDS.field_name,
-          is_editable: 0,
-        },
-      },
+      [field_types.TEXT]: sortDict(NEW_TEXT_FIELDS),
+      [field_types.NUMBER]: sortDict(NEW_NUMBER_FIELDS),
+      [field_types.LOOKUP]: sortDict(COMPLETE_LOOKUP_FIELDS),
+      [field_types.PICKLIST]: sortDict(COMPLETE_PICKLIST_FIELDS),
+      [field_types.ROLLUP]: sortDict(COMPLETE_ROLLUP_FIELDS),
+      [field_types.RADIO]: sortDict(NEW_RADIO_FIELDS),
+      [field_types.CHECKBOX]: sortDict(NEW_CHECKBOX_FIELDS),
+      auto_number: sortDict(FULL_AUTO_NUMBER_FIELD_STRUCTURE),
     };
 
     return {
@@ -157,14 +153,17 @@ export const generateOptions = (options, usePicklistOptionFormat = true) => {
   });
 };
 
-// Merge 2 dict with and order field
 export const mergeDict = (dict1, dict2) => {
   const merged = {
     ...dict1,
     ...dict2,
   };
 
-  return Object.fromEntries(
-    Object.entries(merged).sort(([, a], [, b]) => a.order - b.order),
-  );
+  return sortDict(merged);
 };
+
+function sortDict(dict) {
+  return Object.fromEntries(
+    Object.entries(dict).sort(([, a], [, b]) => a.order - b.order),
+  );
+}
