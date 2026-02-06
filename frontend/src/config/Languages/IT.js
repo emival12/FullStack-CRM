@@ -1,4 +1,8 @@
 export const IT = {
+  LOGIN: {
+    INVALID_CREDENTIALS:
+      "Email o password errate. Controlla i dati inseriti e riprova",
+  },
   NAVBAR: { DATABASE_LABEL: "Database", IMPORT_LABEL: "Import" },
   BUTTONS: {
     NEW_LABEL: "Nuovo",
@@ -15,6 +19,7 @@ export const IT = {
     MAX_FIELD_LABEL: (data) => `Massimo ${data} caratteri`,
     MAX_NUMBER_LABEL: (data) => `Valore massimo accettato: ${data}`,
     MIN_NUMBER_LABEL: (data) => `Valore minimo accettato: ${data}`,
+    INVALID_EMAIL_LABEL: "Inserire una mail valida",
   },
   TOAST: {
     ERROR_TOAST_TITLE_LABEL: "Errore",

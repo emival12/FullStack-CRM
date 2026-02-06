@@ -3,7 +3,7 @@ functionalAnalysis/
 exe/*.spec
 exe/*/
 
-backend/*/
+backend/__*/
 
 *.log
 *.exe

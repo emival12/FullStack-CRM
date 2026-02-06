@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from enum import Enum, auto
+import bcrypt
 
 """
 Python naming convention:
@@ -544,6 +545,39 @@ def convert_into_SQL_field_type(field_type, length):
 ########## END - HELP Method
 
 
+###############################################
+# LOGIN
+###############################################
+def get_user_definition_record(cursor, email):
+    query = """
+    SELECT 
+        ud.id,
+        ud.email,
+        ud.password,
+        upd.profile_name
+    FROM user_definition ud
+    JOIN user_profile_definition upd 
+        ON ud.profile_id = upd.id 
+    WHERE 
+        ud.email = %s
+        AND ud.is_active = 1;
+    """
+    cursor.execute(query, (email, ))
+    return cursor.fetchone()
+
+def login_user(cursor, email, password):
+    user = get_user_definition_record(cursor, email)
+    if user:
+        if bcrypt.checkpw(password.encode("utf-8"), user["password"].encode("utf-8")):
+            user.pop("password")
+            return user
+
+    raise HTTPException(status_code=401, detail={ "error_code": "INVALID_CREDENTIALS" })
+
+
+###############################################
+# DATABASE
+###############################################
 
 def group_object_definition_by_category(tables):
     """

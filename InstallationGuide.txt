@@ -11,7 +11,10 @@ pip install fastapi uvicorn mysql-connector-python
 ## 4:
 pip install python-multipart
 
-## 4: Incollare il main.py dentro la cartella
+## 5:
+pip install bcrypt
+
+## 6: Incollare il main.py dentro la cartella
         Modificare i parametri affinche combacino con l'utente configurato in ## 1
 
 ##: Lanciare il Server Backend

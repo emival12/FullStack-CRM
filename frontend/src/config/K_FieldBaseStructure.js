@@ -1,3 +1,20 @@
+// SINGLE FIELDS FOR LOGIN
+export const EMAIL_LOGIN_BASE = {
+  field_name: "email",
+  field_type: "email",
+  is_editable: 1,
+  is_required: 1,
+  order: 1,
+};
+
+export const PASSWORD_LOGIN_BASE = {
+  field_name: "password",
+  field_type: "password",
+  is_editable: 1,
+  is_required: 1,
+  order: 1,
+};
+
 // SINGLE FIELDS FOR MASSIVE IMPORT
 export const OPERTION_TYPE_BASE = (Operations) => {
   return {

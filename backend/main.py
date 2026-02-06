@@ -36,6 +36,27 @@ def split_table_name(table_name):
     return t_name, rt_name
 
 # EXPOSED API'S:
+###############################################
+# LOGIN
+###############################################
+# Try to login with a user
+@app.post("/api/login")
+async def login_user(request: Request, db = Depends(get_db)):
+    # Read the data from the body
+    data = await request.json() 
+    email = data.get("email")
+    password = data.get("password")
+
+    cursor = db.cursor(dictionary=True)
+    result = utils.login_user(cursor, email, password)
+    cursor.close()
+    return result
+
+
+###############################################
+# DATABASE
+###############################################
+
 # Get all the tables to show in the sidebar
 @app.get("/api/plain_tables")
 def get_tables_plain(db = Depends(get_db)):
@@ -408,6 +429,9 @@ async def delete_field(request: Request, db = Depends(get_db)):
 
 
 
+###############################################
+# PRODUCTION
+###############################################
 
 BUILD_DIR = "../frontend/build"
 

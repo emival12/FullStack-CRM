@@ -1,14 +1,3 @@
-.CenteredPage {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-}
-
-.HalfPageHeight {
-  height: 50vh;
-}
-
 .cursor-pointer {
   cursor: pointer;
 }

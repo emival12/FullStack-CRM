@@ -4,6 +4,28 @@ CREATE DATABASE MarkotexDB;
 # Selezione di un DB con cui lavorare
 USE MarkotexDB;
 
+CREATE TABLE user_profile_definition (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    profile_name VARCHAR(100) NOT NULL UNIQUE
+);
+
+INSERT INTO user_profile_definition (profile_name)
+VALUES 
+    ('System_Admin');
+
+CREATE TABLE user_definition (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) UNIQUE,
+    password VARCHAR(100) NOT NULL,
+    profile_id INT NOT NULL,
+    is_active BOOL DEFAULT 1,
+    FOREIGN KEY (profile_id) REFERENCES user_profile_definition(id) ON DELETE RESTRICT
+);
+
+INSERT INTO user_definition (email, password, profile_id, is_active)
+VALUES 
+    ('vale-12.p@hotmail.it', '$2b$12$PsFMsB9oKRQOwE0emOQnLuMV5Uh1RkEA3IC5KYUiAEL/fQZz9ti0q', 1, 1);
+
 # Creazione Tabella object_definition
 #   La tabella contiene la definizione di tutti le tabelle del database con alcune informazioni chiave: 
 #   la categoria di appartenenza, l'rdinamento, se è una tabella di sistema o se possiede molteplici record type

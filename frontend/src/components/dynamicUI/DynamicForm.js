@@ -194,6 +194,13 @@ export default function DynamicForm({
                 info?.max_limit_value,
               ),
             },
+            pattern:
+              info.field_type === "email"
+                ? {
+                    value: /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                    message: getLabel("FORM_ERRORS.INVALID_EMAIL_LABEL"),
+                  }
+                : undefined,
           })}
         />
         <Form.Control.Feedback type="invalid">

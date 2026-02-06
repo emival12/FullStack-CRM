@@ -1,10 +1,13 @@
 import "../App.css";
 import { Navbar, Nav, Container } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { PATH_DATABASE, PATH_IMPORT, PATH_SETUP } from "../config/K";
 import { getLabel } from "../config/Label";
 
 export default function NavBar() {
+  const { logout } = useAuth();
+
   return (
     <Navbar expand="lg" className="bg-body-tertiary">
       <Container>
@@ -30,6 +33,17 @@ export default function NavBar() {
           <Nav>
             <Nav.Link as={Link} to={PATH_SETUP}>
               <i className="bi bi-gear"></i>
+            </Nav.Link>
+          </Nav>
+          <Nav>
+            <Nav.Link
+              as="button"
+              onClick={() => {
+                logout();
+              }}
+              className="text-danger"
+            >
+              <i className="bi bi-door-open-fill"></i>
             </Nav.Link>
           </Nav>
         </Navbar.Collapse>

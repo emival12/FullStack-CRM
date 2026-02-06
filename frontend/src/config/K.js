@@ -1,4 +1,12 @@
+import {
+  EMAIL_LOGIN_BASE,
+  OBJECT_NAME_MASSIVE_IMPORT_BASE,
+  OPERTION_TYPE_BASE,
+  PASSWORD_LOGIN_BASE,
+} from "./K_FieldBaseStructure";
+
 export const API_BASE_URL = "http://127.0.0.1:8000/api";
+export const PATH_LOGIN = "/login";
 export const PATH_DATABASE = "/database";
 export const PATH_IMPORT = "/import";
 export const PATH_SETUP = "/setup";
@@ -10,3 +18,23 @@ export const PATH_UPLOAD = "/upload";
 
 export const ERROR_MISSING_TABLE = (data) => `Table '${data}' not found`;
 export const ERROR_MISSING_RECORD = (data) => `Record '${data}' not found`;
+
+//LOGIN
+
+//Structure form login
+export const LOGIN_FIELD_STRUCTURE = {
+  email: EMAIL_LOGIN_BASE,
+  password: PASSWORD_LOGIN_BASE,
+};
+
+//MASSIVE IMPORT
+export const Operations = {
+  insert: "insert",
+  update: "update",
+};
+
+//Structure form import
+export const IMPORT_FIELD_STRUCTURE = {
+  operation_type: OPERTION_TYPE_BASE(Operations),
+  object_name: OBJECT_NAME_MASSIVE_IMPORT_BASE,
+};

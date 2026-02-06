@@ -20,7 +20,7 @@ import {
   REFERENCE_OBJECT_BASE,
   REFERENCE_OBJECT_RECORD_TYPE_BASE,
   SORT_ORDER_BASE,
-} from "./K_FieldBaseStructure";
+} from "../../config/K_FieldBaseStructure";
 
 export const Sections = {
   home: "home",

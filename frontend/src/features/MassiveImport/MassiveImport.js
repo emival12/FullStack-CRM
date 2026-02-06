@@ -4,7 +4,7 @@ import { Container, Row, Form, Button, Col } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 
 import { API_BASE_URL, PATH_IMPORT, PATH_UPLOAD } from "../../config/K";
-import { IMPORT_FIELD_STRUCTURE } from "./K_Import";
+import { IMPORT_FIELD_STRUCTURE } from "../../config/K";
 import { getLabel } from "../../config/Label";
 import LoadingScreen from "../../components/LoadingScreen";
 import ToastMsg from "../../components/ToastMsg";
