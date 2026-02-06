@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Table } from "react-bootstrap";
+import { Table, Form, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import { PATH_DATABASE } from "../../config/K";
@@ -54,31 +54,54 @@ export default function DynamicRecordsList({
 }) {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const NUM_RECORD_TO_SHOW = 10;
+  const NUM_RECORD_TO_SHOW = 15;
   const primary_key_name = data?.primary_key_name;
+
+  // Calculate the data filtered by searchTerm
+  const filteredData = searchTerm
+    ? {
+        ...data,
+        records: data?.records.filter((record) => {
+          const concatenedValues = Object.values(record)
+            .join("_")
+            .toLowerCase();
+          return concatenedValues.includes(searchTerm);
+        }),
+      }
+    : data;
 
   // Calculate the slice of the data to show
   const dataStart = (currentPage - 1) * NUM_RECORD_TO_SHOW;
   const dataEnd = currentPage * NUM_RECORD_TO_SHOW;
-  const recordsToShow = data
+  const recordsToShow = filteredData
     ? {
-        ...data,
-        records: data.records.slice(dataStart, dataEnd),
+        ...filteredData,
+        records: filteredData.records.slice(dataStart, dataEnd),
       }
     : null;
 
   // Calculate the total page number
-  const numTotPages = data
-    ? Math.ceil(data.records.length / NUM_RECORD_TO_SHOW)
+  const numTotPages = filteredData
+    ? Math.ceil(filteredData.records.length / NUM_RECORD_TO_SHOW)
     : 0;
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [data]);
+  }, [data, searchTerm]);
 
   return (
     <>
+      <Row className="justify-content-end mb-3 mt-4">
+        <Col xs={12} md={4}>
+          <Form.Control
+            type="text"
+            placeholder={getLabel("GENERIC.SEARCH_PLACEHOLDER_LABEL")}
+            onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
+          />
+        </Col>
+      </Row>
       <Table bordered hover className="m-0">
         <thead>
           <tr>
@@ -109,7 +132,7 @@ export default function DynamicRecordsList({
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
       />
-      {data.records.length === 0 && (
+      {recordsToShow.records.length === 0 && (
         <MissingPage
           missingText={getLabel("MISSING.MISSING_RECORD_LABEL")}
           ShowImg={false}

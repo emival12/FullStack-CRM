@@ -44,6 +44,7 @@ export const IT = {
   },
   GENERIC: {
     LOADING_LABEL: "Caricamento...",
+    SEARCH_PLACEHOLDER_LABEL: "Cerca parola chiave...",
     DB_INTRO_LABEL: "Seleziona una tabella dalla sidebar",
     NEW_RECORD_TITLE_LABEL: "Nuovo record",
     TEXT_AREA_HELP_LABEL: "Dividere ogni valore con l'accapo",
