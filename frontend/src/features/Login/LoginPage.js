@@ -37,10 +37,9 @@ export default function LoginPage() {
       })
       .catch((err) => {
         console.error("LoginPage - Error:", err);
-        if (err.response.status === 401) {
-          const errorCode = err.response.data.detail.error_code;
+        if (err?.response?.status === 401) {
+          const errorCode = err.response.data?.detail?.error_code;
           const message = getLabel(`LOGIN.${errorCode}`);
-
           setToastConfig({
             show: true,
             title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
@@ -50,7 +49,9 @@ export default function LoginPage() {
           setToastConfig({
             show: true,
             title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-            body: err.response.data.detail,
+            body:
+              err?.response?.data?.detail ||
+              getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
           });
         }
       })

@@ -110,8 +110,9 @@ export default function MassiveImport() {
           setToastConfig({
             show: true,
             title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-            body: err.response.data.detail,
-            color: "danger",
+            body:
+              err?.response?.data?.detail ||
+              getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
           });
         }
       })

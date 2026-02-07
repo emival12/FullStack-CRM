@@ -1,5 +1,6 @@
 import os
 import sys
+import configparser
 import mysql.connector
 from fastapi import FastAPI, Depends, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,18 +20,49 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+def get_config():
+    if getattr(sys, 'frozen', False):
+        # PRODUCTION: find the path of the EXE file    
+        base_path = os.path.dirname(sys.executable)
+    else:
+        # DEVELOPMENT: find the path of main.py
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+    config = configparser.ConfigParser()
+    config_path = os.path.join(base_path, 'config.ini')
+
+    if not os.path.exists(config_path):
+        with open(config_path, 'w') as f:
+            f.write("[database]\nuser=root\npassword=\ndatabase=\n")
+        
+        logging.warning(f'Configuration file NOT FOUND in: {config_path}. Default file created')
+        raise Exception(f'Configuration file NOT FOUND in: {config_path}. Default file created')
+
+    config.read(config_path)
+    return config
+
+# Get the configuration file (outside the .exe) 
+config = get_config()
+
 # Connect to MySQL database 
 def get_db():
-    conn = mysql.connector.connect(
-        host="localhost",
-        user="root",                # MySQL user
-        password="root",            # MySQL password
-        database="testnegozio"      # MySQL DB name
-    )
+    conn = None
     try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user=config['database']['user'],             # MySQL user
+            password=config['database']['password'],     # MySQL password
+            database=config['database']['database']      # MySQL DB name
+        )
         yield conn
+    except mysql.connector.Error as err:
+        if getattr(sys, 'frozen', False):
+            logging.error(f"Error on the database: {err}")
+        raise Exception("Error on the Database. Check the log.")
     finally:
-        conn.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 def split_table_name(table_name):
     t_name, sep, rt_name = table_name.rpartition("_")
@@ -433,7 +465,14 @@ async def delete_field(request: Request, db = Depends(get_db)):
 ###############################################
 # PRODUCTION
 ###############################################
-base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
+if getattr(sys, 'frozen', False):
+    # PRODUCTION: use the internal folder of the EXE
+    base_path = sys._MEIPASS
+else:
+    # DEVELOPMENT: use the path frontend/build
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    base_path =  os.path.join(os.path.dirname(current_dir), "frontend")
+
 BUILD_DIR = os.path.join(base_path, "build")
 
 # Mount static files

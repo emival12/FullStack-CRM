@@ -101,10 +101,20 @@ PRODUCTION
 ## 1: SUL MIO PC -> Lanciare nella cartella Frontedn il comando (crea la vera build del sito)
 npm run build
 
-## 2: Installare MySql Server e configurare l'utenza
-
-## 3: SUL MIO PC
+## 2: SUL MIO PC
 Comando per creare un file exe: crea un icona in basso e lancia il server (!!! Bisogna solo controllare che il path sia corretto)
 pyinstaller --onefile --windowed --noconfirm --icon="../frontend/build/brand_favicon.ico" --add-data "../frontend/build;build" --add-data "../frontend/build/brand.png;." run_app.py
 
 Crea due folder: Dist (con l'exe) e build (può essere cancellata)
+
+CAMBIARE IL NOME DEL DB
+## 3 SUL MIO PC -> mysqldump -u root -p --databases testnegozio --add-drop-table > backup_db.sql
+
+
+## 4: SUL PC CLIENTE -> Installare MySql Server e configurare l'utenza
+
+CAMBIARE IL NOME DEL DB
+## 5 SUL PC CLIENTE -> mysql -u root -p testnegozio < backup_db.sql
+
+## 6: SUL PC CLIENTE -> Create a folder "Gestionale" and insert inside it the .exe and the config.ini (configure config.ini)
+

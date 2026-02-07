@@ -81,7 +81,9 @@ export default function NewRecord({
         setToastConfig({
           show: true,
           title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-          body: err.response.data.detail,
+          body:
+            err?.response?.data?.detail ||
+            getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
         });
       });
 
