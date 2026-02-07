@@ -4,6 +4,7 @@ exe/*.spec
 exe/*/
 
 backend/__*/
+backend/build/
 
 *.log
 *.exe

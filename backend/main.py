@@ -1,3 +1,5 @@
+import os
+import sys
 import mysql.connector
 from fastapi import FastAPI, Depends, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
@@ -5,7 +7,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import utils
 import massiveImport
-import os
 
 
 app = FastAPI()
@@ -432,20 +433,17 @@ async def delete_field(request: Request, db = Depends(get_db)):
 ###############################################
 # PRODUCTION
 ###############################################
+base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
+BUILD_DIR = os.path.join(base_path, "build")
 
-BUILD_DIR = "../frontend/build"
-
-# 1. Mount per i file statici (JS/CSS) - Obbligatorio per React
+# Mount static files
 app.mount("/static", StaticFiles(directory=os.path.join(BUILD_DIR, "static")), name="static")
 
 @app.get("/{catchall:path}")
 async def serve_react_app(request: Request, catchall: str):
-    # Costruiamo il percorso del file richiesto
     file_path = os.path.join(BUILD_DIR, catchall)
     
-    # Se il file esiste (immagine, favicon, ecc.), lo restituiamo
     if os.path.isfile(file_path):
         return FileResponse(file_path)
     
-    # Se non esiste, restituiamo index.html (per il routing di React)
     return FileResponse(os.path.join(BUILD_DIR, "index.html"))

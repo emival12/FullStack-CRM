@@ -1,75 +1,92 @@
-# ISTRUZIONI CREAZIONE BACKEND:
+# ISTRUZIONI CREAZIONE BACKEND (DEV):
 ## 1: Installare MySql Server e configurare l'utenza
 
 ## 2: Creare la cartella di backend
 mkdir backend
 
-## 3: Installare le estensioni per far funzionare il server
+## 3: Installare le estensioni
 cd backend
-pip install fastapi uvicorn mysql-connector-python
 
-## 4:
+## 3.1: Estensione FastApi (serve a gestire le chiamate al middleware) 
+pip install fastapi 
+
+## 3.2: Estensione uvicorn (serve a lanciare il server) 
+pip install uvicorn 
+
+## 3.3: Estensione mysql-connector-python (serve a parlare con mySQL) 
+pip install mysql-connector-python
+
+## 3.4: Estensione python-multipart (serve a passare file compressi, serve per pasare l'excel) 
 pip install python-multipart
 
-## 5:
+## 3.5: Estensione bcrypt (serve a criptare la password) 
 pip install bcrypt
 
-## 6: Incollare il main.py dentro la cartella
+## 4: Dentro il file main.py
         Modificare i parametri affinche combacino con l'utente configurato in ## 1
 
-##: Lanciare il Server Backend
+##: Comando per lanciare il Server Backend in sviluppo
 uvicorn main:app --reload
 
 
 
 
-# ISTRUZIONI CREAZIONE FRONTEND:
+# ISTRUZIONI CREAZIONE FRONTEND (DEV):
 ## 1: Creare il sito React (installa automaticamente delle estensioni)
 npx create-react-app frontend
 
+## 2: Installare le estensioni
 cd frontend
 
-## 2: Istallazione libreria React dom v18 in locale 
+## 2.1: Istallazione libreria React dom v18 in locale 
         (Anche se ## 1 installa già react abbiamo bisogno di questa versione in particolare, 
         perchè il router non gestisce ancora l'ultima versione)
 npm install react@18 react-dom@18
 
-## 3: Istallazione libreria React router v7.0.4 in locale (Libreria React per la gestione della navigazione tra pagine)
+## 2.2: Istallazione libreria React router v7.0.4 in locale (Libreria React per la gestione della navigazione tra pagine)
 npm install react-router-dom@7.9.4
 
-## 4: Istallazione libreria React bootstrap in locale (Libreria con una serie di componenti grafici utili)
+## 2.3: Istallazione libreria React bootstrap in locale (Libreria con una serie di componenti grafici utili)
 npm install react-bootstrap bootstrap
 
-## 5: Istallazione libreria React Hook Form in locale (Libreria per la gestione dei form)
+## 2.4: Istallazione libreria React Hook Form in locale (Libreria per la gestione dei form)
 npm install react-hook-form
 
-## 6: Istallazione libreria bootstrap icon in locale (Libreria con icone)
+## 2.5: Istallazione libreria bootstrap icon in locale (Libreria con icone)
 npm install bootstrap-icons
 
-## 7: Istallazione libreria bootstrap per le textarea
+## 2.6: Istallazione libreria bootstrap per le textarea
 npm install react-textarea-autosize
 
-## 8: Istallazione libreria axios in locale (Libreria React per fare richiest HTTP e comunicazione con API)
+## 2.7: Istallazione libreria axios in locale (Libreria React per fare richiest HTTP e comunicazione con API)
 npm install axios
 
-##: Lanciare il Server Frontend
+##: Comando per lanciare il Server Fronted in sviluppo
 npm start
 
 
-# ISTRUZIONI CREAZIONE SCRIPT PER LANCIARE I SERVER ASSIEME:
+# ISTRUZIONI CREAZIONE SCRIPT PER LANCIARE I SERVER ASSIEME (DEV):
 ## 1: Creare la cartella degli eseguibili
 mkdir exe
+
+## 2: Installare le estensioni
 cd exe
 
-## 2:
+## 2.1:
 pip install pyinstaller
 
-## 3: Incollare il start_servers.py dentro la cartella (!!! BISOGNA INSERIRE IL Base_Path CORRETTO)
+## 2.2:
+pip install pystray 
 
-## 4: Crea l'eseguibile
+## 2.3:
+pip install pillow
+
+## 5: Dentro il file start_servers.py dentro la cartella (!!! BISOGNA INSERIRE IL Base_Path CORRETTO)
+
+## 6: Crea l'eseguibile
 pyinstaller --onefile start_servers.py
 
-## 5: L'eseguibile è salvato dentro la folder dist
+## 7: L'eseguibile è salvato dentro la folder dist
 
 
 
@@ -77,46 +94,17 @@ pyinstaller --onefile start_servers.py
 
 
 
+#########################################################
+PRODUCTION
+#########################################################
 
-
-
-
-
-
-SUL MIO PC -> Lanciare nella cartella Backend il comando (Otterrai un file con tutte le librerie e le loro versioni esatte):
-pip freeze > requirements.txt
-
-SUL PC CLIENTE -> Lanciare nella cartella Backend:
-pip install -r requirements.txt
-
-SUL MIO PC -> Lanciare nella cartella Frontedn il comando (crea la vera build del sito):
+## 1: SUL MIO PC -> Lanciare nella cartella Frontedn il comando (crea la vera build del sito)
 npm run build
 
+## 2: Installare MySql Server e configurare l'utenza
 
-Spunto per l'eseguibile:
-import pystray
-from PIL import Image
-import threading
-import uvicorn
-import sys
+## 3: SUL MIO PC
+Comando per creare un file exe: crea un icona in basso e lancia il server (!!! Bisogna solo controllare che il path sia corretto)
+pyinstaller --onefile --windowed --noconfirm --icon="../frontend/build/brand_favicon.ico" --add-data "../frontend/build;build" --add-data "../frontend/build/brand.png;." run_app.py
 
-# 1. Funzione per l'azione "Apri"
-def open_browser():
-    import webbrowser
-    webbrowser.open("http://localhost:8000")
-
-# 2. Funzione per l'azione "Esci"
-def quit_window(icon, item):
-    icon.stop()
-    sys.exit() # Chiude tutto il processo
-
-# 3. Creazione dell'icona
-image = Image.open("icona_tuo_logo.png")
-menu = pystray.Menu(
-    pystray.MenuItem("Apri Gestionale", open_browser),
-    pystray.MenuItem("Esci", quit_window)
-)
-icon = pystray.Icon("NomeApp", image, "Gestionale Cliente", menu)
-
-Comando per compilarlo:
-pyinstaller --onefile --noconsole start_app.py
+Crea due folder: Dist (con l'exe) e build (può essere cancellata)
