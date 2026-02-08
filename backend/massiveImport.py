@@ -1,7 +1,9 @@
 from fastapi import HTTPException
 from enum import Enum
 from decimal import Decimal, InvalidOperation
+from datetime import datetime
 import io
+import re
 import pandas as pd
 import utils
 
@@ -234,13 +236,20 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
     for idx, row in enumerate(df.itertuples()):
         record_type_name = "master" if is_single_record_type else getattr(row, "record_type_name")
 
+        if idx in (3, 4, 5, 6, 7, 8, 9, 10, 11):
+            continue;
+
         new_record = []
         for col in df_cols:
             if utils.SystemFieldName.LAST_MODIFIED_BY.lower() == col:
                 value = str(user_id)
             else:
                 # Get the value of the cell
-                value = str(getattr(row, col)).strip().lower()
+                raw_value = getattr(row, col)
+                if pd.isna(raw_value) or str(raw_value).strip() == "":
+                    value = None
+                else:
+                    value = str(raw_value).strip().lower()
 
             # Get the definition of the field on the DB
             field_definition = fields_dict[col]
@@ -339,7 +348,36 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
                         "column": col,
                         "actual_value": value
                     }
-                )  
+                ) 
+            elif field_type in (utils.FieldTypes.DATE.value, utils.FieldTypes.DATE_TIME.value):
+                if value:   
+                    is_date_type = True if field_type == utils.FieldTypes.DATE.value else False
+                    expected_format = "YYYY-MM-DD" if is_date_type else "YYYY-MM-DDTHH:MM:SS"
+                    format_to_check = "%Y-%m-%d" if is_date_type else "%Y-%m-%dt%H:%M:%S"
+                    regex_pattern = "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" if is_date_type else "^[0-9]{4}-[0-9]{2}-[0-9]{2}t[0-9]{2}:[0-9]{2}:[0-9]{2}$"
+
+                    if not re.match(regex_pattern, value):
+                        raise_input_exception(
+                            "INPUT_FIELD_INVALID_DATE_FORMAT",
+                            {
+                                "row": idx+1,
+                                "column": col,
+                                "actual_value": value,
+                                "expected_format": expected_format
+                            }
+                        )
+                    
+                    try:
+                        datetime.strptime(value, format_to_check)
+                    except ValueError:
+                        raise_input_exception(
+                            "INPUT_FIELD_INVALID_DATE",
+                            {
+                                "row": idx+1,
+                                "column": col,
+                                "actual_value": value,
+                            }
+                        )
             elif field_type in (utils.FieldTypes.PICKLIST.value, utils.FieldTypes.LOOKUP.value):
                 if value not in map_picklist_lookup_index[get_options_map_key(object_name, record_type_name, col)]:
                     raise_input_exception(
@@ -350,7 +388,7 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
                         "actual_value": value
                     }
                 )  
-
+            
             new_record.append(value)
         params.append(tuple(new_record))
         

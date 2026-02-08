@@ -38,7 +38,7 @@ export const getLabel = (labelName, params = null) => {
 
 // Add a <br /> to go on the net line every time he finds \n
 const multiLineFormatter = (textMsg) => {
-  return textMsg.split("\n").map((line, index, array) => (
+  return textMsg.split("\n ").map((line, index, array) => (
     <React.Fragment key={index}>
       {line}
       {index < array.length - 1 && <br />}

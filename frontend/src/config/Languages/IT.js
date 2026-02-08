@@ -92,6 +92,14 @@ export const IT = {
       `La riga ${data.row} nella colonna "${data.column}" ha un valore inesistente.\n
     Valore attuale: ${data.actual_value}`,
 
+    INPUT_FIELD_INVALID_DATE_FORMAT: (data) =>
+      `La riga ${data.row} nella colonna "${data.column}" ha una data formattata male.\n
+    Valore attuale: ${data.actual_value}, Formato accettato: ${data.expected_format}`,
+
+    INPUT_FIELD_INVALID_DATE: (data) =>
+      `La riga ${data.row} nella colonna "${data.column}" non è una data corretta.\n
+    Valore attuale: ${data.actual_value}`,
+
     INPUT_FIELD_INVALID_LOOKUP_PICKLIST: (data) =>
       `La riga ${data.row} nella colonna "${data.column}" ha un valore inesistente.\n
     Valore attuale: ${data.actual_value}`,
