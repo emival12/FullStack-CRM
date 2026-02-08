@@ -133,6 +133,7 @@ export default function EditFieldRecord({ tableKey, sectionKey, recordId }) {
           fieldName: recordId,
         }}
         redirectAPI={`${PATH_SETUP}/${tableKey}/${sectionKey}`}
+        extraActionOnDelete={null}
         extraDescription={null}
       />
       <DynamicForm

@@ -171,6 +171,7 @@ export default function RecordDetail() {
               id: recordId,
             }}
             redirectAPI={PATH_DATABASE + "/" + tableKey}
+            extraActionOnDelete={null}
             extraDescription={null}
           />
           <DynamicForm

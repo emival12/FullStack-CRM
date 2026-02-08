@@ -94,6 +94,7 @@ export default function SetupNewObject() {
         pathAPI={null}
         payloadAPI={null}
         redirectAPI={null}
+        extraActionOnDelete={null}
         extraDescription={getLabel("GENERIC.SETUP_MSG_SELECT_TABLE_LABEL")}
       />
       {showNewForm ? (

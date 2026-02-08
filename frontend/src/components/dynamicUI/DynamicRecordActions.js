@@ -19,6 +19,7 @@ import ModalScreen from "../ModalScreen";
  * @param {Object} props.pathAPI              - Path used in the API call
  * @param {Object} props.payloadAPI           - Payload used in the API call
  * @param {Object} props.redirectAPI          - Path used to redirect after the API success
+ * @param {Function} props.extraActionOnDelete- Extra function with some extra actions to perform on delete
  * @param {Object} props.extraDescription     - Variable with an optional text to be shown near the Delete/New buttons
  */
 export default function DynamicRecordActions({
@@ -32,6 +33,7 @@ export default function DynamicRecordActions({
   pathAPI,
   payloadAPI,
   redirectAPI,
+  extraActionOnDelete,
   extraDescription,
 }) {
   const navigate = useNavigate();
@@ -55,6 +57,9 @@ export default function DynamicRecordActions({
           });
         } else {
           navigate(redirectAPI);
+          if (extraActionOnDelete) {
+            extraActionOnDelete();
+          }
         }
       })
       .catch((err) => {

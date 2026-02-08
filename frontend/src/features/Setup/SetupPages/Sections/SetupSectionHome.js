@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
+import { useOutletContext } from "react-router-dom";
 
 import {
   API_BASE_URL,
@@ -22,6 +23,8 @@ import DynamicRecordActions from "../../../../components/dynamicUI/DynamicRecord
  * @param {String} props.sectionKey     - Section currently selected
  */
 export default function SetupSectionHome({ tableKey, sectionKey }) {
+  const { refreshSidebar, setRefreshSidebar } = useOutletContext();
+
   const [loading, setLoading] = useState(true);
   const [fields, setFields] = useState([]);
   const [isEdit, setIsEdit] = useState(false);
@@ -138,6 +141,9 @@ export default function SetupSectionHome({ tableKey, sectionKey }) {
           table: tableKey,
         }}
         redirectAPI={PATH_SETUP}
+        extraActionOnDelete={() => {
+          setRefreshSidebar(!refreshSidebar);
+        }}
         extraDescription={null}
       />
       <DynamicForm
