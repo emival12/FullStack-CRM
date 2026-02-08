@@ -8,18 +8,35 @@ import MissingPage from "../MissingPage";
 import PaginationControl from "../PaginationControl";
 
 //Dinamic construction of the body entry
-const RecordCell = ({ value, isPrimaryKey, onNavigate }) => {
+const RecordCell = ({ fieldValue, fieldType, isPrimaryKey, onNavigate }) => {
+  let correctFormatDate = formatDateSimple(fieldValue, fieldType);
+
   if (isPrimaryKey) {
     return (
       <td
         className="cursor-pointer text-primary"
-        onClick={() => onNavigate(value)}
+        onClick={() => onNavigate(fieldValue)}
       >
-        {value}
+        {fieldValue}
       </td>
     );
   }
-  return <td>{value}</td>;
+  return <td>{correctFormatDate || fieldValue}</td>;
+};
+
+const formatDateSimple = (fieldValue, fieldType) => {
+  if (!fieldValue) return undefined;
+
+  if (fieldType === "date") {
+    const dateSplit = fieldValue.toString().split("-");
+    return `${dateSplit[2]}/${dateSplit[1]}/${dateSplit[0]}`;
+  } else if (fieldType === "datetime-local") {
+    const dateTimeSplit = fieldValue.toString().split("T");
+    const dateSplit = dateTimeSplit[0].split("-");
+    return `${dateSplit[2]}/${dateSplit[1]}/${dateSplit[0]} ${dateTimeSplit[1].substring(0, 5)}`;
+  } else {
+    return undefined;
+  }
 };
 
 /**
@@ -113,11 +130,12 @@ export default function DynamicRecordsList({
         <tbody>
           {recordsToShow.records.map((record, index) => (
             <tr key={index}>
-              {data.fields.map((fieldName) => (
+              {data.fields.map((field) => (
                 <RecordCell
-                  key={fieldName.key}
-                  value={record[fieldName.key]}
-                  isPrimaryKey={fieldName.key === primary_key_name}
+                  key={field.key}
+                  fieldValue={record[field.key]}
+                  fieldType={field.field_type}
+                  isPrimaryKey={field.key === primary_key_name}
                   onNavigate={(val) =>
                     navigate(`${pathRedirect}/${redirectKey}/${val}`)
                   }

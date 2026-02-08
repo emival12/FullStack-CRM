@@ -10,13 +10,17 @@ Python naming convention:
 """
 
 class FieldTypes(Enum):
-    TEXT     = "text"
-    NUMBER   = "number"
-    LOOKUP   = "lookup"
-    PICKLIST = "picklist"
-    ROLLUP   = "rollup"
-    RADIO    = "radio"
-    CHECKBOX = "checkbox"
+    TEXT        = "text"
+    NUMBER      = "number"
+    LOOKUP      = "lookup"
+    PICKLIST    = "picklist"
+    ROLLUP      = "rollup"
+    RADIO       = "radio"
+    CHECKBOX    = "checkbox"
+    DATE        = "date"
+    DATE_TIME   = "datetime-local"
+    AUTO_NUMBER = "auto_number"
+
 
 class FieldStructureMode(Enum):
     STRUCTURE_ONLY = auto()
@@ -410,9 +414,11 @@ def get_clean_field_names_from_fields(fields, is_object=True):
     new_fields = []
     for field in fields:
         field_name = field["field_name"] if is_object else field
+        field_type = field["field_type"] if is_object else None
         new_fields.append({ 
             "key": field_name, 
-            "label": field_name.replace("_", " ")
+            "label": field_name.replace("_", " "),
+            "field_type": field_type
         })
 
     return new_fields
@@ -538,6 +544,10 @@ def convert_into_SQL_field_type(field_type, length):
         return f'VARCHAR ({length})'
     elif field_type in (FieldTypes.NUMBER.value, FieldTypes.ROLLUP.value):
         return f'DECIMAL ({length})'
+    elif field_type in (FieldTypes.DATE.value):
+        return f'DATE'
+    elif field_type in (FieldTypes.DATE_TIME.value):
+        return f'DATETIME'
     else:
         return f'INT AUTO_INCREMENT'
 
@@ -1109,6 +1119,10 @@ def update_record_by_id(cursor, db, table_name, record_type_name, field_structur
 ###############################################
 # SETUP
 ###############################################
+class SystemFieldName():
+    RECORD_TYPE_NAME    = "record_type_name"
+    CREATE_DATE         = "create_date"
+    LAST_MODIFIED_DATE  = "last_modified_date"
 
 def create_new_object(cursor, db, object_data):
     """
@@ -1125,7 +1139,7 @@ def create_new_object(cursor, db, object_data):
         Raises:
             HTTPException: If a database error occurs
     """
-    
+
     object_label = object_data["object_label"].lower()
     object_name = object_data["object_name"].lower()
     pk_field_name = object_data["id_field_name"].lower()
@@ -1177,7 +1191,7 @@ def create_new_object(cursor, db, object_data):
             (
                 object_name,
                 "master",
-                "record_type_name",
+                SystemFieldName.RECORD_TYPE_NAME,
                 "picklist",
                 255,
                 None,
@@ -1190,7 +1204,41 @@ def create_new_object(cursor, db, object_data):
                 1,
                 0,
                 f'object_name = \'{object_name}\' AND is_active = 1'
-            )
+            ),
+            (
+                object_name,
+                "master",
+                SystemFieldName.CREATE_DATE,
+                "datetime-local",
+                None,
+                None,
+                None,
+                None,
+                None,
+                1,
+                1,
+                0,
+                0,
+                0,
+                None
+            ),
+            (
+                object_name,
+                "master",
+                SystemFieldName.LAST_MODIFIED_DATE,
+                "datetime-local",
+                None,
+                None,
+                None,
+                None,
+                None,
+                1,
+                1,
+                0,
+                0,
+                0,
+                None
+            ),
         ]
         insert_field_definition(cursor, params)                 #Create the field_definition
 
@@ -1210,6 +1258,18 @@ def create_new_object(cursor, db, object_data):
                 "master",               # record_type_name
                 pk_field_name,          # field_name
                 1                       # sort_order
+            ),
+            (
+                object_name,            
+                "master",               
+                SystemFieldName.CREATE_DATE,         
+                2                      
+            ),
+            (
+                object_name,            
+                "master",               
+                SystemFieldName.LAST_MODIFIED_DATE,         
+                2                      
             )
         ]
         insert_record_layout_definition(cursor, params)         #Create the record_layout_definition
@@ -1435,7 +1495,9 @@ def get_length_based_on_field_type(cursor, field_type, field_length, numeric_pre
     elif field_type == FieldTypes.CHECKBOX.value:
         return (1, 1)                                               # A bool needs just one bit
     elif field_type == FieldTypes.RADIO.value:
-         return (255, 255)                                          # A radio is a text with a specific set of values
+        return (255, 255)                                           # A radio is a text with a specific set of values
+    elif field_type in (FieldTypes.DATE.value, FieldTypes.DATE_TIME.value):
+        return (None, None)
     elif field_type in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value, FieldTypes.ROLLUP.value):
         query = f'''
         SELECT 
@@ -1566,14 +1628,16 @@ def create_table(cursor, object_data, object_name, pk_field_name, pk_field_type,
     CREATE TABLE {object_name} (
     {pk_field_name} {field_type} PRIMARY KEY,
     object_name VARCHAR(255) NOT NULL DEFAULT '{object_name}',
-    record_type_name VARCHAR(255) NOT NULL DEFAULT 'master'
+    {SystemFieldName.RECORD_TYPE_NAME} VARCHAR(255) NOT NULL DEFAULT 'master',
+    {SystemFieldName.CREATE_DATE} DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    {SystemFieldName.LAST_MODIFIED_DATE} DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );
     '''
     cursor.execute(command)
 
 def add_column(cursor, object_name, column_name, field_type, field_length):
     sql_field_type = convert_into_SQL_field_type(field_type, field_length)     # get the SQL field type
-    
+
     # for Lookup fields there isn't a real contraint (from the DB point of view is a simple field unrelated) this because we can link also to non Id field 
     command = f'''
     ALTER TABLE {object_name}

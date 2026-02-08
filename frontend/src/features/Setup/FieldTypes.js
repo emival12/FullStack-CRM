@@ -12,6 +12,7 @@ import {
   NEW_RADIO_FIELD_OBJECT_STRUCTURE as NEW_RADIO_FIELDS,
   NEW_CHECKBOX_FIELD_OBJECT_STRUCTURE as NEW_CHECKBOX_FIELDS,
   FULL_AUTO_NUMBER_FIELD_STRUCTURE,
+  NEW_DATE_FIELD_OBJECT_STRUCTURE,
 } from "./K_Setup";
 
 export function FieldTypes() {
@@ -66,10 +67,12 @@ export function FieldTypes() {
       commonLookupOptions,
     );
 
+    const field_types_without_auto_number = { ...field_types };
+    delete field_types_without_auto_number.AUTO_NUMBER;
     const selectionForm = cloneAndAddOptions(
       NEW_FIELDS,
       "field_type",
-      generateOptions(field_types, false),
+      generateOptions(field_types_without_auto_number, false),
     );
 
     const formsByType = {
@@ -80,7 +83,9 @@ export function FieldTypes() {
       [field_types.ROLLUP]: sortDict(COMPLETE_ROLLUP_FIELDS),
       [field_types.RADIO]: sortDict(NEW_RADIO_FIELDS),
       [field_types.CHECKBOX]: sortDict(NEW_CHECKBOX_FIELDS),
-      auto_number: sortDict(FULL_AUTO_NUMBER_FIELD_STRUCTURE),
+      [field_types.DATE]: sortDict(NEW_DATE_FIELD_OBJECT_STRUCTURE),
+      [field_types.DATE_TIME]: sortDict(NEW_DATE_FIELD_OBJECT_STRUCTURE),
+      [field_types.AUTO_NUMBER]: sortDict(FULL_AUTO_NUMBER_FIELD_STRUCTURE),
     };
 
     return {
