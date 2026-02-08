@@ -9,6 +9,7 @@ import { getLabel } from "../../config/Label";
 import LoadingScreen from "../../components/LoadingScreen";
 import ToastMsg from "../../components/ToastMsg";
 import DynamicForm from "../../components/dynamicUI/DynamicForm";
+import { useAuth } from "../../context/AuthContext";
 
 export default function MassiveImport() {
   const [loading, setLoading] = useState(false);
@@ -21,6 +22,8 @@ export default function MassiveImport() {
     body: "",
     color: "danger",
   });
+
+  const { user } = useAuth();
 
   const {
     register,
@@ -72,6 +75,7 @@ export default function MassiveImport() {
     const formData = new FormData();
     formData.append("operation_type", data["operation_type"]);
     formData.append("object_name", data["object_name"]);
+    formData.append("user_id", user["id"]);
     formData.append("file", data["file"][0]);
 
     const headers = {
@@ -113,6 +117,7 @@ export default function MassiveImport() {
             body:
               err?.response?.data?.detail ||
               getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
+            color: "danger",
           });
         }
       })

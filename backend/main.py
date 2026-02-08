@@ -133,6 +133,7 @@ async def get_list_of_importable_objects(db = Depends(get_db)):
 async def import_records_from_csv(
     operation_type: str = Form(...),
     object_name: str = Form(...),
+    user_id: str = Form(...),
     file: UploadFile = File(...),
     db = Depends(get_db)
 ):
@@ -140,7 +141,7 @@ async def import_records_from_csv(
     file_decoded = file_contents.decode('utf-8')
 
     cursor = db.cursor(dictionary=True)
-    massiveImport.elaborate_import_file(db, cursor, operation_type, object_name, file_decoded)
+    massiveImport.elaborate_import_file(db, cursor, operation_type, object_name, user_id, file_decoded)
     cursor.close()
 
     return {"result": 1}

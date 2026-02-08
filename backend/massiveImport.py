@@ -26,7 +26,7 @@ def get_options_map_key(object_name, record_type_name, col):
 
 
 
-def elaborate_import_file(db, cursor, operation_type, object_name, file_decoded):
+def elaborate_import_file(db, cursor, operation_type, object_name, user_id, file_decoded):
     """
         Process an imported CSV file for a specified operation type (insert/update)
         Parses the CSV, validates data, and routes to appropriate handlers based on operation type
@@ -36,17 +36,18 @@ def elaborate_import_file(db, cursor, operation_type, object_name, file_decoded)
             cursor (MySQLCursor): Cursor used to execute SQL queries
             operation_type (str): Type of operation
             object_name (str): Name of the target object
+            user_id (str): Id of the user who is performing the action
             file_decoded (str): CSV file content decoded as a string
     """
 
     df = pd.read_csv(io.StringIO(file_decoded), delimiter=";")
 
     if operation_type == OperationType.INSERT.value:
-        insert_records(db, cursor, object_name, df)
+        insert_records(db, cursor, object_name, user_id, df)
     elif operation_type == OperationType.UPDATE.value:
         raise HTTPException(status_code=404, detail=f'Operation Type not yet supported') #TODO
 
-def insert_records(db, cursor, object_name, df):
+def insert_records(db, cursor, object_name, user_id, df):
     """
         Insert records into the database based on the provided DataFrame after validation.
         Validates columns and rows, and performs batch insert.
@@ -55,6 +56,7 @@ def insert_records(db, cursor, object_name, df):
             db (MySQLConnection): Database connection for commit/rollback
             cursor (MySQLCursor): Cursor to execute SQL statements
             object_name (str): Target table name
+            user_id (str): Id of the user who is performing the action
             df (pandas.DataFrame): DataFrame containing the records to insert
         
         Raises:
@@ -67,8 +69,11 @@ def insert_records(db, cursor, object_name, df):
     # Checks if the excel file have the right fields 
     checks_input_columns(table_fields, df)
 
-    df_cols = set(col.lower() for col in sorted(df.columns))
-    params = process_input_rows(cursor, table_fields, is_single_record_type, object_name, df, df_cols)
+    df_cols = {col.lower() for col in df.columns}
+    df_cols.add(utils.SystemFieldName.LAST_MODIFIED_BY.lower())
+    df_cols = set(df_cols)
+
+    params = process_input_rows(cursor, table_fields, is_single_record_type, object_name, user_id, df, df_cols)
     
     # Insert the records
     try:
@@ -185,7 +190,7 @@ def checks_input_columns(table_fields, df):
     if len(inexisting_field) > 0:
         raise_input_exception("IMPORT_FILE_UNKNOWN_FIELDS", {"columns": list(inexisting_field)})
 
-def process_input_rows(cursor, fields, is_single_record_type, object_name, df, df_cols):
+def process_input_rows(cursor, fields, is_single_record_type, object_name, user_id, df, df_cols):
     """
         Validate each row in the DataFrame according to field definitions. 
         Performs type checks, length checks, lookup validation, and raises exceptions on errors and prepares the parameters for batch insert into the database
@@ -222,9 +227,8 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, df, d
 
     map_picklist_lookup_options = utils.get_picklist_lookup_options(cursor, map_field_by_type["picklist_lookup_fields"], map_object_primary_key_names)
     map_picklist_lookup_index = {
-        field_name: {opt["id"] for opt in options} for field_name, options in map_picklist_lookup_options.items()
+        field_name: {str(opt["id"]) for opt in options} for field_name, options in map_picklist_lookup_options.items()
     }
-
 
     params = []
     for idx, row in enumerate(df.itertuples()):
@@ -232,8 +236,11 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, df, d
 
         new_record = []
         for col in df_cols:
-            # Get the value of the cell
-            value = str(getattr(row, col)).strip().lower()
+            if utils.SystemFieldName.LAST_MODIFIED_BY.lower() == col:
+                value = str(user_id)
+            else:
+                # Get the value of the cell
+                value = str(getattr(row, col)).strip().lower()
 
             # Get the definition of the field on the DB
             field_definition = fields_dict[col]
