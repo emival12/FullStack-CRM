@@ -233,13 +233,14 @@ async def update_record(request: Request, db = Depends(get_db)):
     data = await request.json() 
     table_name = data.get("table")
     record = data.get("record")
+    user = data.get("user")
 
     cursor = db.cursor(dictionary=True)
 
-    utils.check_allowed_tables(cursor, table_name)                      # Evaluate input value (Avoid SQLInjection)
-    (table_name, record_type_name) = split_table_name(table_name)       # table_name == ObjectName_RecordTypeName
+    utils.check_allowed_tables(cursor, table_name)                              # Evaluate input value (Avoid SQLInjection)
+    (table_name, record_type_name) = split_table_name(table_name)               # table_name == ObjectName_RecordTypeName
 
-    result = utils.insert_new_record(cursor, db, table_name, [record])  # execute the actual insert
+    result = utils.insert_new_record(cursor, db, table_name, [record], user["id"])    # execute the actual insert
     cursor.close()
     return result
 
@@ -251,16 +252,26 @@ async def update_record(request: Request, db = Depends(get_db)):
     data = await request.json() 
     table_name = data.get("table")
     record_id = data.get("id")
+    user = data.get("user")
     field_structure = data.get("field")
 
     cursor = db.cursor(dictionary=True)
 
     utils.check_allowed_tables(cursor, table_name)                                                                              # Evaluate input value (Avoid SQLInjection)
-    (table_name, record_type_name) = split_table_name(table_name)                                                                       # table_name == ObjectName_RecordTypeName
+    (table_name, record_type_name) = split_table_name(table_name)                                                               # table_name == ObjectName_RecordTypeName
     primary_key_field = utils.get_primary_keys_from_multiple_objects(cursor, [table_name]).get(table_name)                      # get the name of the PK of the object
     
-
-    result = utils.update_record_by_id(cursor, db, table_name, record_type_name, field_structure, primary_key_field, record_id) # execute the actual update
+    # execute the actual update
+    result = utils.update_record_by_id(
+        cursor, 
+        db, 
+        table_name, 
+        record_type_name, 
+        field_structure, 
+        primary_key_field, 
+        record_id,
+        user["id"]
+    ) 
     cursor.close()
     return result
 

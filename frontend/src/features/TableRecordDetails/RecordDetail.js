@@ -12,6 +12,7 @@ import {
   PATH_UPDATE,
 } from "../../config/K";
 import { getLabel } from "../../config/Label";
+import { useAuth } from "../../context/AuthContext";
 import MissingPage from "../../components/MissingPage";
 import LoadingScreen from "../../components/LoadingScreen";
 import ToastMsg from "../../components/ToastMsg";
@@ -34,6 +35,8 @@ export default function RecordDetail() {
     body: "",
   });
   const [controlledError, setControlledError] = useState(false);
+
+  const { user } = useAuth();
 
   const {
     register,
@@ -95,6 +98,7 @@ export default function RecordDetail() {
       const apiData = {
         table: tableKey,
         id: recordId,
+        user: user,
         field: modified_data,
       };
 

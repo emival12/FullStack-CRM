@@ -44,13 +44,13 @@ def get_object_definition_records(cursor, object_names=None):
     filter_object_name = ""
     params = ()
     if object_names:
-        filter_object_name = f'WHERE od.object_name IN ({", ".join(["%s"] * len(object_names))})'
+        filter_object_name = f'AND od.object_name IN ({", ".join(["%s"] * len(object_names))})'
         params = tuple(object_names)
 
     query = f'''
     SELECT od.object_label, od.object_name, od.category, od.sort_order, od.is_system_object, od.is_single_record_type
     FROM object_definition od
-    {filter_object_name}
+    WHERE od.is_system_object = 0 {filter_object_name}
     ORDER BY od.sort_order ASC;
     '''
     cursor.execute(query, params)
@@ -86,7 +86,7 @@ def get_object_definition_records_join_rt(cursor, object_names=None):
     SELECT od.object_label, od.object_name, rtd.record_type_name, od.category, od.sort_order, od.is_system_object, od.is_single_record_type
     FROM object_definition od
     LEFT JOIN record_type_definition rtd ON od.object_name = rtd.object_name
-    WHERE rtd.is_active = 1 {filter_object_name}
+    WHERE rtd.is_active = 1 AND od.is_system_object = 0 {filter_object_name}
     ORDER BY od.sort_order ASC;
     '''
     cursor.execute(query, params)
@@ -871,7 +871,7 @@ def get_field_structure_and_value_data(cursor, table_name, fields, mode, record_
 
     map_checkbox_radio_options = get_checkbox_radio_options(cursor, map_field_by_type["radio_fields"])
     map_picklist_lookup_options = get_picklist_lookup_options(cursor, map_field_by_type["picklist_lookup_fields"], map_object_primary_key_names)
-    
+
     # If is needed only the structure the Rollup (readOnly fields) and the record values are useless
     if mode == FieldStructureMode.STRUCTURE_AND_DATA:
         primary_key_field = get_primary_key_from_fields(fields)
@@ -1055,7 +1055,7 @@ def delete_record_by_id(cursor, db, table_name, record_type_name, primary_key_fi
 
     return execute_with_transaction(cursor, db, query, params, "Error deleting record: ")
 
-def insert_new_record(cursor, db, table_name, records):
+def insert_new_record(cursor, db, table_name, records, user_id):
     """
         Insert a series of record of the same table
 
@@ -1064,6 +1064,7 @@ def insert_new_record(cursor, db, table_name, records):
             db (MySQLConnection): Database connection object used to commit or rollback changes
             table_name (str): Name of the database table to query
             records (list[dict]): List of dictionaries, each representing a record to insert
+            user_id (str): Id of the user who is performing the action
 
         Returns:
             dict: Dictionary containing the number of records deleted
@@ -1071,10 +1072,19 @@ def insert_new_record(cursor, db, table_name, records):
         Raises:
             HTTPException: If a database error occurs during deletion
     """
+    record_keys = list(records[0].keys())
+    record_keys.append(SystemFieldName.LAST_MODIFIED_BY)
 
-    field_list = ', '.join(records[0].keys())
-    placeholders = ", ".join(["%s"] * len(records[0].keys()))
-    params = [tuple(None if v == "" else v for v in r.values()) for r in records]
+    field_list = ', '.join(record_keys)
+    placeholders = ", ".join(["%s"] * len(record_keys))
+
+    params = []
+    for r in records:
+        record_values = []
+        for v in r.values():
+            record_values.append(None if v == "" else v)
+        record_values.append(user_id)
+        params.append(tuple(record_values))
 
     query = f'''
     INSERT INTO {table_name} ({field_list})
@@ -1083,7 +1093,7 @@ def insert_new_record(cursor, db, table_name, records):
 
     return execute_with_transaction(cursor, db, query, params, "Error inserting record: ", True)
 
-def update_record_by_id(cursor, db, table_name, record_type_name, field_structure, primary_key_field, record_id):
+def update_record_by_id(cursor, db, table_name, record_type_name, field_structure, primary_key_field, record_id, user_id):
     """
         Update a record from a given table by record type and record id
 
@@ -1094,6 +1104,7 @@ def update_record_by_id(cursor, db, table_name, record_type_name, field_structur
             field_structure (dict): Dictionary with all the field to update {field_name: field_value, ...}
             primary_key_field (str): Name of the table's primary key field
             record_id (str): Primary key value identifying the record to delete
+            user_id (str): Id of the user who is performing the action
 
         Returns:
             dict: Dictionary containing the number of records deleted
@@ -1103,6 +1114,7 @@ def update_record_by_id(cursor, db, table_name, record_type_name, field_structur
     """
 
     set_clause = ", ".join([f'{field_name} = %s' for field_name in field_structure.keys()])                     # create the clause (Es: Name = %s, Costo = %s, ...)
+    set_clause += f", {SystemFieldName.LAST_MODIFIED_BY} = {user_id}"
 
     values_params = [None if field_value == "" else field_value for field_value in field_structure.values()]    # prepare the list of values to be placed in the %s
     params = values_params + [record_id] + ([record_type_name] if record_type_name else [])                     # add at the end of the params the WHERE filter
@@ -1123,6 +1135,7 @@ class SystemFieldName():
     RECORD_TYPE_NAME    = "record_type_name"
     CREATE_DATE         = "create_date"
     LAST_MODIFIED_DATE  = "last_modified_date"
+    LAST_MODIFIED_BY    = "last_modified_by"
 
 def create_new_object(cursor, db, object_data):
     """
@@ -1192,7 +1205,7 @@ def create_new_object(cursor, db, object_data):
                 object_name,
                 "master",
                 SystemFieldName.RECORD_TYPE_NAME,
-                "picklist",
+                FieldTypes.PICKLIST.value,
                 255,
                 None,
                 None,
@@ -1209,7 +1222,7 @@ def create_new_object(cursor, db, object_data):
                 object_name,
                 "master",
                 SystemFieldName.CREATE_DATE,
-                "datetime-local",
+                FieldTypes.DATE_TIME.value,
                 None,
                 None,
                 None,
@@ -1226,12 +1239,29 @@ def create_new_object(cursor, db, object_data):
                 object_name,
                 "master",
                 SystemFieldName.LAST_MODIFIED_DATE,
-                "datetime-local",
+                FieldTypes.DATE_TIME.value,
                 None,
                 None,
                 None,
                 None,
                 None,
+                1,
+                1,
+                0,
+                0,
+                0,
+                None
+            ),
+            (
+                object_name,
+                "master",
+                SystemFieldName.LAST_MODIFIED_BY,
+                FieldTypes.LOOKUP.value,
+                255,
+                None,
+                None,
+                "user_definition",
+                "email",
                 1,
                 1,
                 0,
@@ -1270,6 +1300,12 @@ def create_new_object(cursor, db, object_data):
                 "master",               
                 SystemFieldName.LAST_MODIFIED_DATE,         
                 2                      
+            ),
+            (
+                object_name,            
+                "master",               
+                SystemFieldName.LAST_MODIFIED_BY,         
+                3                   
             )
         ]
         insert_record_layout_definition(cursor, params)         #Create the record_layout_definition
@@ -1568,7 +1604,7 @@ def insert_ausiliar_extra_system_object(cursor, field_type, data):
         FROM field_definition
         WHERE 
             object_name = %s 
-            AND field_type = "lookup"
+            AND field_type = {FieldTypes.LOOKUP.value}
             AND reference_object = %s
             AND is_active = 1
         '''
@@ -1630,7 +1666,8 @@ def create_table(cursor, object_data, object_name, pk_field_name, pk_field_type,
     object_name VARCHAR(255) NOT NULL DEFAULT '{object_name}',
     {SystemFieldName.RECORD_TYPE_NAME} VARCHAR(255) NOT NULL DEFAULT 'master',
     {SystemFieldName.CREATE_DATE} DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    {SystemFieldName.LAST_MODIFIED_DATE} DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    {SystemFieldName.LAST_MODIFIED_DATE} DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    {SystemFieldName.LAST_MODIFIED_BY} VARCHAR(255) NOT NULL
     );
     '''
     cursor.execute(command)

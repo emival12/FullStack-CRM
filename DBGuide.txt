@@ -65,6 +65,21 @@ CREATE TABLE field_definition (
     INDEX idx_reference_object(reference_object)
 );
 
+# Mandatory per lastModifiedBy
+INSERT INTO object_definition(object_label, object_name, category, sort_order, is_system_object, is_single_record_type)
+VALUES 
+    ('user_definition', 'user_definition',     'system',   1,  1, 1);
+
+INSERT INTO record_type_definition(object_name, record_type_name, is_active)
+VALUES 
+    ('user_definition',     'master',       1);
+
+INSERT INTO field_definition(object_name, record_type_name, field_name, field_type, length, numeric_precision, 
+    numeric_scale, reference_object, reference_field, is_active, is_visible, is_editable, is_required, is_primary_key, lookup_filter)
+VALUES 
+    ('user_definition', 'master','email','text',255,null,null, null, null,1, 1, 0, 0, 0, null);
+
+
 # Creazione Tabella radio_checkbox_options
 #   La tabella descrive le opzioni disponibili per i checkbox/radio
 CREATE TABLE radio_checkbox_options (

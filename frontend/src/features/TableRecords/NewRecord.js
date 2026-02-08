@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { Button, Modal } from "react-bootstrap";
 
 import { API_BASE_URL, PATH_INSERT } from "../../config/K";
+import { useAuth } from "../../context/AuthContext";
 import { getLabel } from "../../config/Label";
 import ToastMsg from "../../components/ToastMsg";
 import DynamicForm from "../../components/dynamicUI/DynamicForm";
@@ -31,6 +32,8 @@ export default function NewRecord({
     body: "",
   });
 
+  const { user } = useAuth();
+
   const {
     register,
     handleSubmit,
@@ -57,6 +60,7 @@ export default function NewRecord({
       .post(`${API_BASE_URL}${PATH_INSERT}`, {
         table: tableKey,
         record: data,
+        user: user,
       })
       .then((res) => {
         console.log(
