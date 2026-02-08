@@ -151,14 +151,14 @@ async def import_records_from_csv(
 def get_table_records(table_name: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
-    utils.check_allowed_tables(cursor, table_name)                                                                  # Evaluate input value (Avoid SQLInjection)
-    (table_name, record_type_name) = split_table_name(table_name)                                                   # table_name == ObjectName_RecordTypeName
+    utils.check_allowed_tables(cursor, table_name)                                                       # Evaluate input value (Avoid SQLInjection)
+    (table_name, record_type_name) = split_table_name(table_name)                                        # table_name == ObjectName_RecordTypeName
 
-    dict_fields = utils.get_list_view_definition_fields(cursor, [(table_name, record_type_name)])                   # retrieve fields definitions on the list view
+    dict_fields = utils.get_list_view_definition_fields(cursor, [(table_name, record_type_name)])        # retrieve fields definitions on the list view
     fields = dict_fields.get(utils.get_table_key_from_strings(table_name, record_type_name))
 
-    (fields_text, joins, has_group, group) = utils.build_field_value_select_clause(cursor, fields, table_name)      # retrieve SQL clause from the fields, to extract the values of the fields
-    records = utils.build_query(cursor, table_name, record_type_name, fields_text, joins, has_group, group)         # make the query using the clauses created 
+    (fields_text, joins, group) = utils.build_field_value_select_clause(cursor, fields, table_name)      # retrieve SQL clause from the fields, to extract the values of the fields
+    records = utils.build_query(cursor, table_name, record_type_name, fields_text, joins, group)         # make the query using the clauses created 
 
     cursor.close()
     return {

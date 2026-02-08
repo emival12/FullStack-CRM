@@ -745,7 +745,7 @@ def build_field_value_select_clause(cursor, fields, table_name, map_object_prima
 
     fields_text = ", ".join(field_syntax_list)
     group = build_group_by_clause(field_syntax_list, exclude_from_group) if has_group else ""
-    return (fields_text, joins, has_group, group)
+    return (fields_text, joins, group)
 
 def build_field_join_clause(table_name, table_field, join_table_name, join_field, join_reference_field):
     join_table_alias = get_alias(join_table_name)
@@ -788,7 +788,7 @@ def build_group_by_clause(field_syntax_list, exclude_from_group):
 
     return f' GROUP BY {", ".join(fields_to_group)}'
 
-def build_query(cursor, table_name, record_type_name, fields_text, joins, has_group, group):
+def build_query(cursor, table_name, record_type_name, fields_text, joins, group):
     """
         Build and execute an SQL SELECT statement for the specified table and record type
 
@@ -801,7 +801,6 @@ def build_query(cursor, table_name, record_type_name, fields_text, joins, has_gr
             record_type_name (str): Record type name of the table
             fields_text (str): Comma-separated list of SQL fields to select
             joins (list[str]): List of SQL JOIN clauses
-            has_group (bool): Whether a GROUP BY clause is required
             group (str): The GROUP BY clause, or an empty string if not applicable
 
         Returns:
@@ -814,7 +813,8 @@ def build_query(cursor, table_name, record_type_name, fields_text, joins, has_gr
         FROM {table_name} {table_name_alias}
         {" ".join(joins) if joins else ""}
         WHERE {table_name_alias}.record_type_name = %s
-        {group + ";" if has_group else ";"}
+        {group}
+        ORDER BY {SystemFieldName.CREATE_DATE} DESC;
     '''
     cursor.execute(query, (record_type_name,))
     return cursor.fetchall()
@@ -1012,8 +1012,8 @@ def get_related_list_value(cursor, table_name, record_type_name, related_lists, 
 
         fields = dict_fields.get(get_table_key(related_list, "child_object_name", "child_record_type_name"))
 
-        (fields_text, joins, has_group, group) = build_field_value_select_clause(cursor, fields, child_table_name)
-        related_records = build_query(cursor, child_table_name, child_record_type_name, fields_text, joins, has_group, group)
+        (fields_text, joins, group) = build_field_value_select_clause(cursor, fields, child_table_name)
+        related_records = build_query(cursor, child_table_name, child_record_type_name, fields_text, joins, group)
  
         tempDictionary = {
             "label": related_list['label'].capitalize(),
