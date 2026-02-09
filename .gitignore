@@ -5,6 +5,7 @@ exe/*/
 
 backend/__*/
 backend/build/
+backend/config.ini
 
 *.log
-*.exe
+start_servers.exe
