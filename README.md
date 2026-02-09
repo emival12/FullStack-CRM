@@ -45,7 +45,7 @@ I built this application to replicate dynamic object creation, metadata-driven U
 
 ### Massive Data Insert
 > *Show the success message after a bulk insert: "Handling 5k+ records using Pandas integration."*
-![Massive Insert Demo](massive_import.gif)
+![Massive Insert Demo](assets/massive_import.gif)
 
 
 ## Engineering Challenges & Solutions
