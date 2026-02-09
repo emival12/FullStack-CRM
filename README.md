@@ -39,19 +39,13 @@ I built this application to replicate dynamic object creation, metadata-driven U
 
 
 ## Visual Showcase
-### Custom Object Creation
+### Custom Object Creation + Dynamic UI Rendering
 > *Show the 'Admin' side: "Creating a new custom object and seeing it reflected in the database schema."*
 ![Custom Object Demo](assets/custom_object_creation.gif)
 
-### Dynamic UI Rendering
-> *TODO Briefly describe what's happening: e.g., "The UI dynamically generates fields based on the selected object metadata."*
-![Dynamic UI Demo](link-alla-tua-immagine-o-gif)
-
 ### Massive Data Insert
-> *TODO Show the progress bar or the success message after a bulk upload: "Handling 5k+ records using Pandas integration."*
-![Massive Insert Demo](link-alla-tua-immagine-o-gif)
-
-
+> *Show the success message after a bulk insert: "Handling 5k+ records using Pandas integration."*
+![Massive Insert Demo](massive_import.gif)
 
 
 ## Engineering Challenges & Solutions
