@@ -24,7 +24,7 @@ CREATE TABLE user_definition (
 
 INSERT INTO user_definition (email, password, profile_id, is_active)
 VALUES 
-    ('vale-12.p@hotmail.it', '$2b$12$PsFMsB9oKRQOwE0emOQnLuMV5Uh1RkEA3IC5KYUiAEL/fQZz9ti0q', 1, 1);
+    ('admin@test.it', '$2b$12$PsFMsB9oKRQOwE0emOQnLuMV5Uh1RkEA3IC5KYUiAEL/fQZz9ti0q', 1, 1);
 
 # Creazione Tabella object_definition
 #   La tabella contiene la definizione di tutti le tabelle del database con alcune informazioni chiave: 
@@ -65,6 +65,16 @@ CREATE TABLE field_definition (
     INDEX idx_reference_object(reference_object)
 );
 
+# Creazione Tabella record_type_definition
+#   La tabella contiene la definizione dei record type degli oggetti
+CREATE TABLE record_type_definition (
+    object_name VARCHAR(100),
+    record_type_name VARCHAR(100),
+    is_active BOOL DEFAULT 1,
+    PRIMARY KEY (object_name, record_type_name),
+    FOREIGN KEY (object_name) REFERENCES object_definition(object_name) ON DELETE CASCADE
+);
+
 # Mandatory per lastModifiedBy
 INSERT INTO object_definition(object_label, object_name, category, sort_order, is_system_object, is_single_record_type)
 VALUES 
@@ -77,7 +87,8 @@ VALUES
 INSERT INTO field_definition(object_name, record_type_name, field_name, field_type, length, numeric_precision, 
     numeric_scale, reference_object, reference_field, is_active, is_visible, is_editable, is_required, is_primary_key, lookup_filter)
 VALUES 
-    ('user_definition', 'master','email','text',255,null,null, null, null,1, 1, 0, 0, 0, null);
+    ('user_definition', 'master','email',   'text',         255,    null,null, null, null,1, 1, 0, 0, 0, null),
+    ('user_definition', 'master','id',      'auto_number',  null,   null,null, null, null,1, 1, 0, 0, 1, null);
 
 
 # Creazione Tabella radio_checkbox_options
@@ -117,17 +128,6 @@ CREATE TABLE record_layout_definition (
     PRIMARY KEY (object_name, record_type_name, field_name),
     FOREIGN KEY (object_name, record_type_name, field_name) 
         REFERENCES field_definition(object_name, record_type_name, field_name) ON DELETE CASCADE
-);
-
-
-# Creazione Tabella record_type_definition
-#   La tabella contiene la definizione dei record type degli oggetti
-CREATE TABLE record_type_definition (
-    object_name VARCHAR(100),
-    record_type_name VARCHAR(100),
-    is_active BOOL DEFAULT 1,
-    PRIMARY KEY (object_name, record_type_name),
-    FOREIGN KEY (object_name) REFERENCES object_definition(object_name) ON DELETE CASCADE
 );
 
 

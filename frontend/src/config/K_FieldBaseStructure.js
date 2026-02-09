@@ -133,7 +133,7 @@ export const IS_ACTIVE_BASE = {
   is_editable: 0,
   is_required: 1,
   label: "",
-  value: 1,
+  value: true,
   order: 97,
 };
 
@@ -143,7 +143,7 @@ export const IS_VISIBLE_BASE = {
   is_editable: 0,
   is_required: 1,
   label: "",
-  value: 1,
+  value: true,
   order: 98,
 };
 
@@ -153,7 +153,7 @@ export const IS_EDITABLE_BASE = {
   is_editable: 1,
   is_required: 0,
   label: "",
-  value: 1,
+  value: true,
   order: 99,
 };
 
@@ -163,7 +163,7 @@ export const IS_REQUIRED_BASE = {
   is_editable: 1,
   is_required: 0,
   label: "",
-  value: 0,
+  value: false,
   order: 100,
 };
 

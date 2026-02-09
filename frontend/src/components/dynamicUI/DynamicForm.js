@@ -137,7 +137,6 @@ export default function DynamicForm({
             disabled={disabled}
             id={key}
             label={info.label}
-            value={info.value}
             isInvalid={errors[key]}
             {...register(key, {
               required: {
