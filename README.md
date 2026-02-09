@@ -10,9 +10,9 @@
 - [Key Features](#key-features)
 - [Tech Stack](#tech-stack)
 - [Visual Showcase](#visual-showcase)
-- [Engineering Challenges & Solutions](#engineering-challenges-solutions)
+- [Engineering Challenges & Solutions](#engineering-challenges--solutions)
 - [Roadmap](#roadmap)
-- [Installation & Setup](#installation-setup)
+- [Installation & Setup](#installation--setup)
 - [Execution](#execution)
 
 ## Project Overview
@@ -32,7 +32,7 @@ I built this application to replicate dynamic object creation, metadata-driven U
 
 
 ## Tech Stack
-* **Frontend:** React.js (Axios, React-Bootstrap, ...[TODO])
+* **Frontend:** React.js (Axios, React-Bootstrap, React Router, React Hook Form)
 * **Backend:** Python (FastAPI, Pandas)
 * **Database:** MySQL
 * **Environment:** Local Development Environment
@@ -40,8 +40,8 @@ I built this application to replicate dynamic object creation, metadata-driven U
 
 ## Visual Showcase
 ### Custom Object Creation
-> *TODO Show the 'Admin' side: "Creating a new custom object and seeing it reflected in the database schema."*
-![Custom Object Demo](link-alla-tua-immagine-o-gif)
+> *Show the 'Admin' side: "Creating a new custom object and seeing it reflected in the database schema."*
+![Custom Object Demo](assets/custom_object_creation.gif)
 
 ### Dynamic UI Rendering
 > *TODO Briefly describe what's happening: e.g., "The UI dynamically generates fields based on the selected object metadata."*
@@ -68,17 +68,18 @@ I built this application to replicate dynamic object creation, metadata-driven U
 ## Installation & Setup
 To run this project locally:
 
-1.  **Download the [TODO_NomeFolder]**
-2.  **Database** Import the `schema.sql` file located in the `db` folder into your MySQL instance.
+1.  **Download the "crm" folder**
+2.  **Database** Import the `schema.sql` file located in the `sqlDump` folder into your MySQL instance.
 3.  **Configure the configuration files**
     ```bash
-    cd [TODO_NomeFolder]
+    cd crm
+    Rename config.example.ini into config.ini
     Edit the config.ini file with your local database credentials
     ```
 
     
 ## Execution
-1. Run the **.exe** inside the [TODO_NomeFolder]
+1. Run the **.exe** inside the "crm" folder
 2. The application will automatically open a new Chrome tab
 3. A dedicated tray icon allows you to manage the server status or re-open the browser interface
 
