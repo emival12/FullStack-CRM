@@ -108,7 +108,7 @@ pyinstaller --onefile --windowed --noconfirm --icon="../frontend/build/brand_fav
 Crea due folder: Dist (con l'exe) e build (può essere cancellata)
 
 CAMBIARE IL NOME DEL DB
-## 3 SUL MIO PC -> mysqldump -u root -p --databases testnegozio --add-drop-table > backup_db.sql
+## 3 SUL MIO PC (dentro dumpSql) -> mysqldump -u root -p --databases testnegozio --add-drop-table > backup_db.sql
 
 
 ## 4: SUL PC CLIENTE -> Installare MySql Server e configurare l'utenza
