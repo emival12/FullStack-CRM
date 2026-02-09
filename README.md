@@ -45,12 +45,13 @@ I built this application to replicate dynamic object creation, metadata-driven U
 
 ### Massive Data Insert
 > *Show the success message after a bulk insert: "Handling 5k+ records using Pandas integration."*
-![Massive Insert Demo](massive_import.gif)
+![Massive Insert Demo](assets/massive_import.gif)
 
 
 ## Engineering Challenges & Solutions
 ### 1. Dynamic Schema Mapping
 **Problem:** How to allow users to create "fields" and "objects" on the fly without breaking the database schema?
+
 **Solution:** Built a metadata-driven engine where table and field definitions are stored as data. The Python middleware interprets these definitions to construct raw SQL queries dynamically.
 
 
@@ -81,4 +82,3 @@ To run this project locally:
 
 ---
 *Author: Pascarella Valerio*
-*This project is a technical showcase for transitioning from Salesforce development to full-stack & mobile engineering.*
