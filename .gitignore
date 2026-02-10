@@ -7,5 +7,7 @@ backend/__*/
 backend/build/
 backend/config.ini
 
+crm/config.ini
+
 *.log
 start_servers.exe
