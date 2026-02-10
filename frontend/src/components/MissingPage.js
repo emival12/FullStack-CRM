@@ -1,5 +1,5 @@
 import "../App.css";
-import { getLabel } from "../config/Label";
+import { useLabels } from "../config/Label";
 
 /**
  * Shows a missing text
@@ -8,6 +8,8 @@ import { getLabel } from "../config/Label";
  * @param {Boolean} props.ShowImg        - Boolean to show or hide the image
  */
 export default function MissingPage({ missingText, ShowImg = true }) {
+  const { getLabel } = useLabels();
+
   return (
     <div className="CenteredPage flex-row mt-3">
       {ShowImg && <i className="bi bi-x-octagon fs-2 pe-2 text-danger"></i>}

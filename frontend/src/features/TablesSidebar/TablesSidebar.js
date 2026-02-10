@@ -2,7 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 
 import { API_BASE_URL } from "../../config/K";
-import { getLabel } from "../../config/Label";
+import { useLabels } from "../../config/Label";
 import ScreenAdaptiveSidebar from "../../components/ScreenAdaptiveSidebar";
 import TablesSidebarAccordion from "./TablesSidebarAccordion";
 import LoadingScreen from "../../components/LoadingScreen";
@@ -13,6 +13,8 @@ import LoadingScreen from "../../components/LoadingScreen";
  * @param {String} props.tableKey       - Table currently selected
  */
 export default function TablesSidebar({ tableKey }) {
+  const { getLabel } = useLabels();
+
   const [loading, setLoading] = useState(true);
   const [tablesData, setTablesData] = useState([]);
 

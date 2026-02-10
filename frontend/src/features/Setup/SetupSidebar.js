@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { API_BASE_URL, PATH_SETUP } from "../../config/K";
 import { SECTIONS } from "./K_Setup";
-import { getLabel } from "../../config/Label";
+import { useLabels } from "../../config/Label";
 import LoadingScreen from "../../components/LoadingScreen";
 import ScreenAdaptiveSidebar from "../../components/ScreenAdaptiveSidebar";
 
@@ -17,7 +17,9 @@ import ScreenAdaptiveSidebar from "../../components/ScreenAdaptiveSidebar";
  * @param {Boolean} props.refreshSidebar      - Boolean to understand if is need a refresh of the list of objects
  */
 export default function SetupSidebar({ tableKey, sectionKey, refreshSidebar }) {
+  const { getLabel } = useLabels();
   const navigate = useNavigate();
+
   const [loading, setLoading] = useState(true);
   const [tables, setTables] = useState([]);
 

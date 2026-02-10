@@ -4,7 +4,7 @@ import { useOutletContext } from "react-router-dom";
 import { Button } from "react-bootstrap";
 
 import { API_BASE_URL, ERROR_MISSING_TABLE } from "../../config/K";
-import { getLabel } from "../../config/Label";
+import { useLabels } from "../../config/Label";
 import MissingPage from "../../components/MissingPage";
 import LoadingScreen from "../../components/LoadingScreen";
 import DynamicRecordsList from "../../components/dynamicUI/DynamicRecordsList";
@@ -24,6 +24,7 @@ const getDisplayTitle = (key) => {
 };
 
 export default function RecordsListView() {
+  const { getLabel } = useLabels();
   const { tableKey } = useOutletContext();
 
   const [loading, setLoading] = useState(true);

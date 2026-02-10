@@ -2,6 +2,7 @@ import os
 import sys
 import configparser
 import mysql.connector
+import json
 from fastapi import FastAPI, Depends, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -21,25 +22,37 @@ app.add_middleware(
 )
 
 
-def get_config():
+def get_correct_path(file_name, is_external=False, dev_folder_path = None):
     if getattr(sys, 'frozen', False):
-        # PRODUCTION: find the path of the EXE file    
-        base_path = os.path.dirname(sys.executable)
+        # PRODUCTION   
+        if is_external:
+            base_path = os.path.dirname(sys.executable) # find the path of the EXE file  
+        else:
+            base_path = sys._MEIPASS                    # use the internal folder of the EXE 
     else:
-        # DEVELOPMENT: find the path of main.py
-        base_path = os.path.dirname(os.path.abspath(__file__))
+        # DEVELOPMENT
+        base_path = os.path.dirname(os.path.abspath(__file__)) # find the path of main.py
+        if dev_folder_path:
+            base_path =  os.path.join(os.path.dirname(base_path), dev_folder_path)
+
+    return os.path.join(base_path, file_name)
+
+def log_err_and_throw_exception(msg, same_msg = True):
+    if getattr(sys, 'frozen', False):
+        logging.error(msg)
+
+    raise Exception(msg if same_msg else msg.split(":")[0])
+
+def get_config():
+    CONFIG_PATH = get_correct_path("config.ini", is_external=True)
+    
+    if not os.path.exists(CONFIG_PATH):
+        with open(CONFIG_PATH, 'w') as f:
+            f.write("[database]\nuser=root\npassword=\ndatabase=\n")
+        log_err_and_throw_exception(f'Configuration file NOT FOUND in: {CONFIG_PATH}. Default file created')
 
     config = configparser.ConfigParser()
-    config_path = os.path.join(base_path, 'config.ini')
-
-    if not os.path.exists(config_path):
-        with open(config_path, 'w') as f:
-            f.write("[database]\nuser=root\npassword=\ndatabase=\n")
-        
-        logging.warning(f'Configuration file NOT FOUND in: {config_path}. Default file created')
-        raise Exception(f'Configuration file NOT FOUND in: {config_path}. Default file created')
-
-    config.read(config_path)
+    config.read(CONFIG_PATH)
     return config
 
 # Get the configuration file (outside the .exe) 
@@ -57,9 +70,7 @@ def get_db():
         )
         yield conn
     except mysql.connector.Error as err:
-        if getattr(sys, 'frozen', False):
-            logging.error(f"Error on the database: {err}")
-        raise Exception("Error on the Database. Check the log.")
+        log_err_and_throw_exception(f'Error on the database: {err}', False)
     finally:
         if conn and conn.is_connected():
             conn.close()
@@ -84,6 +95,26 @@ async def login_user(request: Request, db = Depends(get_db)):
     result = utils.login_user(cursor, email, password)
     cursor.close()
     return result
+
+
+@app.get("/api/translations/{browser_language}")
+async def get_translation_file(browser_language: str):
+    TRANSLATION_DIR = get_correct_path("translations", is_external=True, dev_folder_path="frontend/src/config")
+    lang_code = browser_language.split("-")[0].lower()  
+    
+    file_path = os.path.join(TRANSLATION_DIR, f"{lang_code}.json")
+    if not os.path.exists(file_path):
+        with open(file_path, 'w') as f:
+            f.write("{}")
+        log_err_and_throw_exception(f'Translation file NOT FOUND in: {file_path}. Default file created')
+
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return data
+    except Exception as err:
+        log_err_and_throw_exception(f'Error on the translation file: {err}', False)
+
 
 
 ###############################################
@@ -477,15 +508,8 @@ async def delete_field(request: Request, db = Depends(get_db)):
 ###############################################
 # PRODUCTION
 ###############################################
-if getattr(sys, 'frozen', False):
-    # PRODUCTION: use the internal folder of the EXE
-    base_path = sys._MEIPASS
-else:
-    # DEVELOPMENT: use the path frontend/build
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    base_path =  os.path.join(os.path.dirname(current_dir), "frontend")
-
-BUILD_DIR = os.path.join(base_path, "build")
+# Get the build directory 
+BUILD_DIR = get_correct_path("build", dev_folder_path="frontend")
 
 # Mount static files
 app.mount("/static", StaticFiles(directory=os.path.join(BUILD_DIR, "static")), name="static")

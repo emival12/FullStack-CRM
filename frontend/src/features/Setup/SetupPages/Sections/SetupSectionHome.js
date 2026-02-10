@@ -10,7 +10,7 @@ import {
   PATH_UPDATE,
 } from "../../../../config/K";
 import { HOME_OBJECT_FIELD_STRUCTURE } from "../../K_Setup";
-import { getLabel } from "../../../../config/Label";
+import { useLabels } from "../../../../config/Label";
 import ToastMsg from "../../../../components/ToastMsg";
 import LoadingScreen from "../../../../components/LoadingScreen";
 import DynamicForm from "../../../../components/dynamicUI/DynamicForm";
@@ -23,6 +23,7 @@ import DynamicRecordActions from "../../../../components/dynamicUI/DynamicRecord
  * @param {String} props.sectionKey     - Section currently selected
  */
 export default function SetupSectionHome({ tableKey, sectionKey }) {
+  const { getLabel } = useLabels();
   const { refreshSidebar, setRefreshSidebar } = useOutletContext();
 
   const [loading, setLoading] = useState(true);

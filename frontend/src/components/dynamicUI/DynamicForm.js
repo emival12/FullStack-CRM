@@ -1,6 +1,6 @@
 import { Form, FloatingLabel } from "react-bootstrap";
 import TextareaAutosize from "react-textarea-autosize";
-import { getLabel } from "../../config/Label";
+import { useLabels } from "../../config/Label";
 
 /**
  * Shows a form with some fields
@@ -45,6 +45,8 @@ export default function DynamicForm({
   isNewForm,
   isEdit,
 }) {
+  const { getLabel } = useLabels();
+
   const renderField = (key, info) => {
     if (info.field_type === "picklist" || info.field_type === "lookup") {
       return get_selection_entry(key, info);
@@ -177,21 +179,21 @@ export default function DynamicForm({
             },
             maxLength: {
               value: info.length,
-              message: getLabel("FORM_ERRORS.MAX_FIELD_LABEL", info.length),
+              message: getLabel("FORM_ERRORS.MAX_FIELD_LABEL", {
+                max_lenght: info.length,
+              }),
             },
             min: {
               value: Number(info?.min_limit_value),
-              message: getLabel(
-                "FORM_ERRORS.MIN_NUMBER_LABEL",
-                info?.min_limit_value,
-              ),
+              message: getLabel("FORM_ERRORS.MIN_NUMBER_LABEL", {
+                min_value: info?.min_limit_value,
+              }),
             },
             max: {
               value: Number(info?.max_limit_value),
-              message: getLabel(
-                "FORM_ERRORS.MAX_NUMBER_LABEL",
-                info?.max_limit_value,
-              ),
+              message: getLabel("FORM_ERRORS.MAX_NUMBER_LABEL", {
+                max_value: info?.max_limit_value,
+              }),
             },
             pattern:
               info.field_type === "email"

@@ -5,7 +5,7 @@ import NavBar from "./components/NavBar";
 import "./App.css";
 import { useAuth } from "./context/AuthContext";
 import { PATH_DATABASE, PATH_IMPORT, PATH_LOGIN, PATH_SETUP } from "./config/K";
-import { getLabel } from "./config/Label";
+import { useLabels } from "./config/Label";
 import DatabaseMainPage from "./features/MainScreen/DatabaseMainPage";
 import RecordsListView from "./features/TableRecords/RecordsListView";
 import RecordDetail from "./features/TableRecordDetails/RecordDetail";
@@ -19,6 +19,7 @@ import LoadingScreen from "./components/LoadingScreen";
 
 function App() {
   const { user, loading } = useAuth();
+  const { getLabel } = useLabels();
 
   if (loading)
     return (

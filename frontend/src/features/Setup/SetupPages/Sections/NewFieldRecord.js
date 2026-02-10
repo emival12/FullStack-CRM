@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { Button, Modal } from "react-bootstrap";
 
 import { API_BASE_URL, PATH_SETUP } from "../../../../config/K";
-import { getLabel } from "../../../../config/Label";
+import { useLabels } from "../../../../config/Label";
 import { FieldTypes } from "../../FieldTypes";
 import ToastMsg from "../../../../components/ToastMsg";
 import LoadingScreen from "../../../../components/LoadingScreen";
@@ -24,6 +24,8 @@ export default function NewFieldRecord({
   setShowNewModal,
   refreshData,
 }) {
+  const { getLabel } = useLabels();
+
   const [pageNumber, setPageNumber] = useState(1);
   const [validated, setValidated] = useState(false);
 

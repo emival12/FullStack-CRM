@@ -11,8 +11,8 @@ import {
   PATH_DELETE,
   PATH_UPDATE,
 } from "../../config/K";
-import { getLabel } from "../../config/Label";
 import { useAuth } from "../../context/AuthContext";
+import { useLabels } from "../../config/Label";
 import MissingPage from "../../components/MissingPage";
 import LoadingScreen from "../../components/LoadingScreen";
 import ToastMsg from "../../components/ToastMsg";
@@ -21,6 +21,7 @@ import DynamicRecordsList from "../../components/dynamicUI/DynamicRecordsList";
 import DynamicForm from "../../components/dynamicUI/DynamicForm";
 
 export default function RecordDetail() {
+  const { getLabel } = useLabels();
   const navigate = useNavigate();
   const { tableKey, recordId } = useOutletContext();
 

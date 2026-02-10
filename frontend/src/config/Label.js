@@ -1,47 +1,69 @@
-import React from "react";
-import { ENG } from "./Languages/ENG";
-import { IT } from "./Languages/IT";
+import axios from "axios";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { API_BASE_URL } from "./K";
 
-const labelNotFound = "Label Not Found";
-const dictionaries = {
-  it: IT,
-  en: ENG,
-};
-dictionaries["it-IT"] = dictionaries.it;
-dictionaries["en-US"] = dictionaries.en;
-dictionaries["en-GB"] = dictionaries.en;
+//Creation of context (place where i can save things and avoid the props)
+const LabelContext = createContext();
+export const useLabels = () => useContext(LabelContext);
 
-const getBrowserLanguage = () => {
+export default function LabelManager({ children }) {
+  const labelNotFound = "Label Not Found";
   const browserLang = navigator.language;
-  return dictionaries[browserLang] ? browserLang : "eng";
-};
+  const [translationJson, setTranslationJson] = useState(null);
 
-export const getLabel = (labelName, params = null) => {
-  if (!labelName) return labelNotFound;
-  const path = labelName.split(".");
+  useEffect(() => {
+    axios
+      .get(`${API_BASE_URL}/translations/${browserLang}`)
+      .then((res) => {
+        console.log("LabelManager - result:", res.data);
+        setTranslationJson(res.data);
+      })
+      .catch((err) => {
+        console.error("LabelManager - Error:", err);
+        throw err;
+      });
+  }, [browserLang]);
 
-  let currentStep = dictionaries[getBrowserLanguage()];
-  for (const key of path) {
-    if (currentStep && currentStep[key] !== undefined) {
-      currentStep = currentStep[key];
-    } else {
-      return labelNotFound;
+  const getLabel = (labelName, params = null) => {
+    if (!labelName) return labelNotFound;
+    const path = labelName.split(".");
+
+    let currentStep = translationJson;
+    for (const key of path) {
+      if (currentStep && currentStep[key] !== undefined) {
+        currentStep = currentStep[key];
+      } else {
+        return labelNotFound;
+      }
     }
-  }
 
-  const labelValue =
-    typeof currentStep === "function" ? currentStep(params) : currentStep;
-  return typeof labelValue === "string" && labelValue.includes("\n")
-    ? multiLineFormatter(labelValue)
-    : labelValue;
-};
+    let labelValue = currentStep;
+    if (params) {
+      Object.keys(params).forEach((key) => {
+        labelValue = labelValue.replace(`{{${key}}}`, params[key]);
+      });
+    }
+    console.log(params);
+    console.log(labelValue);
 
-// Add a <br /> to go on the net line every time he finds \n
-const multiLineFormatter = (textMsg) => {
-  return textMsg.split("\n ").map((line, index, array) => (
-    <React.Fragment key={index}>
-      {line}
-      {index < array.length - 1 && <br />}
-    </React.Fragment>
-  ));
-};
+    return typeof labelValue === "string" && labelValue.includes("\n")
+      ? multiLineFormatter(labelValue)
+      : labelValue;
+  };
+
+  // Add a <br /> to go on the net line every time he finds \n
+  const multiLineFormatter = (textMsg) => {
+    return textMsg.split("\n").map((line, index, array) => (
+      <React.Fragment key={index}>
+        {line}
+        {index < array.length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
+
+  return (
+    <LabelContext.Provider value={{ getLabel }}>
+      {children}
+    </LabelContext.Provider>
+  );
+}

@@ -5,13 +5,16 @@ import { useForm } from "react-hook-form";
 
 import { API_BASE_URL, PATH_IMPORT, PATH_UPLOAD } from "../../config/K";
 import { IMPORT_FIELD_STRUCTURE } from "../../config/K";
-import { getLabel } from "../../config/Label";
+import { useAuth } from "../../context/AuthContext";
+import { useLabels } from "../../config/Label";
+import DynamicForm from "../../components/dynamicUI/DynamicForm";
 import LoadingScreen from "../../components/LoadingScreen";
 import ToastMsg from "../../components/ToastMsg";
-import DynamicForm from "../../components/dynamicUI/DynamicForm";
-import { useAuth } from "../../context/AuthContext";
 
 export default function MassiveImport() {
+  const { user } = useAuth();
+  const { getLabel } = useLabels();
+
   const [loading, setLoading] = useState(false);
   const [fieldStructure, setFieldStructure] = useState([]);
   const [validated, setValidated] = useState(false);
@@ -22,8 +25,6 @@ export default function MassiveImport() {
     body: "",
     color: "danger",
   });
-
-  const { user } = useAuth();
 
   const {
     register,
@@ -63,7 +64,7 @@ export default function MassiveImport() {
         });
       })
       .finally(() => setLoading(false));
-  }, [reset]);
+  }, [reset, getLabel]);
 
   useEffect(() => {
     fetchData();

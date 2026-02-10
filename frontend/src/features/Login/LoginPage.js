@@ -3,15 +3,16 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Button } from "react-bootstrap";
 
-import { getLabel } from "../../config/Label";
-import ToastMsg from "../../components/ToastMsg";
 import { LOGIN_FIELD_STRUCTURE, PATH_DATABASE } from "../../config/K";
-import DynamicForm from "../../components/dynamicUI/DynamicForm";
 import { useAuth } from "../../context/AuthContext";
+import { useLabels } from "../../config/Label";
+import DynamicForm from "../../components/dynamicUI/DynamicForm";
+import ToastMsg from "../../components/ToastMsg";
 import LoadingScreen from "../../components/LoadingScreen";
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const { getLabel } = useLabels();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);

@@ -1,12 +1,14 @@
 import "../App.css";
 import { Navbar, Nav, Container } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+
 import { PATH_DATABASE, PATH_IMPORT, PATH_SETUP } from "../config/K";
-import { getLabel } from "../config/Label";
+import { useAuth } from "../context/AuthContext";
+import { useLabels } from "../config/Label";
 
 export default function NavBar() {
   const { logout } = useAuth();
+  const { getLabel } = useLabels();
 
   return (
     <Navbar expand="lg" className="bg-body-tertiary">

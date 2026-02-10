@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
-import { getLabel } from "../../config/Label";
+import { useLabels } from "../../config/Label";
 import ModalScreen from "../ModalScreen";
 
 /**
@@ -36,6 +36,8 @@ export default function DynamicRecordActions({
   extraActionOnDelete,
   extraDescription,
 }) {
+  const { getLabel } = useLabels();
+
   const navigate = useNavigate();
   const [modalConfig, setModalConfig] = useState({
     show: false,

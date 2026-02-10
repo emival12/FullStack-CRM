@@ -1,5 +1,5 @@
 import { Button, Modal } from "react-bootstrap";
-import { getLabel } from "../config/Label";
+import { useLabels } from "../config/Label";
 
 /**
  * Shows a modal with a message and two buttons: one to confirm, the other one to cancel
@@ -17,6 +17,8 @@ export default function ModalScreen({
   titleText,
   bodyText,
 }) {
+  const { getLabel } = useLabels();
+
   return (
     <Modal show={showModal} onHide={() => setShowModal(false)}>
       <Modal.Header closeButton>

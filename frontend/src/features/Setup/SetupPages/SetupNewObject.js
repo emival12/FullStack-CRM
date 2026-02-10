@@ -5,13 +5,14 @@ import { useForm } from "react-hook-form";
 
 import { API_BASE_URL } from "../../../config/K";
 import { NEW_OBJECT_FIELD_STRUCTURE } from "../K_Setup";
-import { getLabel } from "../../../config/Label";
+import { useLabels } from "../../../config/Label";
 import LoadingScreen from "../../../components/LoadingScreen";
 import ToastMsg from "../../../components/ToastMsg";
 import DynamicForm from "../../../components/dynamicUI/DynamicForm";
 import DynamicRecordActions from "../../../components/dynamicUI/DynamicRecordActions";
 
 export default function SetupNewObject() {
+  const { getLabel } = useLabels();
   const { refreshSidebar, setRefreshSidebar } = useOutletContext();
 
   const [loading, setLoading] = useState(false);

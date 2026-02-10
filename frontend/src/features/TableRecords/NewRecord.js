@@ -5,7 +5,7 @@ import { Button, Modal } from "react-bootstrap";
 
 import { API_BASE_URL, PATH_INSERT } from "../../config/K";
 import { useAuth } from "../../context/AuthContext";
-import { getLabel } from "../../config/Label";
+import { useLabels } from "../../config/Label";
 import ToastMsg from "../../components/ToastMsg";
 import DynamicForm from "../../components/dynamicUI/DynamicForm";
 
@@ -23,6 +23,8 @@ export default function NewRecord({
   setShowNewModal,
   refreshData,
 }) {
+  const { getLabel } = useLabels();
+
   const [fields, setFields] = useState([]);
   const [validated, setValidated] = useState(false);
 

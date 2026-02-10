@@ -3,7 +3,7 @@ import { Table, Form, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import { PATH_DATABASE } from "../../config/K";
-import { getLabel } from "../../config/Label";
+import { useLabels } from "../../config/Label";
 import MissingPage from "../MissingPage";
 import PaginationControl from "../PaginationControl";
 
@@ -69,6 +69,8 @@ export default function DynamicRecordsList({
   redirectKey,
   pathRedirect = PATH_DATABASE,
 }) {
+  const { getLabel } = useLabels();
+
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");

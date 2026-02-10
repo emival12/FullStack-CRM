@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Button } from "react-bootstrap";
 
 import { API_BASE_URL, PATH_SETUP } from "../../../../config/K";
-import { getLabel } from "../../../../config/Label";
+import { useLabels } from "../../../../config/Label";
 import LoadingScreen from "../../../../components/LoadingScreen";
 import NewFieldRecord from "./NewFieldRecord";
 import DynamicRecordsList from "../../../../components/dynamicUI/DynamicRecordsList";
@@ -15,6 +15,8 @@ import DynamicRecordsList from "../../../../components/dynamicUI/DynamicRecordsL
  * @param {String} props.sectionKey     - Section currently selected
  */
 export default function SetupSectionFields({ tableKey, sectionKey }) {
+  const { getLabel } = useLabels();
+
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState([]);
   const [showNewModal, setShowNewModal] = useState(false);

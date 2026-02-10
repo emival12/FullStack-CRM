@@ -9,7 +9,7 @@ import {
   PATH_DELETE,
   PATH_SETUP,
 } from "../../../../config/K";
-import { getLabel } from "../../../../config/Label";
+import { useLabels } from "../../../../config/Label";
 import LoadingScreen from "../../../../components/LoadingScreen";
 import MissingPage from "../../../../components/MissingPage";
 import ToastMsg from "../../../../components/ToastMsg";
@@ -18,6 +18,8 @@ import DynamicRecordActions from "../../../../components/dynamicUI/DynamicRecord
 import DynamicForm from "../../../../components/dynamicUI/DynamicForm";
 
 export default function EditFieldRecord({ tableKey, sectionKey, recordId }) {
+  const { getLabel } = useLabels();
+
   const [loading, setLoading] = useState(true);
   const [fields, setFields] = useState([]);
   const [isEdit, setIsEdit] = useState(false);
