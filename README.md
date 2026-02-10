@@ -53,7 +53,8 @@ I built this application to replicate dynamic object creation, metadata-driven U
 **Problem:** How to allow users to create "fields" and "objects" on the fly without breaking the database schema?
 
 **Solution:** Built a metadata-driven engine where table and field definitions are stored as data. The Python middleware interprets these definitions to construct raw SQL queries dynamically.
-
+> *Show the metadata-driven structure."*
+![System Object Structure](assets/core_system_object_structrute.png)
 
 ## Roadmap: 
 * **Web Finalization:** Complete the remaining features in the backlog
