@@ -99,7 +99,7 @@ async def login_user(request: Request, db = Depends(get_db)):
 
 @app.get("/api/translations/{browser_language}")
 async def get_translation_file(browser_language: str):
-    TRANSLATION_DIR = get_correct_path("translations", is_external=True, dev_folder_path="frontend/src/config")
+    TRANSLATION_DIR = get_correct_path("translations", is_external=True, dev_folder_path="frontend\src\config")
     lang_code = browser_language.split("-")[0].lower()  
     
     file_path = os.path.join(TRANSLATION_DIR, f"{lang_code}.json")

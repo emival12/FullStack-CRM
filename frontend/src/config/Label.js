@@ -43,8 +43,6 @@ export default function LabelManager({ children }) {
         labelValue = labelValue.replace(`{{${key}}}`, params[key]);
       });
     }
-    console.log(params);
-    console.log(labelValue);
 
     return typeof labelValue === "string" && labelValue.includes("\n")
       ? multiLineFormatter(labelValue)
