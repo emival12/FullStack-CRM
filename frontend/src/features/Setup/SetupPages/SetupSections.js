@@ -2,8 +2,8 @@ import { useOutletContext } from "react-router-dom";
 
 import { Sections } from "../K_Setup";
 import SetupSectionHome from "./Sections/SetupSectionHome";
-import SetupSectionFields from "./Sections/SetupSectionFields";
-import EditFieldRecord from "./Sections/EditFieldRecord";
+import SetupSectionFieldsListView from "./Sections/SetupSectionFieldsListView";
+import SetupSectionFieldsEdit from "./Sections/SetupSectionFieldsEdit";
 
 export default function SetupSectionObject() {
   const { tableKey, sectionKey, recordId } = useOutletContext();
@@ -21,7 +21,7 @@ export default function SetupSectionObject() {
     if (sectionKey === Sections.fields) {
       if (!recordId) {
         return (
-          <SetupSectionFields
+          <SetupSectionFieldsListView
             tableKey={tableKey}
             sectionKey={sectionKey}
             recordId={recordId}
@@ -29,7 +29,7 @@ export default function SetupSectionObject() {
         );
       } else {
         return (
-          <EditFieldRecord
+          <SetupSectionFieldsEdit
             tableKey={tableKey}
             sectionKey={sectionKey}
             recordId={recordId}

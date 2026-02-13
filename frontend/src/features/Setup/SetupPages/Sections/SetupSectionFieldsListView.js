@@ -14,7 +14,7 @@ import DynamicRecordsList from "../../../../components/dynamicUI/DynamicRecordsL
  * @param {String} props.tableKey       - Table currently selected
  * @param {String} props.sectionKey     - Section currently selected
  */
-export default function SetupSectionFields({ tableKey, sectionKey }) {
+export default function SetupSectionFieldsListView({ tableKey, sectionKey }) {
   const { getLabel } = useLabels();
 
   const [loading, setLoading] = useState(true);
@@ -29,12 +29,12 @@ export default function SetupSectionFields({ tableKey, sectionKey }) {
       .get(`${API_BASE_URL}${PATH_SETUP}/${tableKey}/${sectionKey}`)
       .then((res) => {
         console.log(
-          "SetupSectionFields - List of Fields Object received:",
+          "SetupSectionFieldsListView - List of Fields Object received:",
           res.data,
         );
         setRecords(res.data);
       })
-      .catch((err) => console.error("SetupSectionFields - Error:", err))
+      .catch((err) => console.error("SetupSectionFieldsListView - Error:", err))
       .finally(() => setLoading(false));
   }, [tableKey, sectionKey]);
 

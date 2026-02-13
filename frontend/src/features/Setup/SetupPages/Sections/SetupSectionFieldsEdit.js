@@ -17,7 +17,11 @@ import { FieldTypes } from "../../FieldTypes";
 import DynamicRecordActions from "../../../../components/dynamicUI/DynamicRecordActions";
 import DynamicForm from "../../../../components/dynamicUI/DynamicForm";
 
-export default function EditFieldRecord({ tableKey, sectionKey, recordId }) {
+export default function SetupSectionFieldsEdit({
+  tableKey,
+  sectionKey,
+  recordId,
+}) {
   const { getLabel } = useLabels();
 
   const [loading, setLoading] = useState(true);
@@ -61,7 +65,7 @@ export default function EditFieldRecord({ tableKey, sectionKey, recordId }) {
       )
       .then((res) => {
         console.log(res);
-        console.log("EditFieldRecord - Edit Field Received:", res.data);
+        console.log("SetupSectionFieldsEdit - Edit Field Received:", res.data);
         setFields(res.data);
         setIsDeletable(res.data.object_primary_key_name !== recordId); // prevent delete of PrimaryKey
 
@@ -83,7 +87,7 @@ export default function EditFieldRecord({ tableKey, sectionKey, recordId }) {
         resetField("reference_field");
       })
       .catch((err) => {
-        console.error("EditFieldRecord - Error:", err);
+        console.error("SetupSectionFieldsEdit - Error:", err);
         const errMsg = err.response.data.detail;
         if (
           errMsg === ERROR_MISSING_TABLE(tableKey) ||
