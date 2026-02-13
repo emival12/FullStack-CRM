@@ -205,7 +205,6 @@ def get_tables(db = Depends(get_db)):
     cursor.close()
     return structure
 
-
 # Get all the records of an object
 @data_router.get("/{table_name}")
 def get_table_records(table_name: str, db = Depends(get_db)):
@@ -226,7 +225,6 @@ def get_table_records(table_name: str, db = Depends(get_db)):
         "primary_key_name": utils.get_primary_key_from_fields(fields),
         "records": records
     }
-
 
 # Get all the fields values with their structure of a single record
 @data_router.get("/{table_name}/record/{record_id}")
@@ -252,7 +250,6 @@ def get_record_info(table_name: str, record_id: str, db = Depends(get_db)):
         "related_list": rel_lists
     }
 
-
 # Get all the fields structure of an object
 @data_router.get("/{table_name}/new-record")
 def get_new_record_structure(table_name: str, db = Depends(get_db)):
@@ -266,7 +263,6 @@ def get_new_record_structure(table_name: str, db = Depends(get_db)):
 
     cursor.close()
     return field_structure
-
 
 # Delete a single record
 @data_router.post("/delete")
@@ -286,7 +282,6 @@ async def delete_record(request: Request, db = Depends(get_db)):
     cursor.close()
     return result
 
-
 # Insert a new record
 @data_router.post("/insert")
 async def update_record(request: Request, db = Depends(get_db)):
@@ -304,7 +299,6 @@ async def update_record(request: Request, db = Depends(get_db)):
     result = utils.insert_new_record(cursor, db, table_name, [record], user["id"])    # execute the actual insert
     cursor.close()
     return result
-
 
 # Update a single record
 @data_router.post("/update")
