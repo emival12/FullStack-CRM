@@ -37,11 +37,12 @@ def get_correct_path(file_name, is_external=False, dev_folder_path = None):
 
     return os.path.join(base_path, file_name)
 
-def log_err_and_throw_exception(msg, same_msg = True):
+def log_err_and_throw_exception(msg, same_msg = True, throw_exc = True):
     if getattr(sys, 'frozen', False):
         logging.error(msg)
 
-    raise Exception(msg if same_msg else msg.split(":")[0])
+    if throw_exc:
+        raise Exception(msg if same_msg else msg.split(":")[0])
 
 def get_config():
     CONFIG_PATH = get_correct_path("config.ini", is_external=True)
@@ -49,7 +50,7 @@ def get_config():
     if not os.path.exists(CONFIG_PATH):
         with open(CONFIG_PATH, 'w') as f:
             f.write("[database]\nuser=root\npassword=\ndatabase=\n")
-        log_err_and_throw_exception(f'Configuration file NOT FOUND in: {CONFIG_PATH}. Default file created')
+        log_err_and_throw_exception(f'Configuration file NOT FOUND in: {CONFIG_PATH}. Default file created', throw_exc = True)
 
     config = configparser.ConfigParser()
     config.read(CONFIG_PATH)
@@ -101,12 +102,17 @@ async def login_user(request: Request, db = Depends(get_db)):
 async def get_translation_file(browser_language: str):
     TRANSLATION_DIR = get_correct_path("translations", is_external=True, dev_folder_path="frontend\src\config")
     lang_code = browser_language.split("-")[0].lower()  
-    
     file_path = os.path.join(TRANSLATION_DIR, f"{lang_code}.json")
+    
+    # 1. Check if exist the folder, otherwise create it 
+    if not os.path.exists(TRANSLATION_DIR):
+        os.makedirs(TRANSLATION_DIR, exist_ok=True)
+
+    # 2. Check if exist the file, otherwise create it 
     if not os.path.exists(file_path):
         with open(file_path, 'w') as f:
             f.write("{}")
-        log_err_and_throw_exception(f'Translation file NOT FOUND in: {file_path}. Default file created')
+        log_err_and_throw_exception(f'Translation file NOT FOUND in: {file_path}. Default file created', throw_exc=False)
 
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
