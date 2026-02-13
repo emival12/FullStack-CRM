@@ -143,7 +143,7 @@ export default function NewFieldRecord({
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            {getLabel("NEW_FIELD.NEW_FIELD_TITLE_LABEL")}
+            {getLabel("MODAL.INSERT.NEW_FIELD_TITLE_LABEL")}
           </Modal.Title>
         </Modal.Header>
 

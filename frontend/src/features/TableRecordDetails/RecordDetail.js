@@ -157,7 +157,10 @@ export default function RecordDetail() {
         id="uncontrolled-tab-example"
         className="mb-3"
       >
-        <Tab eventKey="details" title={getLabel("GENERIC.DETAIL_TAB_LABEL")}>
+        <Tab
+          eventKey="details"
+          title={getLabel("DETAIL_TABS.DETAIL_TAB_LABEL")}
+        >
           <DynamicRecordActions
             setLoading={setLoading}
             editLabel={getLabel("BUTTONS.EDIT_LABEL")}
@@ -198,7 +201,7 @@ export default function RecordDetail() {
         {fields.related_list.length > 0 ? (
           <Tab
             eventKey="relatedLists"
-            title={getLabel("GENERIC.RELATED_TAB_LABEL")}
+            title={getLabel("DETAIL_TABS.RELATED_TAB_LABEL")}
           >
             {Object.entries(fields.related_list).map(([key, related_list]) => (
               <div className="border border-2 p-3 pt-2 rounded-4" key={key}>

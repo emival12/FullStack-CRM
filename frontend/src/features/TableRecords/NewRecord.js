@@ -107,7 +107,7 @@ export default function NewRecord({
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            {getLabel("GENERIC.NEW_RECORD_TITLE_LABEL")}
+            {getLabel("MODAL.INSERT.NEW_RECORD_TITLE_LABEL")}
           </Modal.Title>
         </Modal.Header>
 

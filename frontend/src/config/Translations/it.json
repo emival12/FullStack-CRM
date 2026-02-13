@@ -16,6 +16,10 @@
     "NEXT_LABEL": "Avanti",
     "PREVIOUS_LABEL": "Indietro"
   },
+  "DETAIL_TABS": {
+    "DETAIL_TAB_LABEL": "Dettaglio",
+    "RELATED_TAB_LABEL": "Correlati"
+  },
   "FORM_ERRORS": {
     "MANDATORY_FIELD_LABEL": "Campo obbligatorio",
     "MAX_FIELD_LABEL": "Massimo {{max_length}} caratteri",
@@ -35,7 +39,8 @@
       "TITLE_MODAL_DELETE_LABEL": "Conferma Cancellazione",
       "BODY_MODAL_DELETE_LABEL": "Sei sicuro di voler cancellare il record?"
     },
-    "NEW_FIELD": {
+    "INSERT": {
+      "NEW_RECORD_TITLE_LABEL": "Nuovo record",
       "NEW_FIELD_TITLE_LABEL": "Nuovo campo"
     }
   },
@@ -52,14 +57,11 @@
   },
   "GENERIC": {
     "LOADING_LABEL": "Caricamento...",
-    "SEARCH_PLACEHOLDER_LABEL": "Cerca parola chiave...",
-    "DB_INTRO_LABEL": "Seleziona una tabella dalla sidebar",
-    "NEW_RECORD_TITLE_LABEL": "Nuovo record",
-    "TEXT_AREA_HELP_LABEL": "Dividere ogni valore con l'accapo",
-    "DETAIL_TAB_LABEL": "Dettaglio",
-    "RELATED_TAB_LABEL": "Correlati",
+    "SETUP_TABLE_SELECTION_LABEL": "Tabella da modificare",
     "SETUP_MSG_SELECT_TABLE_LABEL": "Seleziona una tabella da modificare",
-    "SETUP_TABLE_SELECTION_LABEL": "Tabella da modificare"
+    "DB_INTRO_LABEL": "Seleziona una tabella dalla sidebar",
+    "SEARCH_PLACEHOLDER_LABEL": "Cerca parola chiave...",
+    "TEXT_AREA_HELP_LABEL": "Dividere ogni valore con l'accapo"
   },
   "API_MASSIVE_IMPORT_ERROR_MESSAGES": {
     "IMPORT_FILE_MISSING_REQUIRED_FIELDS": "Le colonne: [ {{columns}} ] sono obbligatorie",
