@@ -3,7 +3,7 @@ import sys
 import configparser
 import mysql.connector
 import json
-from fastapi import FastAPI, Depends, Request, UploadFile, File, Form
+from fastapi import FastAPI, APIRouter, Depends, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -81,11 +81,13 @@ def split_table_name(table_name):
     return t_name, rt_name
 
 # EXPOSED API'S:
+utils_router = APIRouter(prefix="/api", tags=["utils"])
+
 ###############################################
-# LOGIN
+# UTILS
 ###############################################
 # Try to login with a user
-@app.post("/api/login")
+@utils_router.post("/login")
 async def login_user(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -97,8 +99,7 @@ async def login_user(request: Request, db = Depends(get_db)):
     cursor.close()
     return result
 
-
-@app.get("/api/translations/{browser_language}")
+@utils_router.get("/translations/{browser_language}")
 async def get_translation_file(browser_language: str):
     TRANSLATION_DIR = get_correct_path("translations", is_external=True, dev_folder_path="frontend\src\config")
     lang_code = browser_language.split("-")[0].lower()  
@@ -111,7 +112,7 @@ async def get_translation_file(browser_language: str):
     # 2. Check if exist the file, otherwise create it 
     if not os.path.exists(file_path):
         with open(file_path, 'w') as f:
-            f.write("{}")
+            json.dump({}, f)
         log_err_and_throw_exception(f'Translation file NOT FOUND in: {file_path}. Default file created', throw_exc=False)
 
     try:
@@ -121,35 +122,30 @@ async def get_translation_file(browser_language: str):
     except Exception as err:
         log_err_and_throw_exception(f'Error on the translation file: {err}', False)
 
-
-
-###############################################
-# DATABASE
-###############################################
-
-# Get all the tables to show in the sidebar
-@app.get("/api/plain_tables")
-def get_tables_plain(db = Depends(get_db)):
-    cursor = db.cursor(dictionary=True)
-
-    tables = utils.get_object_definition_records(cursor)
+@utils_router.get("/images/{image_name}")
+async def get_translation_file(image_name: str):
+    IMG_DIR = get_correct_path("imgs", is_external=True, dev_folder_path="frontend\src\config")
+    file_path = os.path.join(IMG_DIR, image_name)
     
-    cursor.close()
-    return tables
+    # 1. Check if exist the folder, otherwise create it 
+    if not os.path.exists(IMG_DIR):
+        os.makedirs(IMG_DIR, exist_ok=True)
 
-@app.get("/api/tables")
-def get_tables(db = Depends(get_db)):
-    cursor = db.cursor(dictionary=True)
+    # 2. Check if exist the file, otherwise create it 
+    if not os.path.exists(file_path):
+        return {}
 
-    tables = utils.get_object_definition_records_join_rt(cursor)
-    structure = utils.group_object_definition_by_category(tables)
+    return FileResponse(file_path)
 
-    cursor.close()
-    return structure
 
+
+###############################################
+# MASSIVE IMPORT
+###############################################
+massive_import_router = APIRouter(prefix="/api", tags=["massive_import"])
 
 # Get the list of all the tables in options syntax
-@app.get("/api/import")
+@massive_import_router.get("/import")
 async def get_list_of_importable_objects(db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
         
@@ -166,7 +162,7 @@ async def get_list_of_importable_objects(db = Depends(get_db)):
     return options_tables
 
 # Import records from a CSV file
-@app.post("/api/import/upload")
+@massive_import_router.post("/import/upload")
 async def import_records_from_csv(
     operation_type: str = Form(...),
     object_name: str = Form(...),
@@ -183,8 +179,35 @@ async def import_records_from_csv(
 
     return {"result": 1}
 
+
+###############################################
+# DATABASE
+###############################################
+data_router = APIRouter(prefix="/api", tags=["data"])
+
+# Get all the tables to show in the sidebar
+@data_router.get("/plain_tables")
+def get_tables_plain(db = Depends(get_db)):
+    cursor = db.cursor(dictionary=True)
+
+    tables = utils.get_object_definition_records(cursor)
+    
+    cursor.close()
+    return tables
+
+@data_router.get("/tables")
+def get_tables(db = Depends(get_db)):
+    cursor = db.cursor(dictionary=True)
+
+    tables = utils.get_object_definition_records_join_rt(cursor)
+    structure = utils.group_object_definition_by_category(tables)
+
+    cursor.close()
+    return structure
+
+
 # Get all the records of an object
-@app.get("/api/{table_name}")
+@data_router.get("/{table_name}")
 def get_table_records(table_name: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
@@ -206,7 +229,7 @@ def get_table_records(table_name: str, db = Depends(get_db)):
 
 
 # Get all the fields values with their structure of a single record
-@app.get("/api/{table_name}/record/{record_id}")
+@data_router.get("/{table_name}/record/{record_id}")
 def get_record_info(table_name: str, record_id: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
@@ -231,7 +254,7 @@ def get_record_info(table_name: str, record_id: str, db = Depends(get_db)):
 
 
 # Get all the fields structure of an object
-@app.get("/api/{table_name}/new-record")
+@data_router.get("/{table_name}/new-record")
 def get_new_record_structure(table_name: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 
@@ -246,7 +269,7 @@ def get_new_record_structure(table_name: str, db = Depends(get_db)):
 
 
 # Delete a single record
-@app.post("/api/delete")
+@data_router.post("/delete")
 async def delete_record(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -265,7 +288,7 @@ async def delete_record(request: Request, db = Depends(get_db)):
 
 
 # Insert a new record
-@app.post("/api/insert")
+@data_router.post("/insert")
 async def update_record(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -284,7 +307,7 @@ async def update_record(request: Request, db = Depends(get_db)):
 
 
 # Update a single record
-@app.post("/api/update")
+@data_router.post("/update")
 async def update_record(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -318,74 +341,10 @@ async def update_record(request: Request, db = Depends(get_db)):
 ###############################################
 # SETUP
 ###############################################
-
-# Insert a new table in the database
-@app.post("/api/new-object")
-async def create_new_object(request: Request, db = Depends(get_db)):
-    # Read the data from the body
-    data = await request.json() 
-    object_data = data.get("data")
-
-    cursor = db.cursor(dictionary=True)
-
-    result = utils.create_new_object(cursor, db, object_data)
-
-    cursor.close()
-    return result
-
-    """
-        Per cancellare il test:
-        
-        DROP TABLE aaa;
-        DELETE FROM object_definition WHERE object_name = 'aaa';
-        DELETE FROM record_type_definition WHERE object_name = 'aaa';
-        DELETE FROM field_definition WHERE object_name = 'aaa';
-    """
-
-# Get the structure of the table
-@app.get("/api/setup/{table_name}")
-async def get_object_definition(table_name: str, db = Depends(get_db)):
-    cursor = db.cursor(dictionary=True)
-        
-    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)       
-    tables = utils.get_object_definition_records(cursor, [table_name])
-    
-    cursor.close()
-    return tables[0] if len(tables) > 0 else {}
-
-# Delete a single table
-@app.post("/api/setup/home/delete")
-async def delete_object(request: Request, db = Depends(get_db)):
-    # Read the data from the body
-    data = await request.json() 
-    table_name = data.get("table")
-
-    cursor = db.cursor(dictionary=True)
-
-    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)
-    result = utils.delete_object(cursor, db, table_name)
-
-    cursor.close()
-    return result
-
-# Update a single table
-@app.post("/api/setup/home/update")
-async def update_object(request: Request, db = Depends(get_db)):
-    # Read the data from the body
-    data = await request.json() 
-    table_name = data.get("table")
-    field_structure = data.get("field")
-
-    cursor = db.cursor(dictionary=True)
-
-    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)
-    result = utils.update_record_by_id(cursor, db, "object_definition", None, field_structure, "object_name", table_name)
-    cursor.close()
-
-    return {}
+setup_router = APIRouter(prefix="/api/setup", tags=["setup"])
 
 # Get all the fields structure for the creation of a new field
-@app.get("/api/setup/field/new/structure")
+@setup_router.get("/field/new/structure")
 async def get_field_creation_structure(db = Depends(get_db)):
     field_types = {}
     for ft in utils.FieldTypes:
@@ -419,8 +378,19 @@ async def get_field_creation_structure(db = Depends(get_db)):
         "rt_options": grouped_rt
     }
 
+# Get the structure of the table
+@setup_router.get("/{table_name}")
+async def get_object_definition(table_name: str, db = Depends(get_db)):
+    cursor = db.cursor(dictionary=True)
+        
+    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)       
+    tables = utils.get_object_definition_records(cursor, [table_name])
+    
+    cursor.close()
+    return tables[0] if len(tables) > 0 else {}
+
 # Get all the fields of an object
-@app.get("/api/setup/{table_name}/fields")
+@setup_router.get("/{table_name}/fields")
 async def get_object_fields_record(table_name: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
         
@@ -441,8 +411,81 @@ async def get_object_fields_record(table_name: str, db = Depends(get_db)):
         "records": records
     }
 
+
+# Insert a new table in the database
+@setup_router.post("/new-object")
+async def create_new_object(request: Request, db = Depends(get_db)):
+    # Read the data from the body
+    data = await request.json() 
+    object_data = data.get("data")
+
+    cursor = db.cursor(dictionary=True)
+
+    result = utils.create_new_object(cursor, db, object_data)
+
+    cursor.close()
+    return result
+
+    """
+        Per cancellare il test:
+        
+        DROP TABLE aaa;
+        DELETE FROM object_definition WHERE object_name = 'aaa';
+        DELETE FROM record_type_definition WHERE object_name = 'aaa';
+        DELETE FROM field_definition WHERE object_name = 'aaa';
+    """
+
+# Delete a single table
+@setup_router.post("/home/delete")
+async def delete_object(request: Request, db = Depends(get_db)):
+    # Read the data from the body
+    data = await request.json() 
+    table_name = data.get("table")
+
+    cursor = db.cursor(dictionary=True)
+
+    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)
+    result = utils.delete_object(cursor, db, table_name)
+
+    cursor.close()
+    return result
+
+# Update a single table
+@setup_router.post("/home/update")
+async def update_object(request: Request, db = Depends(get_db)):
+    # Read the data from the body
+    data = await request.json() 
+    table_name = data.get("table")
+    field_structure = data.get("field")
+
+    cursor = db.cursor(dictionary=True)
+
+    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)
+    result = utils.update_record_by_id(cursor, db, "object_definition", None, field_structure, "object_name", table_name)
+    cursor.close()
+
+    return {}
+
+# Delete a field from an object
+@setup_router.post("/fields/delete")
+async def delete_field(request: Request, db = Depends(get_db)):
+    # Read the data from the body
+    data = await request.json() 
+    table_name = data.get("table")
+    field_name = data.get("fieldName")
+
+    cursor = db.cursor(dictionary=True)
+    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)               # Evaluate input value (Avoid SQLInjection)
+
+    field_attributes = utils.get_field_definition_by_field_name(cursor, table_name, field_name)   # Get the definition of the field
+    current_field_type = field_attributes["field_type"]                                     # Get the field type from the field definition
+
+    result = utils.delete_field_from_table(cursor, db, table_name, field_name, current_field_type)
+    cursor.close()
+    return result
+
 # Insert a new field
-@app.post("/api/setup/{table_name}/field/new")
+@setup_router.post("/{table_name}/field/new")
 async def create_new_field(request: Request, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -457,7 +500,7 @@ async def create_new_field(request: Request, db = Depends(get_db)):
     return result
 
 # Get all the values of the field with their structure
-@app.post("/api/setup/{table_name}/fields/{field_name}")
+@setup_router.post("/{table_name}/fields/{field_name}")
 async def get_field_info(request: Request, table_name: str, field_name: str, db = Depends(get_db)):
     # Read the data from the body
     data = await request.json() 
@@ -488,27 +531,12 @@ async def get_field_info(request: Request, table_name: str, field_name: str, db 
         "field_structure": field_structure
     }
 
-# Delete a field from an object
-@app.post("/api/setup/fields/delete")
-async def delete_field(request: Request, db = Depends(get_db)):
-    # Read the data from the body
-    data = await request.json() 
-    table_name = data.get("table")
-    field_name = data.get("fieldName")
-
-    cursor = db.cursor(dictionary=True)
-    utils.check_allowed_tables(cursor, table_name, utils.get_basic_table_key)               # Evaluate input value (Avoid SQLInjection)
-
-    field_attributes = utils.get_field_definition_by_field_name(cursor, table_name, field_name)   # Get the definition of the field
-    current_field_type = field_attributes["field_type"]                                     # Get the field type from the field definition
-
-    result = utils.delete_field_from_table(cursor, db, table_name, field_name, current_field_type)
-    cursor.close()
-    return result
 
 
-
-
+app.include_router(utils_router)
+app.include_router(massive_import_router)
+app.include_router(setup_router) 
+app.include_router(data_router)
 
 
 ###############################################

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useForm } from "react-hook-form";
 
-import { API_BASE_URL } from "../../../config/K";
+import { API_BASE_URL, PATH_SETUP } from "../../../config/K";
 import { NEW_OBJECT_FIELD_STRUCTURE } from "../K_Setup";
 import { useLabels } from "../../../config/Label";
 import LoadingScreen from "../../../components/LoadingScreen";
@@ -42,7 +42,7 @@ export default function SetupNewObject() {
       data: data,
     };
     axios
-      .post(`${API_BASE_URL}/new-object`, apiData)
+      .post(`${API_BASE_URL}${PATH_SETUP}/new-object`, apiData)
       .then((res) => {
         console.log("SetupNewObject - Insert object results:", res.data);
         if (res.data.result === 0) {

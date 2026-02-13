@@ -111,6 +111,10 @@ export const NEW_DATE_FIELD_OBJECT_STRUCTURE = {
   ...BASE_FIELD_OBJECT_STRUCTURE,
 };
 
+export const NEW_IMG_FIELD_OBJECT_STRUCTURE = {
+  ...BASE_FIELD_OBJECT_STRUCTURE,
+};
+
 // this is used only on the primary key (the autonumber type is not available)
 export const FULL_AUTO_NUMBER_FIELD_STRUCTURE = {
   field_name: {

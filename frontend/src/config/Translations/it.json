@@ -18,7 +18,7 @@
   },
   "FORM_ERRORS": {
     "MANDATORY_FIELD_LABEL": "Campo obbligatorio",
-    "MAX_FIELD_LABEL": "Massimo {{max_lenght}} caratteri",
+    "MAX_FIELD_LABEL": "Massimo {{max_length}} caratteri",
     "MAX_NUMBER_LABEL": "Valore massimo accettato: {{max_value}}",
     "MIN_NUMBER_LABEL": "Valore minimo accettato: {{min_value}}",
     "INVALID_EMAIL_LABEL": "Inserire una mail valida"

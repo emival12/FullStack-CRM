@@ -19,6 +19,7 @@ class FieldTypes(Enum):
     CHECKBOX    = "checkbox"
     DATE        = "date"
     DATE_TIME   = "datetime-local"
+    IMG         = "image"
     AUTO_NUMBER = "auto_number"
 
 
@@ -548,8 +549,12 @@ def convert_into_SQL_field_type(field_type, length):
         return f'DATE'
     elif field_type in (FieldTypes.DATE_TIME.value):
         return f'DATETIME'
-    else:
+    elif field_type in (FieldTypes.IMG.value):
+        return f'VARCHAR ({length})'
+    elif field_type in (FieldTypes.AUTO_NUMBER.value):
         return f'INT AUTO_INCREMENT'
+    else:
+        return f'UNEXPECTED VALUE'
 
 
 ########## END - HELP Method
@@ -1523,7 +1528,6 @@ def get_length_based_on_field_type(cursor, field_type, field_length, numeric_pre
                             or a "precision, scale" pair for numeric fields.
     """
     
-
     if field_type == FieldTypes.TEXT.value:   
         return (field_length, field_length)                         # A text has already the field length setted from the user input
     elif field_type == FieldTypes.NUMBER.value:
@@ -1534,6 +1538,8 @@ def get_length_based_on_field_type(cursor, field_type, field_length, numeric_pre
         return (255, 255)                                           # A radio is a text with a specific set of values
     elif field_type in (FieldTypes.DATE.value, FieldTypes.DATE_TIME.value):
         return (None, None)
+    elif field_type == FieldTypes.IMG.value:
+        return (None, 255)
     elif field_type in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value, FieldTypes.ROLLUP.value):
         query = f'''
         SELECT 

@@ -1,6 +1,14 @@
-import { Form, FloatingLabel } from "react-bootstrap";
+import {
+  Form,
+  FloatingLabel,
+  Container,
+  Row,
+  Col,
+  Image,
+} from "react-bootstrap";
 import TextareaAutosize from "react-textarea-autosize";
 import { useLabels } from "../../config/Label";
+import { API_BASE_URL } from "../../config/K";
 
 /**
  * Shows a form with some fields
@@ -46,14 +54,27 @@ export default function DynamicForm({
   isEdit,
 }) {
   const { getLabel } = useLabels();
+  const fieldTypes = {
+    TEXT: "text",
+    PICKLIST: "picklist",
+    LOOKUP: "lookup",
+    RADIO: "radio",
+    CHECKBOX: "checkbox",
+    IMG: "image",
+  };
 
   const renderField = (key, info) => {
-    if (info.field_type === "picklist" || info.field_type === "lookup") {
+    if (
+      info.field_type === fieldTypes.PICKLIST ||
+      info.field_type === fieldTypes.LOOKUP
+    ) {
       return get_selection_entry(key, info);
-    } else if (info.field_type === "radio") {
+    } else if (info.field_type === fieldTypes.RADIO) {
       return get_radio(key, info);
-    } else if (info.field_type === "checkbox") {
+    } else if (info.field_type === fieldTypes.CHECKBOX) {
       return get_checkbox(key, info);
+    } else if (info.field_type === fieldTypes.IMG) {
+      return get_image(key, info);
     } else {
       return get_entry(key, info);
     }
@@ -155,6 +176,51 @@ export default function DynamicForm({
     );
   };
 
+  const get_image = (key, info) => {
+    return (
+      <Container key={key} fluid className="mb-3 p-0">
+        <Row className="align-items-center">
+          <Col xs={12} md={8}>
+            <Image
+              src={`${API_BASE_URL}/images/${info?.value}`}
+              fluid
+              rounded
+            />
+          </Col>
+          <Col>
+            <FloatingLabel
+              controlId={`floating-${key}`}
+              label={key.replaceAll("_", " ") + (info.is_required ? " *" : "")}
+            >
+              <Form.Control
+                type={fieldTypes.TEXT}
+                required={info.is_required}
+                defaultValue={isNewForm ? null : info?.value}
+                disabled={isNewForm ? false : !info.is_editable || !isEdit}
+                isInvalid={errors[key]}
+                {...register(key, {
+                  required: {
+                    value: info.is_required,
+                    message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
+                  },
+                  maxLength: {
+                    value: info.length,
+                    message: getLabel("FORM_ERRORS.MAX_FIELD_LABEL", {
+                      max_length: info.length,
+                    }),
+                  },
+                })}
+              />
+              <Form.Control.Feedback type="invalid">
+                {errors[key]?.message}
+              </Form.Control.Feedback>
+            </FloatingLabel>
+          </Col>
+        </Row>
+      </Container>
+    );
+  };
+
   const get_entry = (key, info) => {
     return (
       <>
@@ -180,7 +246,7 @@ export default function DynamicForm({
             maxLength: {
               value: info.length,
               message: getLabel("FORM_ERRORS.MAX_FIELD_LABEL", {
-                max_lenght: info.length,
+                max_length: info.length,
               }),
             },
             min: {
@@ -224,10 +290,32 @@ export default function DynamicForm({
       onSubmit={onSubmit}
     >
       {Object.entries(fields).map(([key, info]) => {
-        const isFloatingAllowed = !["radio", "checkbox"].includes(
-          info.field_type,
-        );
-        return isFloatingAllowed ? (
+        const isFloatingNotAllowed = [
+          fieldTypes.RADIO,
+          fieldTypes.CHECKBOX,
+        ].includes(info.field_type);
+        if (isFloatingNotAllowed) {
+          return (
+            <Form.Group
+              key={key}
+              className={
+                info.field_type === fieldTypes.RADIO ? "mb-3" : "mb-3 d-flex"
+              }
+            >
+              <Form.Label>
+                {key.replaceAll("_", " ") + (info.is_required ? " *" : "")}
+              </Form.Label>
+              {renderField(key, info)}
+            </Form.Group>
+          );
+        }
+
+        const isImage = info.field_type === fieldTypes.IMG;
+        if (isImage) {
+          return renderField(key, info);
+        }
+
+        return (
           <FloatingLabel
             key={key}
             controlId={`floating-${key}`}
@@ -236,16 +324,6 @@ export default function DynamicForm({
           >
             {renderField(key, info)}
           </FloatingLabel>
-        ) : (
-          <Form.Group
-            key={key}
-            className={info.field_type === "radio" ? "mb-3" : "mb-3 d-flex"}
-          >
-            <Form.Label>
-              {key.replaceAll("_", " ") + (info.is_required ? " *" : "")}
-            </Form.Label>
-            {renderField(key, info)}
-          </Form.Group>
         );
       })}
     </Form>

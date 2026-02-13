@@ -13,6 +13,7 @@ import {
   NEW_CHECKBOX_FIELD_OBJECT_STRUCTURE as NEW_CHECKBOX_FIELDS,
   FULL_AUTO_NUMBER_FIELD_STRUCTURE,
   NEW_DATE_FIELD_OBJECT_STRUCTURE,
+  NEW_IMG_FIELD_OBJECT_STRUCTURE,
 } from "./K_Setup";
 
 export function FieldTypes() {
@@ -85,6 +86,7 @@ export function FieldTypes() {
       [field_types.CHECKBOX]: sortDict(NEW_CHECKBOX_FIELDS),
       [field_types.DATE]: sortDict(NEW_DATE_FIELD_OBJECT_STRUCTURE),
       [field_types.DATE_TIME]: sortDict(NEW_DATE_FIELD_OBJECT_STRUCTURE),
+      [field_types.IMG]: sortDict(NEW_IMG_FIELD_OBJECT_STRUCTURE),
       [field_types.AUTO_NUMBER]: sortDict(FULL_AUTO_NUMBER_FIELD_STRUCTURE),
     };
 
