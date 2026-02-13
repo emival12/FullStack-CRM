@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import utils
 import massiveImport
+import backup_manager
 
 
 app = FastAPI()
@@ -37,10 +38,14 @@ def get_correct_path(file_name, is_external=False, dev_folder_path = None):
 
     return os.path.join(base_path, file_name)
 
-def log_err_and_throw_exception(msg, same_msg = True, throw_exc = True):
+def log_message(msg):
     if getattr(sys, 'frozen', False):
         logging.error(msg)
+    else:
+        print(msg)
 
+def log_err_and_throw_exception(msg, same_msg = True, throw_exc = True):
+    log_message(msg)
     if throw_exc:
         raise Exception(msg if same_msg else msg.split(":")[0])
 
@@ -574,3 +579,13 @@ async def serve_react_app(request: Request, catchall: str):
         return FileResponse(file_path)
     
     return FileResponse(os.path.join(BUILD_DIR, "index.html"))
+
+
+
+
+@app.on_event("startup")
+async def startup_event():
+    config = get_current_config()
+    BACKUP_DIR = get_correct_path("backups", is_external=True, dev_folder_path="frontend\src\config")
+    
+    backup_manager.check_and_run_smart_backup(config, BACKUP_DIR, log_message)
