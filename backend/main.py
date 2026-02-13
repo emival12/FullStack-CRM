@@ -3,6 +3,7 @@ import sys
 import configparser
 import mysql.connector
 import json
+import logging
 from fastapi import FastAPI, APIRouter, Depends, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles

@@ -8,6 +8,8 @@ backend/build/
 backend/config.ini
 
 crm/config.ini
+crm/debug_log.txt
+crm/backups/*
 
 *.log
 start_servers.exe
