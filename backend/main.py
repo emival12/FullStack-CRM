@@ -56,11 +56,11 @@ def get_config():
     config.read(CONFIG_PATH)
     return config
 
-# Get the configuration file (outside the .exe) 
-config = get_config()
+def get_current_config():
+    return get_config() # Get the configuration file (outside the .exe) 
 
 # Connect to MySQL database 
-def get_db():
+def get_db(config = Depends(get_current_config)):  
     conn = None
     try:
         conn = mysql.connector.connect(
@@ -88,7 +88,7 @@ utils_router = APIRouter(prefix="/api", tags=["utils"])
 ###############################################
 # Try to login with a user
 @utils_router.post("/login")
-async def login_user(request: Request, db = Depends(get_db)):
+async def login_user(request: Request, db = Depends(get_db), config = Depends(get_current_config)):
     # Read the data from the body
     data = await request.json() 
     email = data.get("email")
@@ -96,8 +96,32 @@ async def login_user(request: Request, db = Depends(get_db)):
 
     cursor = db.cursor(dictionary=True)
     result = utils.login_user(cursor, email, password)
+    result["db_name"] = config["database"]["database"]
     cursor.close()
     return result
+
+@utils_router.post("/check_connection")
+async def check_user_login(request: Request, db = Depends(get_db), config = Depends(get_current_config)):
+    # Read the data from the body
+    data = await request.json() 
+    email = data.get("email")
+    db_name = data.get("db_name")
+
+    # If the DB is changed we have to perform the logout
+    current_db_in_config = config["database"]["database"]
+    if db_name != current_db_in_config:
+        utils.raise_input_exception(401, "DATABASE_CHANGED")
+
+    cursor = db.cursor(dictionary=True)
+    user_record = utils.get_user_definition_record(cursor, email)
+    cursor.close()
+
+    # If the user doens't match we have to perform the logout
+    if not user_record or str(user_record["email"]) != str(email):
+        utils.raise_input_exception(401, "INVALID_SESSION")
+
+    return {"status": "ok"}
+
 
 @utils_router.get("/translations/{browser_language}")
 async def get_translation_file(browser_language: str):

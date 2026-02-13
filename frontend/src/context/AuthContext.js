@@ -29,14 +29,14 @@ export function AuthProvider({ children }) {
     return axios
       .post(`${API_BASE_URL}/login`, apiData)
       .then((res) => {
-        console.log("AuthProvider - result:", res.data);
+        console.log("AuthProvider - login result:", res.data);
 
         setUser(res.data);
         localStorage.setItem("userToken", JSON.stringify(res.data));
         return res;
       })
       .catch((err) => {
-        console.error("AuthProvider - Error:", err);
+        console.error("AuthProvider - login Error:", err);
         throw err;
       });
   };
@@ -45,7 +45,16 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const savedUser = localStorage.getItem("userToken");
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      axios
+        .post(`${API_BASE_URL}/check_connection`, savedUser)
+        .then((res) => {
+          console.log("AuthProvider - check connection result:", res.data);
+          setUser(JSON.parse(savedUser));
+        })
+        .catch((err) => {
+          console.log("AuthProvider - check connection error:", err);
+          logout();
+        });
     }
     setLoading(false);
   }, []);
