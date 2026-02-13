@@ -11,7 +11,7 @@ export default function MissingPage({ missingText, ShowImg = true }) {
   const { getLabel } = useLabels();
 
   return (
-    <div className="CenteredPage flex-row mt-3">
+    <div className="h-100 d-flex align-items-center justify-content-center mt-3">
       {ShowImg && <i className="bi bi-x-octagon fs-2 pe-2 text-danger"></i>}
       <span className="fw-bold">
         {missingText || getLabel("MISSING.MISSING_DEFAULT_LABEL")}

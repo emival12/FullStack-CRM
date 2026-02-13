@@ -21,7 +21,8 @@
     "MAX_FIELD_LABEL": "Massimo {{max_length}} caratteri",
     "MAX_NUMBER_LABEL": "Valore massimo accettato: {{max_value}}",
     "MIN_NUMBER_LABEL": "Valore minimo accettato: {{min_value}}",
-    "INVALID_EMAIL_LABEL": "Inserire una mail valida"
+    "INVALID_EMAIL_LABEL": "Inserire una mail valida",
+    "IMAGE_NOT_FOUND": "Immagine non trovata"
   },
   "TOAST": {
     "ERROR_TOAST_TITLE_LABEL": "Errore",
@@ -60,7 +61,7 @@
     "SETUP_MSG_SELECT_TABLE_LABEL": "Seleziona una tabella da modificare",
     "SETUP_TABLE_SELECTION_LABEL": "Tabella da modificare"
   },
-  "API_ERROR_MESSAGES": {
+  "API_MASSIVE_IMPORT_ERROR_MESSAGES": {
     "IMPORT_FILE_MISSING_REQUIRED_FIELDS": "Le colonne: [ {{columns}} ] sono obbligatorie",
     "IMPORT_FILE_UNKNOWN_FIELDS": "Le colonne: [ {{columns}} ] non esistono sull'oggetto indicato",
     "IMPORT_FIELD_LENGTH_EXCEEDED": "La riga {{row}} nella colonna \"{{column}}\" ha un valore troppo lungo.\nLunghezza massima: {{max_length}}, Lunghezza attuale: {{actual_length}}",

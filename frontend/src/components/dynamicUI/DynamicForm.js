@@ -1,26 +1,19 @@
-import {
-  Form,
-  FloatingLabel,
-  Container,
-  Row,
-  Col,
-  Image,
-} from "react-bootstrap";
+import { Form, FloatingLabel } from "react-bootstrap";
 import TextareaAutosize from "react-textarea-autosize";
 import { useLabels } from "../../config/Label";
-import { API_BASE_URL } from "../../config/K";
+import DynamicImage from "./DynamicImage";
 
 /**
  * Shows a form with some fields
  *
  * @param {Object[]} props.fields               - Fields to show
- * @param {Object} props.validated              - Flag to show or hide the validations
+ * @param {Boolean} props.validated             - Flag to show or hide the validations
  * @param {Function} props.onSubmit             - Function to use on submit
- * @param {Object} props.tableKey               - Key of the selected table
+ * @param {String} props.tableKey               - Key of the selected table
  * @param {Object[]} props.errors               - Collection of errors messages (standard of react-hook-form)
  * @param {Function} props.register             - Function to register the form element (standard of react-hook-form)
- * @param {Object} props.isNewForm              - Flag to understand which form is
- * @param {Object} props.isEdit                 - Flag to understand if is in view or edit mode
+ * @param {Boolean} props.isNewForm             - Flag to understand which form is
+ * @param {Boolean} props.isEdit                - Flag to understand if is in view or edit mode
  */
 /**
  * Fields structure:
@@ -73,8 +66,6 @@ export default function DynamicForm({
       return get_radio(key, info);
     } else if (info.field_type === fieldTypes.CHECKBOX) {
       return get_checkbox(key, info);
-    } else if (info.field_type === fieldTypes.IMG) {
-      return get_image(key, info);
     } else {
       return get_entry(key, info);
     }
@@ -176,51 +167,6 @@ export default function DynamicForm({
     );
   };
 
-  const get_image = (key, info) => {
-    return (
-      <Container key={key} fluid className="mb-3 p-0">
-        <Row className="align-items-center">
-          <Col xs={12} md={8}>
-            <Image
-              src={`${API_BASE_URL}/images/${info?.value}`}
-              fluid
-              rounded
-            />
-          </Col>
-          <Col>
-            <FloatingLabel
-              controlId={`floating-${key}`}
-              label={key.replaceAll("_", " ") + (info.is_required ? " *" : "")}
-            >
-              <Form.Control
-                type={fieldTypes.TEXT}
-                required={info.is_required}
-                defaultValue={isNewForm ? null : info?.value}
-                disabled={isNewForm ? false : !info.is_editable || !isEdit}
-                isInvalid={errors[key]}
-                {...register(key, {
-                  required: {
-                    value: info.is_required,
-                    message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
-                  },
-                  maxLength: {
-                    value: info.length,
-                    message: getLabel("FORM_ERRORS.MAX_FIELD_LABEL", {
-                      max_length: info.length,
-                    }),
-                  },
-                })}
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors[key]?.message}
-              </Form.Control.Feedback>
-            </FloatingLabel>
-          </Col>
-        </Row>
-      </Container>
-    );
-  };
-
   const get_entry = (key, info) => {
     return (
       <>
@@ -312,7 +258,18 @@ export default function DynamicForm({
 
         const isImage = info.field_type === fieldTypes.IMG;
         if (isImage) {
-          return renderField(key, info);
+          return (
+            <DynamicImage
+              key={key}
+              fieldKey={key}
+              info={info}
+              fieldTypes={fieldTypes}
+              isNewForm={isNewForm}
+              isEdit={isEdit}
+              errors={errors}
+              register={register}
+            />
+          );
         }
 
         return (

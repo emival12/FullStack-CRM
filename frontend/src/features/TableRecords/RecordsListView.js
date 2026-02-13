@@ -45,8 +45,8 @@ export default function RecordsListView() {
       })
       .catch((err) => {
         console.error("RecordsListView - Error:", err);
-        const errMsg = err.response.data.detail;
-        if (errMsg === ERROR_MISSING_TABLE(tableKey)) {
+        const errorCode = err.response.data.detail.error_code;
+        if (errorCode === ERROR_MISSING_TABLE) {
           setControlledError(true);
         }
       })

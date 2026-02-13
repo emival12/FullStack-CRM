@@ -15,11 +15,7 @@ class OperationType(Enum):
 
 ########## HELP Method
 def raise_input_exception(error_code, error_data):
-    detail_error = {
-        "error_code": error_code,
-        "error_data": error_data
-    }
-    raise HTTPException(status_code=400, detail=detail_error)
+    utils.raise_input_exception(400, error_code, error_data)
 
 def get_options_map_key(object_name, record_type_name, col):
     return f'{object_name}_{record_type_name}_{col}'

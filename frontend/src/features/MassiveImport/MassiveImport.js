@@ -103,7 +103,7 @@ export default function MassiveImport() {
           const errorCode = err.response.data.detail.error_code;
           const errorData = err.response.data.detail.error_data;
           const message = getLabel(
-            `API_ERROR_MESSAGES.${errorCode}`,
+            `API_MASSIVE_IMPORT_ERROR_MESSAGES.${errorCode}`,
             errorData,
           );
 

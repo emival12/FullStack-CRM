@@ -16,8 +16,8 @@ export const PATH_UPDATE = "/update";
 export const PATH_INSERT = "/insert";
 export const PATH_UPLOAD = "/upload";
 
-export const ERROR_MISSING_TABLE = (data) => `Table '${data}' not found`;
-export const ERROR_MISSING_RECORD = (data) => `Record '${data}' not found`;
+export const ERROR_MISSING_TABLE = "INPUT_TABLE_NAME_NOT_FOUND";
+export const ERROR_MISSING_RECORD = "INPUT_RECORD_ID_NOT_FOUND";
 
 //LOGIN
 

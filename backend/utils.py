@@ -27,6 +27,20 @@ class FieldStructureMode(Enum):
     STRUCTURE_ONLY = auto()
     STRUCTURE_AND_DATA = auto()
 
+
+def raise_input_exception(status_code, error_code, error_data=None, simple_detail=False):
+    detail_error = {
+        "error_code": error_code,
+        "error_data": error_data
+    }
+
+    if simple_detail:
+        detail_error = error_code
+
+    raise HTTPException(status_code=status_code, detail=detail_error)
+
+
+
 ########## BASE Query
 def get_object_definition_records(cursor, object_names=None):
     """
@@ -450,7 +464,8 @@ def check_allowed_tables(cursor, table_name, key_function=get_table_key):
 
     allowed_tables = { key_function(row) for row in cursor.fetchall() }
     if table_name not in allowed_tables:
-        raise HTTPException(status_code=404, detail=f'Table \'{table_name}\' not found')
+        raise_input_exception(404, "INPUT_TABLE_NAME_NOT_FOUND")
+
 
 def get_primary_keys_from_multiple_objects(cursor, object_names):
     """
@@ -538,7 +553,7 @@ def execute_with_transaction(cursor, db, query, params, error_msg, many=False):
     except Exception as e:
         db.rollback()
         print(error_msg + str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise_input_exception(500, str(e), simple_detail=True)
 
 def convert_into_SQL_field_type(field_type, length):
     if field_type in (FieldTypes.TEXT.value, FieldTypes.RADIO.value, FieldTypes.CHECKBOX.value, FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value):
@@ -587,7 +602,7 @@ def login_user(cursor, email, password):
             user.pop("password")
             return user
 
-    raise HTTPException(status_code=401, detail={ "error_code": "INVALID_CREDENTIALS" })
+    raise_input_exception(401, "INVALID_CREDENTIALS")
 
 
 ###############################################
@@ -970,7 +985,7 @@ def get_single_record(cursor, table_name, fields, filter_fields, params):
 
     if not record:
         print(query, params)
-        raise HTTPException(status_code=500, detail=f'Record not found')
+        raise_input_exception(500, "INPUT_RECORD_ID_NOT_FOUND")
     return record
 
 def get_related_list_value(cursor, table_name, record_type_name, related_lists, tables_dict):
@@ -1330,7 +1345,7 @@ def create_new_object(cursor, db, object_data):
             pass
 
         print('Error in the table create: ' + str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise_input_exception(500, str(e), simple_detail=True)
 
 def delete_object(cursor, db, table_name):
     """
@@ -1369,7 +1384,7 @@ def delete_object(cursor, db, table_name):
         db.rollback()
         
         print('Error in the table delete: ' + str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise_input_exception(500, str(e), simple_detail=True)
 
 def get_field_names_grouped_by_objects(cursor, tables, fields, only_active):
     """
@@ -1506,7 +1521,7 @@ def create_new_field(cursor, db, object_name, field_data):
         db.rollback()
 
         print('Error in the table create: ' + str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise_input_exception(500, str(e), simple_detail=True)
 
 def get_length_based_on_field_type(cursor, field_type, field_length, numeric_precision, numeric_scale, reference_object, reference_field):
     """
@@ -1617,7 +1632,7 @@ def insert_ausiliar_extra_system_object(cursor, field_type, data):
         cursor.execute(query, (reference_object, object_name))
         detail_join_key = cursor.fetchall()
         if len(detail_join_key) <= 0:
-            raise HTTPException(status_code=500, detail="Missing lookup field")
+            raise_input_exception(500, "Missing lookup field", simple_detail=True)
         
         detail_join_key = detail_join_key[0]["field_name"]
         primary_key_field = get_primary_keys_from_multiple_objects(cursor, [object_name]).get(object_name)
@@ -1820,7 +1835,7 @@ def get_field_definition_by_field_name(cursor, table_name, field_name):
         [field_name]
     )
     if not len(field_attributes):
-        raise HTTPException(status_code=404, detail=f'Field \'{field_name}\' not found')
+        raise_input_exception(500, f'Field \'{field_name}\' not found', simple_detail=True)
 
     return field_attributes[0]
 
@@ -1914,4 +1929,4 @@ def delete_field_from_table(cursor, db, table_name, field_name, current_field_ty
         db.rollback()
         
         print('Error in the field table delete: ' + str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise_input_exception(500, str(e), simple_detail=True)

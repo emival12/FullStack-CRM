@@ -88,10 +88,10 @@ export default function SetupSectionFieldsEdit({
       })
       .catch((err) => {
         console.error("SetupSectionFieldsEdit - Error:", err);
-        const errMsg = err.response.data.detail;
+        const errorCode = err.response.data.detail.error_code;
         if (
-          errMsg === ERROR_MISSING_TABLE(tableKey) ||
-          errMsg === ERROR_MISSING_RECORD(recordId)
+          errorCode === ERROR_MISSING_TABLE ||
+          errorCode === ERROR_MISSING_RECORD
         ) {
           setControlledError(true);
         }

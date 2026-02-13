@@ -123,7 +123,7 @@ async def get_translation_file(browser_language: str):
         log_err_and_throw_exception(f'Error on the translation file: {err}', False)
 
 @utils_router.get("/images/{image_name}")
-async def get_translation_file(image_name: str):
+async def get_image_file(image_name: str):
     IMG_DIR = get_correct_path("imgs", is_external=True, dev_folder_path="frontend\src\config")
     file_path = os.path.join(IMG_DIR, image_name)
     
@@ -133,7 +133,7 @@ async def get_translation_file(image_name: str):
 
     # 2. Check if exist the file, otherwise create it 
     if not os.path.exists(file_path):
-        return {}
+        raise utils.raise_input_exception(404, "IMAGE_NOT_FOUND") 
 
     return FileResponse(file_path)
 
