@@ -231,8 +231,7 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
     params = []
     for idx, row in enumerate(df.itertuples()):
         record_type_name = "master" if is_single_record_type else getattr(row, "record_type_name")
-        print(idx)
-        print(row)
+
         new_record = []
         for col in df_cols:
             if utils.SystemFieldName.LAST_MODIFIED_BY.lower() == col:
