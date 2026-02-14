@@ -16,14 +16,6 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Current Database: `core_metadata`
---
-
-CREATE DATABASE /*!32312 IF NOT EXISTS*/ `core_metadata` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-
-USE `core_metadata`;
-
---
 -- Table structure for table `aggregation_function`
 --
 
@@ -80,7 +72,7 @@ CREATE TABLE `field_definition` (
 
 LOCK TABLES `field_definition` WRITE;
 /*!40000 ALTER TABLE `field_definition` DISABLE KEYS */;
-INSERT INTO `field_definition` VALUES ('product','master','create_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('product','master','id','auto_number',NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,1),('product','master','last_modified_by','lookup',255,NULL,NULL,'user_definition','email',NULL,1,1,0,0,0),('product','master','last_modified_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('product','master','name','text',30,NULL,NULL,NULL,NULL,NULL,1,1,1,1,0),('product','master','record_type_name','picklist',255,NULL,NULL,'record_type_definition','record_type_name','object_name = \'product\' AND is_active = 1',1,0,0,1,0),('product','master','stock','number',NULL,5,2,NULL,NULL,NULL,1,1,1,0,0),('user_definition','master','email','text',255,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('user_definition','master','id','auto_number',NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,1);
+INSERT INTO `field_definition` VALUES ('user_definition','master','email','text',255,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('user_definition','master','id','auto_number',NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,1);
 /*!40000 ALTER TABLE `field_definition` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -107,7 +99,6 @@ CREATE TABLE `list_view_definition` (
 
 LOCK TABLES `list_view_definition` WRITE;
 /*!40000 ALTER TABLE `list_view_definition` DISABLE KEYS */;
-INSERT INTO `list_view_definition` VALUES ('product','master','id',1);
 /*!40000 ALTER TABLE `list_view_definition` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -136,7 +127,7 @@ CREATE TABLE `object_definition` (
 
 LOCK TABLES `object_definition` WRITE;
 /*!40000 ALTER TABLE `object_definition` DISABLE KEYS */;
-INSERT INTO `object_definition` VALUES ('product','product','Sales',1,0,1),('user_definition','user_definition','system',1,1,1);
+INSERT INTO `object_definition` VALUES ('user_definition','user_definition','system',1,1,1);
 /*!40000 ALTER TABLE `object_definition` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -192,7 +183,6 @@ CREATE TABLE `record_layout_definition` (
 
 LOCK TABLES `record_layout_definition` WRITE;
 /*!40000 ALTER TABLE `record_layout_definition` DISABLE KEYS */;
-INSERT INTO `record_layout_definition` VALUES ('product','master','create_date',2),('product','master','id',1),('product','master','last_modified_by',3),('product','master','last_modified_date',2),('product','master','name',4),('product','master','stock',5);
 /*!40000 ALTER TABLE `record_layout_definition` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -218,7 +208,7 @@ CREATE TABLE `record_type_definition` (
 
 LOCK TABLES `record_type_definition` WRITE;
 /*!40000 ALTER TABLE `record_type_definition` DISABLE KEYS */;
-INSERT INTO `record_type_definition` VALUES ('product','master',1),('user_definition','master',1);
+INSERT INTO `record_type_definition` VALUES ('user_definition','master',1);
 /*!40000 ALTER TABLE `record_type_definition` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -352,4 +342,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-09 21:22:13
+-- Dump completed on 2026-02-14 12:08:29
