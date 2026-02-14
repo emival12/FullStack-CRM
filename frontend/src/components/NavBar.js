@@ -16,7 +16,7 @@ export default function NavBar() {
         <Navbar.Brand>
           <img
             src="/brand.png"
-            height="30"
+            height="40"
             className="d-inline-block align-top"
             alt="Brand Logo"
           />

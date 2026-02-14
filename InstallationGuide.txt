@@ -90,6 +90,8 @@ pyinstaller --onefile start_servers.py
 
 
 
+https://realfavicongenerator.net/ -> Per creare FavIvoc
+
 
 
 
