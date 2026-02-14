@@ -67,7 +67,7 @@ def insert_records(db, cursor, object_name, user_id, df):
     # Checks if the excel file have the right fields 
     checks_input_columns(table_fields, df)
 
-    df_cols = {col.lower() for col in df.columns}
+    df_cols = set(df.columns)
     df_cols.add(utils.SystemFieldName.LAST_MODIFIED_BY.lower())
     df_cols = set(df_cols)
 
@@ -174,9 +174,9 @@ def checks_input_columns(table_fields, df):
         db_fields.append(field_name)
 
 
-    sorted_db_fields = set(sorted(db_fields))
-    sorted_required_fields = set(sorted(required_fields))
-    sorted_cols = set(sorted(df.columns))
+    sorted_db_fields = set(db_fields)
+    sorted_required_fields = set(required_fields)
+    sorted_cols = set(col.lower() for col in df.columns)
 
     # Check if all the required field are been inserted
     missing_required_fields = sorted_required_fields.difference(sorted_cols)
@@ -242,10 +242,10 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
                 if pd.isna(raw_value) or str(raw_value).strip() == "":
                     value = None
                 else:
-                    value = str(raw_value).strip().lower()
+                    value = str(raw_value).strip()
 
             # Get the definition of the field on the DB
-            field_definition = fields_dict[col]
+            field_definition = fields_dict[col.lower()]
             field_type = field_definition["field_type"]
 
             if field_type in (utils.FieldTypes.TEXT.value):
@@ -268,6 +268,7 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
                     "true": 1,
                 }
 
+                value = value.lower()
                 if value not in accepted_values:
                     raise_input_exception(
                         "INPUT_FIELD_INVALID_BOOLEAN", 
@@ -333,6 +334,7 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
                     }
                 )      
             elif field_type in (utils.FieldTypes.RADIO.value):
+                value = value.lower()
                 if value not in map_checkbox_radio_index[get_options_map_key(object_name, record_type_name, col)]:
                     raise_input_exception(
                     "INPUT_FIELD_INVALID_RADIO", 
@@ -343,6 +345,7 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
                     }
                 ) 
             elif field_type in (utils.FieldTypes.DATE.value, utils.FieldTypes.DATE_TIME.value):
+                value = value.lower()
                 if value:   
                     is_date_type = True if field_type == utils.FieldTypes.DATE.value else False
                     expected_format = "YYYY-MM-DD" if is_date_type else "YYYY-MM-DDTHH:MM:SS"

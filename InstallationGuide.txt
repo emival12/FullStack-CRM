@@ -93,6 +93,23 @@ pyinstaller --onefile start_servers.py
 https://realfavicongenerator.net/ -> Per creare FavIvoc
 
 
+SOLUZIONE TEMPORANEA PER GESTIRE RECORD LAYOUT:
+UPDATE record_layout_definition 
+SET sort_order = CASE field_name
+    WHEN 'id' THEN 1
+    WHEN 'name' THEN 2
+    WHEN 'stock' THEN 3
+	WHEN 'foto' THEN 4
+    WHEN 'priority' THEN 5
+	WHEN 'active' THEN 6
+	WHEN 'owner' THEN 7
+    WHEN 'create_date' THEN 8
+    WHEN 'last_modified_date' THEN 9
+	WHEN 'last_modified_by' THEN 10
+END
+WHERE object_name = 'product' AND record_type_name = 'master';
+
+
 
 
 
@@ -110,13 +127,13 @@ pyinstaller --onefile --windowed --noconfirm --icon="../frontend/build/brand_fav
 Crea due folder: Dist (con l'exe) e build (può essere cancellata)
 
 CAMBIARE IL NOME DEL DB
-## 3 SUL MIO PC (dentro dumpSql) -> mysqldump -u root -p --databases testnegozio --add-drop-table > backup_db.sql
+## 3 SUL MIO PC (dentro dumpSql) -> mysqldump -u root -p core_metadata --add-drop-table > core_metadata.sql
 
 
 ## 4: SUL PC CLIENTE -> Installare MySql Server e configurare l'utenza
 
 CAMBIARE IL NOME DEL DB
-## 5 SUL PC CLIENTE -> mysql -u root -p testnegozio < backup_db.sql
+## 5 SUL PC CLIENTE -> mysql -u root -p markotex_db < core_metadata.sql
 
 ## 6: SUL PC CLIENTE -> Create a folder "Gestionale" and insert inside it the .exe and the config.ini (configure config.ini)
 

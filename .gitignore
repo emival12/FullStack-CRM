@@ -15,3 +15,7 @@ crm/backups/*
 start_servers.exe
 
 frontend/src/config/backups/*
+
+*.MDB
+
+excelImport/*
