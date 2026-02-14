@@ -54,9 +54,9 @@ export function AuthProvider({ children }) {
         .catch((err) => {
           console.log("AuthProvider - check connection error:", err);
           logout();
-        });
+        })
+        .finally(() => setLoading(false));
     }
-    setLoading(false);
   }, []);
 
   // All the things passed in the values are available to all the components who read the context

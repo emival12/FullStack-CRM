@@ -12,11 +12,11 @@ import LabelManager from "./config/Label";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <AuthProvider>
-      <LabelManager>
+    <LabelManager>
+      <AuthProvider>
         <App />
-      </LabelManager>
-    </AuthProvider>
+      </AuthProvider>
+    </LabelManager>
   </React.StrictMode>,
 );
 

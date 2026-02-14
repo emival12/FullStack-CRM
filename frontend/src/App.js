@@ -39,14 +39,18 @@ function App() {
         <>
           <NavBar />
           <Routes>
-            {/* Automatic redirect from "/" to "/Database" */}
+            {/* Automatic redirect from "/" or "/login" to "/Database" */}
             <Route path="/" element={<Navigate to={PATH_DATABASE} replace />} />
+            <Route
+              path={PATH_LOGIN}
+              element={<Navigate to={PATH_DATABASE} replace />}
+            />
 
             {/* 
             When the path is: 
               /Database is rendered the index
               /Database/XXXX is rendered the second path
-          */}
+            */}
             <Route path={PATH_DATABASE} element={<DatabaseMainPage />}>
               <Route index element={getLabel("GENERIC.DB_INTRO_LABEL")} />
               <Route path=":tableKey" element={<RecordsListView />} />
