@@ -40,18 +40,17 @@ export default function DynamicImage({
   return (
     <Container fluid className="mb-3 p-0">
       <Row className="align-items-center">
-        <Col xs={12} md={8}>
+        <Col xs={12} md={8} className="d-flex justify-content-center">
           {!imgError ? (
             <Image
               src={`${API_BASE_URL}/images/${info?.value}`}
               fluid
               rounded
               onError={() => setImgError(true)}
+              style={{ maxHeight: "300px" }}
             />
           ) : (
-            <div className="d-flex justify-content-center">
-              {getLabel("FORM_ERRORS.IMAGE_NOT_FOUND")}
-            </div>
+            <div>{getLabel("FORM_ERRORS.IMAGE_NOT_FOUND")}</div>
           )}
         </Col>
         <Col>
