@@ -77,7 +77,10 @@ export default function SetupNewObject() {
   const object_label_value = watch("object_label");
   useEffect(() => {
     if (!object_label_value) return;
-    setValue("object_name", object_label_value.replace(" ", "_").toLowerCase());
+    setValue(
+      "object_name",
+      object_label_value.replaceAll(" ", "_").toLowerCase(),
+    );
   }, [object_label_value, setValue]);
 
   if (loading) return <LoadingScreen />;
