@@ -38,7 +38,7 @@ def elaborate_import_file(db, cursor, operation_type, object_name, user_id, file
             file_decoded (str): CSV file content decoded as a string
     """
 
-    df = pd.read_csv(io.StringIO(file_decoded), delimiter=";")
+    df = pd.read_csv(io.StringIO(file_decoded), delimiter=";", keep_default_na=False, na_values=[''])
 
     if operation_type == OperationType.INSERT.value:
         insert_records(db, cursor, object_name, user_id, df)
@@ -231,7 +231,8 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
     params = []
     for idx, row in enumerate(df.itertuples()):
         record_type_name = "master" if is_single_record_type else getattr(row, "record_type_name")
-
+        print(idx)
+        print(row)
         new_record = []
         for col in df_cols:
             if utils.SystemFieldName.LAST_MODIFIED_BY.lower() == col:
