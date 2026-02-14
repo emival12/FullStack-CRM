@@ -14,8 +14,8 @@ const getDisplayTitle = (key) => {
   if (!key) return "";
 
   const splittedKey = key.split("_");
-  const tableName = splittedKey[0];
-  const recordTypeName = splittedKey[1];
+  const recordTypeName = splittedKey.pop();
+  const tableName = splittedKey.join(" ");
 
   const title =
     recordTypeName.toLowerCase() !== "master" ? recordTypeName : tableName;
