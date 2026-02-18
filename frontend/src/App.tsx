@@ -8,11 +8,12 @@ import { useLabels } from "./context/Label/Label";
 import DatabaseMainPage from "./features/MainScreen/DatabaseMainPage";
 import RecordsListView from "./features/TableRecords/RecordsListView";
 import RecordDetail from "./features/TableRecordDetails/RecordDetail";
+import MassiveImport from "./features/MassiveImport/MassiveImport";
 /*
 import SetupMainPage from "./features/MainScreen/SetupMainPage";
 import SetupNewObject from "./features/Setup/SetupPages/SetupNewObject";
 import SetupSections from "./features/Setup/SetupPages/SetupSections";
-import MassiveImport from "./features/MassiveImport/MassiveImport";
+
 */
 import MissingPage from "./components/MissingPage/MissingPage";
 import LoginPage from "./features/Login/LoginPage";
@@ -58,9 +59,8 @@ function App() {
               <Route path=":tableKey" element={<RecordsListView />} />
               <Route path=":tableKey/:recordId" element={<RecordDetail />} />
             </Route>
-
-            {/*
             <Route path={PATH_IMPORT} element={<MassiveImport />} />
+            {/*
             <Route path={PATH_SETUP} element={<SetupMainPage />}>
               <Route index element={<SetupNewObject />} />
               <Route

@@ -69,8 +69,8 @@ export default function NewRecord({
         if (res.data.result === 0) {
           setToastConfig({
             show: true,
-            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL") as string,
-            body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL") as string,
+            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
+            body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
           });
         } else {
           setValidated(false);
@@ -83,10 +83,10 @@ export default function NewRecord({
         console.error("NewRecord - Sumbit - Error:", err);
         setToastConfig({
           show: true,
-          title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL") as string,
+          title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
           body:
             err?.response?.data?.detail ||
-            (getLabel("TOAST.ERROR_TOAST_BODY_LABEL") as string),
+            getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
         });
       });
 

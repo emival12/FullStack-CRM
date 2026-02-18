@@ -1,7 +1,7 @@
 export type GetLabelFunc = (
   labelName: string,
   params?: Record<string, string> | null,
-) => React.ReactNode;
+) => string;
 
 export interface LabelContextType {
   getLabel: GetLabelFunc;

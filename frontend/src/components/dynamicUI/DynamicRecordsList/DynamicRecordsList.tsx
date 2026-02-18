@@ -106,7 +106,7 @@ export default function DynamicRecordsList({
         <Col xs={12} md={4}>
           <Form.Control
             type="text"
-            placeholder={getLabel("GENERIC.SEARCH_PLACEHOLDER_LABEL") as string}
+            placeholder={getLabel("GENERIC.SEARCH_PLACEHOLDER_LABEL")}
             onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
           />
         </Col>
@@ -144,7 +144,7 @@ export default function DynamicRecordsList({
       />
       {recordsToShow?.records.length === 0 && (
         <MissingPage
-          missingText={getLabel("MISSING.MISSING_RECORD_LABEL") as string}
+          missingText={getLabel("MISSING.MISSING_RECORD_LABEL")}
           showImg={false}
         />
       )}

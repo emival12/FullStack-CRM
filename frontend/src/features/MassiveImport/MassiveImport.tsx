@@ -2,24 +2,36 @@ import axios from "axios";
 import { useEffect, useState, useCallback } from "react";
 import { Container, Row, Form, Button, Col } from "react-bootstrap";
 import { useForm } from "react-hook-form";
+import {
+  FieldOptionLookup,
+  MetadataFieldStructure,
+  ToastConfig,
+} from "commot.types";
+import { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
-import { API_BASE_URL, PATH_IMPORT, PATH_UPLOAD } from "../../config/K";
-import { IMPORT_FIELD_STRUCTURE } from "../../config/K";
-import { useAuth } from "../../context/AuthContext";
-import { useLabels } from "../../config/Label";
-import DynamicForm from "../../components/dynamicUI/DynamicForm";
-import LoadingScreen from "../../components/LoadingScreen";
-import ToastMsg from "../../components/ToastMsg";
+import {
+  API_BASE_URL,
+  PATH_IMPORT,
+  PATH_UPLOAD,
+  IMPORT_FIELD_STRUCTURE,
+} from "config/K";
+import { useAuth } from "context/Auth/Auth";
+import { useLabels } from "context/Label/Label";
+import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
+import LoadingScreen from "components/LoadingScreen/LoadingScreen";
+import ToastMsg from "components/ToastMsg/ToastMsg";
 
-export default function MassiveImport() {
+export default function MassiveImport(): React.ReactElement {
   const { user } = useAuth();
   const { getLabel } = useLabels();
 
   const [loading, setLoading] = useState(false);
-  const [fieldStructure, setFieldStructure] = useState([]);
   const [validated, setValidated] = useState(false);
+  const [fieldStructure, setFieldStructure] = useState<MetadataFieldStructure>(
+    {},
+  );
 
-  const [toastConfig, setToastConfig] = useState({
+  const [toastConfig, setToastConfig] = useState<ToastConfig>({
     show: false,
     title: "",
     body: "",
@@ -38,7 +50,7 @@ export default function MassiveImport() {
     setLoading(true);
     setValidated(false);
     axios
-      .get(API_BASE_URL + PATH_IMPORT)
+      .get<FieldOptionLookup[]>(API_BASE_URL + PATH_IMPORT)
       .then((res) => {
         console.log("MassiveImport - Data Received:", res.data);
         let clonedFieldStructure = structuredClone(IMPORT_FIELD_STRUCTURE);
@@ -70,14 +82,14 @@ export default function MassiveImport() {
     fetchData();
   }, [fetchData]);
 
-  const onSubmit = (data) => {
+  const onSubmit = (data: Record<string, any>) => {
     setLoading(true);
 
     const formData = new FormData();
     formData.append("operation_type", data["operation_type"]);
     formData.append("object_name", data["object_name"]);
-    formData.append("user_id", user["id"]);
-    formData.append("file", data["file"][0]);
+    formData.append("user_id", String(user?.["id"]));
+    formData.append("file", data["file"]?.[0]);
 
     const headers = {
       headers: {
@@ -135,10 +147,9 @@ export default function MassiveImport() {
         <Row>
           <Col>
             <DynamicForm
-              fields={fieldStructure}
+              fields={fieldStructure as DataFieldStructure}
               validated={validated}
               onSubmit={handleSubmit(onSubmit)}
-              tableKey={null}
               errors={errors}
               register={register}
               isNewForm={false}
@@ -152,7 +163,7 @@ export default function MassiveImport() {
                 type="file"
                 accept=".csv"
                 required={true}
-                isInvalid={errors["file"]}
+                isInvalid={!!errors["file"]}
                 {...register("file", {
                   required: {
                     value: true,
@@ -160,8 +171,11 @@ export default function MassiveImport() {
                   },
                 })}
               />
-              <Form.Control.Feedback type="invalid">
-                {errors["file"]?.message}
+              <Form.Control.Feedback
+                type="invalid"
+                style={{ whiteSpace: "pre-line" }}
+              >
+                {errors["file"]?.message?.toString()}
               </Form.Control.Feedback>
             </Form.Group>
           </Col>

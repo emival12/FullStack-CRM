@@ -66,9 +66,7 @@ export default function RecordsListView(): React.ReactElement {
 
   if (controlledError) {
     return (
-      <MissingPage
-        missingText={getLabel("MISSING.MISSING_TABLE_LABEL") as string}
-      />
+      <MissingPage missingText={getLabel("MISSING.MISSING_TABLE_LABEL")} />
     );
   }
 

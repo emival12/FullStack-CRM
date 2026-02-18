@@ -1,4 +1,4 @@
-import type { BaseFieldInfo } from "commot.types";
+import { FieldType, type BaseFieldInfo } from "commot.types";
 
 // SINGLE FIELDS FOR LOGIN
 export const EMAIL_LOGIN_BASE: BaseFieldInfo = {
@@ -22,10 +22,12 @@ type OperationsType = {
   insert: string;
   update: string;
 };
-export const OPERTION_TYPE_BASE = (Operations: OperationsType) => {
+export const OPERTION_TYPE_BASE = (
+  Operations: OperationsType,
+): BaseFieldInfo => {
   return {
     field_name: "operation_type",
-    field_type: "lookup",
+    field_type: FieldType.LOOKUP,
     is_editable: 1,
     is_required: 1,
     options: [
@@ -43,9 +45,9 @@ export const OPERTION_TYPE_BASE = (Operations: OperationsType) => {
   };
 };
 
-export const OBJECT_NAME_MASSIVE_IMPORT_BASE = {
+export const OBJECT_NAME_MASSIVE_IMPORT_BASE: BaseFieldInfo = {
   field_name: "object_name",
-  field_type: "lookup",
+  field_type: FieldType.LOOKUP,
   is_editable: 1,
   is_required: 1,
   options: [],

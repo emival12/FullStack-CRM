@@ -120,8 +120,8 @@ export default function RecordDetail() {
           if (res.data.result === 0) {
             setToastConfig({
               show: true,
-              title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL") as string,
-              body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL") as string,
+              title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
+              body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
             });
           } else {
             if (new_PK) {
@@ -137,10 +137,10 @@ export default function RecordDetail() {
           console.error("RecordDetail - Error:", err);
           setToastConfig({
             show: true,
-            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL") as string,
+            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
             body:
               err?.response?.data?.detail ||
-              (getLabel("TOAST.ERROR_TOAST_BODY_LABEL") as string),
+              getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
           });
         })
         .finally(() => setLoading(false));
@@ -153,9 +153,7 @@ export default function RecordDetail() {
 
   if (controlledError) {
     return (
-      <MissingPage
-        missingText={getLabel("MISSING.MISSING_RECORD_LABEL") as string}
-      />
+      <MissingPage missingText={getLabel("MISSING.MISSING_RECORD_LABEL")} />
     );
   }
 
@@ -172,7 +170,7 @@ export default function RecordDetail() {
         >
           <DynamicRecordActions
             setLoading={setLoading}
-            editLabel={getLabel("BUTTONS.EDIT_LABEL") as string}
+            editLabel={getLabel("BUTTONS.EDIT_LABEL")}
             isEdit={isEdit}
             setIsEdit={setIsEdit}
             reset={reset}

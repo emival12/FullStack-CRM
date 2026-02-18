@@ -67,19 +67,7 @@ export default function LabelManager({ children }: LabelManagerProps) {
       });
     }
 
-    return labelValue.includes("\n")
-      ? multiLineFormatter(labelValue)
-      : labelValue;
-  };
-
-  // Add a <br /> to go on the net line every time he finds \n
-  const multiLineFormatter = (textMsg: string) => {
-    return textMsg.split("\n").map((line, index, array) => (
-      <React.Fragment key={index}>
-        {line}
-        {index < array.length - 1 && <br />}
-      </React.Fragment>
-    ));
+    return labelValue;
   };
 
   return (

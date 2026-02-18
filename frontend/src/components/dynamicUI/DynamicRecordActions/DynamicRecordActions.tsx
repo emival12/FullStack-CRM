@@ -45,8 +45,8 @@ export default function DynamicRecordActions({
         if (res.data.result === 0) {
           setToastConfig({
             show: true,
-            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL") as string,
-            body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL") as string,
+            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
+            body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
           });
         } else {
           navigate(redirectAPI);
@@ -59,10 +59,10 @@ export default function DynamicRecordActions({
         console.error("DynamicRecordActions - Error:", err);
         setToastConfig({
           show: true,
-          title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL") as string,
+          title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
           body:
             err?.response?.data?.detail ||
-            (getLabel("TOAST.ERROR_TOAST_BODY_LABEL") as string),
+            getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
         });
       })
       .finally(() => setLoading(false));
@@ -86,12 +86,8 @@ export default function DynamicRecordActions({
             onClick={() => {
               setModalConfig({
                 show: true,
-                title: getLabel(
-                  "MODAL.DELETE.TITLE_MODAL_DELETE_LABEL",
-                ) as string,
-                body: getLabel(
-                  "MODAL.DELETE.BODY_MODAL_DELETE_LABEL",
-                ) as string,
+                title: getLabel("MODAL.DELETE.TITLE_MODAL_DELETE_LABEL"),
+                body: getLabel("MODAL.DELETE.BODY_MODAL_DELETE_LABEL"),
               });
             }}
           >

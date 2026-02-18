@@ -49,7 +49,7 @@ export default function TablesSidebar({
           toggleSidebar={toggleSidebar}
         />
       }
-      labelPhoneButton={getLabel("MOBILE.TABLES_LABEL") as string}
+      labelPhoneButton={getLabel("MOBILE.TABLES_LABEL")}
       toggleSidebar={toggleSidebar}
       showSidebar={showSidebar}
     />

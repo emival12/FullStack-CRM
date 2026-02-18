@@ -42,19 +42,19 @@ export default function LoginPage(): React.ReactElement {
         console.error("LoginPage - Error:", err);
         if (err?.response?.status === 401) {
           const errorCode = err.response.data?.detail?.error_code;
-          const message = getLabel(`LOGIN.${errorCode}`) as string;
+          const message = getLabel(`LOGIN.${errorCode}`);
           setToastConfig({
             show: true,
-            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL") as string,
+            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
             body: message,
           });
         } else {
           setToastConfig({
             show: true,
-            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL") as string,
+            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
             body:
               err?.response?.data?.detail ||
-              (getLabel("TOAST.ERROR_TOAST_BODY_LABEL") as string),
+              getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
           });
         }
       })

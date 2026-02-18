@@ -66,7 +66,7 @@ export interface BaseFieldInfo {
   is_required: 0 | 1;
   is_primary_key?: 0 | 1;
   lookup_filter?: string;
-  options?: (FieldOptionRadio & FieldOptionLookup)[];
+  options?: (FieldOptionRadio | FieldOptionLookup)[];
   value?: any;
   max_limit_value?: string;
   min_limit_value?: string;

@@ -36,7 +36,7 @@ export const Operations = {
 };
 
 //Structure form import
-export const IMPORT_FIELD_STRUCTURE = {
+export const IMPORT_FIELD_STRUCTURE: MetadataFieldStructure = {
   operation_type: OPERTION_TYPE_BASE(Operations),
   object_name: OBJECT_NAME_MASSIVE_IMPORT_BASE,
 };

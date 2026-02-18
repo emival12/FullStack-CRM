@@ -63,15 +63,13 @@ export default function DynamicImage({
               {...register(fieldKey, {
                 required: {
                   value: !!info.is_required,
-                  message: getLabel(
-                    "FORM_ERRORS.MANDATORY_FIELD_LABEL",
-                  ) as string,
+                  message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
                 },
                 maxLength: {
                   value: Number(info.length),
                   message: getLabel("FORM_ERRORS.MAX_FIELD_LABEL", {
                     max_length: String(info.length ?? ""),
-                  }) as string,
+                  }),
                 },
               })}
             />
