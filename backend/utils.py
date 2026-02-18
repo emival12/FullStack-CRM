@@ -1554,7 +1554,7 @@ def get_length_based_on_field_type(cursor, field_type, field_length, numeric_pre
     elif field_type in (FieldTypes.DATE.value, FieldTypes.DATE_TIME.value):
         return (None, None)
     elif field_type == FieldTypes.IMG.value:
-        return (None, 255)
+        return (255, 255)
     elif field_type in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value, FieldTypes.ROLLUP.value):
         query = f'''
         SELECT 

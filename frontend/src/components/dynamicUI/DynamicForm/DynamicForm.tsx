@@ -163,12 +163,14 @@ export default function DynamicForm({
               value: !!info.is_required,
               message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL") as string,
             },
-            maxLength: {
-              value: Number(info.length),
-              message: getLabel("FORM_ERRORS.MAX_FIELD_LABEL", {
-                max_length: String(info.length ?? ""),
-              }) as string,
-            },
+            maxLength: info.length
+              ? {
+                  value: Number(info.length),
+                  message: getLabel("FORM_ERRORS.MAX_FIELD_LABEL", {
+                    max_length: String(info.length ?? ""),
+                  }) as string,
+                }
+              : undefined,
             min: {
               value: Number(info?.min_limit_value),
               message: getLabel("FORM_ERRORS.MIN_NUMBER_LABEL", {
