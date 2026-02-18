@@ -3,7 +3,7 @@ import {
   OBJECT_NAME_MASSIVE_IMPORT_BASE,
   OPERTION_TYPE_BASE,
   PASSWORD_LOGIN_BASE,
-} from "./K_FieldBaseStructure";
+} from "./K_FieldBaseStructure.js";
 
 export const API_BASE_URL = "http://127.0.0.1:8000/api";
 export const PATH_LOGIN = "/login";
@@ -19,8 +19,9 @@ export const PATH_UPLOAD = "/upload";
 export const ERROR_MISSING_TABLE = "INPUT_TABLE_NAME_NOT_FOUND";
 export const ERROR_MISSING_RECORD = "INPUT_RECORD_ID_NOT_FOUND";
 
-//LOGIN
+export const NUM_RECORD_TO_SHOW = 15;
 
+//LOGIN
 //Structure form login
 export const LOGIN_FIELD_STRUCTURE = {
   email: EMAIL_LOGIN_BASE,

@@ -1,11 +1,16 @@
 import { Col, Button, Offcanvas } from "react-bootstrap";
+import type {
+  ScreenAdaptiveSidebarProps,
+  DesktopSidebarProps,
+  ScreenAdaptiveSidebarProps as PhoneSidebarProps,
+} from "./ScreenAdaptiveSidebar.types.js";
 
 const PhoneSidebar = ({
   sidebarComponent,
   labelPhoneButton,
   toggleSidebar,
   showSidebar,
-}) => (
+}: PhoneSidebarProps): React.ReactElement => (
   <>
     {/* Button to open the sidebar on mobile*/}
     <Col
@@ -38,7 +43,9 @@ const PhoneSidebar = ({
   </>
 );
 
-const DesktopSidebar = ({ sidebarComponent }) => (
+const DesktopSidebar = ({
+  sidebarComponent,
+}: DesktopSidebarProps): React.ReactElement => (
   <Col xs={12} md={2} className="d-none d-md-block pe-0">
     <div className="pt-3 pb-3 ps-3 pe-2">{sidebarComponent}</div>
   </Col>
@@ -46,18 +53,13 @@ const DesktopSidebar = ({ sidebarComponent }) => (
 
 /**
  * Handles the different graphics to the sidebar for phone and desktop
- *
- * @param {Object} props.sidebarComponent       - Component showed in the sidebar
- * @param {String} props.labelPhoneButton       - Label used in the mobile button visualization
- * @param {Function} props.toggleSidebar        - Function used to Open/Close the sidebar
- * @param {Boolean} props.showSidebar           - Flag to undestand if he should Open/Close the sidebar
  */
 export default function ScreenAdaptiveSidebar({
   sidebarComponent,
   labelPhoneButton,
   toggleSidebar,
   showSidebar,
-}) {
+}: ScreenAdaptiveSidebarProps): React.ReactElement {
   return (
     <>
       <PhoneSidebar

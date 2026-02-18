@@ -1,40 +1,16 @@
 import { Form, FloatingLabel } from "react-bootstrap";
 import TextareaAutosize from "react-textarea-autosize";
-import { useLabels } from "../../config/Label";
-import DynamicImage from "./DynamicImage";
+import {
+  FieldType,
+  type DynamicFormProps,
+  type FieldRenderFunction,
+} from "./DynamicForm.types.js";
+
+import { useLabels } from "@context/Label/Label.js";
+import DynamicImage from "./DynamicImage.js";
 
 /**
  * Shows a form with some fields
- *
- * @param {Object[]} props.fields               - Fields to show
- * @param {Boolean} props.validated             - Flag to show or hide the validations
- * @param {Function} props.onSubmit             - Function to use on submit
- * @param {String} props.tableKey               - Key of the selected table
- * @param {Object[]} props.errors               - Collection of errors messages (standard of react-hook-form)
- * @param {Function} props.register             - Function to register the form element (standard of react-hook-form)
- * @param {Boolean} props.isNewForm             - Flag to understand which form is
- * @param {Boolean} props.isEdit                - Flag to understand if is in view or edit mode
- */
-/**
- * Fields structure:
- * {
- *   "Field_name_1": {
- *       Description field
- *       "field_type": "...",
- *       "length": ...,
- *       "is_editable": ...,
- *       ....
- *       IF IS A PICKLIST OR LOOKUP THERE IS ALSO AN OPTION SECTION
- *       "options": [
- *           {
- *               "reference_field": "....",
- *               "id": "...."
- *           },
- *           ....
- *       ]
- *   },
- *   ....
- * }
  */
 export default function DynamicForm({
   fields,
@@ -45,33 +21,25 @@ export default function DynamicForm({
   register,
   isNewForm,
   isEdit,
-}) {
+}: DynamicFormProps): React.ReactElement {
   const { getLabel } = useLabels();
-  const fieldTypes = {
-    TEXT: "text",
-    PICKLIST: "picklist",
-    LOOKUP: "lookup",
-    RADIO: "radio",
-    CHECKBOX: "checkbox",
-    IMG: "image",
-  };
 
-  const renderField = (key, info) => {
+  const renderField: FieldRenderFunction = (key, info) => {
     if (
-      info.field_type === fieldTypes.PICKLIST ||
-      info.field_type === fieldTypes.LOOKUP
+      info.field_type === FieldType.PICKLIST ||
+      info.field_type === FieldType.LOOKUP
     ) {
       return get_selection_entry(key, info);
-    } else if (info.field_type === fieldTypes.RADIO) {
+    } else if (info.field_type === FieldType.RADIO) {
       return get_radio(key, info);
-    } else if (info.field_type === fieldTypes.CHECKBOX) {
+    } else if (info.field_type === FieldType.CHECKBOX) {
       return get_checkbox(key, info);
     } else {
       return get_entry(key, info);
     }
   };
 
-  const get_selection_entry = (key, info) => {
+  const get_selection_entry: FieldRenderFunction = (key, info) => {
     return (
       <>
         <Form.Select
@@ -87,51 +55,54 @@ export default function DynamicForm({
               ? info.reference_field === "record_type_name"
               : !info.is_editable || !isEdit
           }
-          isInvalid={errors[key]}
+          isInvalid={!!errors[key]} // !! means if the object exist writes true otherwise false
           {...register(key, {
-            validate: (value) =>
-              !info.is_required ||
-              value !== "NULL" ||
-              getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
+            validate: (value: any): boolean | string => {
+              if (!info.is_required) return true;
+              if (value !== "NULL") return true;
+              return getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL") as string;
+            },
           })}
         >
           <option value="NULL"></option>
-          {info.options.map((opt) => (
+          {info.options?.map((opt) => (
             <option key={opt.id} value={opt.id}>
               {opt.reference_field}
             </option>
           ))}
         </Form.Select>
         <Form.Control.Feedback type="invalid">
-          {errors[key]?.message}
+          {errors[key]?.message?.toString()}
         </Form.Control.Feedback>
       </>
     );
   };
 
-  const get_radio = (key, info) => {
+  const get_radio: FieldRenderFunction = (key, info) => {
     return (
       <>
-        {info.options.map((opt) => (
+        {info.options?.map((opt) => (
           <div key={opt.option_key} className="ms-2">
             <Form.Check
               inline
-              type={info.field_type}
-              required={info.is_required}
+              type={info.field_type as any}
+              required={!!info.is_required}
               disabled={isNewForm ? false : !info.is_editable || !isEdit}
               id={opt.option_key}
               label={opt.option_label}
               value={opt.option_key}
-              isInvalid={errors[key]}
+              isInvalid={!!errors[key]} // !! means if the object exist writes true otherwise false
               {...register(key, {
                 required: {
-                  value: info.is_required,
-                  message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
+                  value: !!info.is_required,
+                  message: getLabel(
+                    "FORM_ERRORS.MANDATORY_FIELD_LABEL",
+                  ) as string,
                 },
               })}
             />
             <Form.Control.Feedback type="invalid">
-              {errors[key]?.message}
+              {errors[key]?.message?.toString()}
             </Form.Control.Feedback>
           </div>
         ))}
@@ -139,44 +110,47 @@ export default function DynamicForm({
     );
   };
 
-  const get_checkbox = (key, info) => {
+  const get_checkbox: FieldRenderFunction = (key, info) => {
     const disabled = isNewForm ? false : !info.is_editable || !isEdit;
+    const required = info.is_required && !disabled;
     return (
       <>
         <span className="ms-2">
           <Form.Check
             inline
-            type={info.field_type}
-            required={info.is_required && !disabled}
+            type={info.field_type as any}
+            required={!!required}
             disabled={disabled}
             id={key}
             label={info.label}
-            isInvalid={errors[key]}
+            isInvalid={!!errors[key]}
             {...register(key, {
               required: {
-                value: info.is_required && !disabled,
-                message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
+                value: !!required,
+                message: getLabel(
+                  "FORM_ERRORS.MANDATORY_FIELD_LABEL",
+                ) as string,
               },
             })}
           />
           <Form.Control.Feedback type="invalid">
-            {errors[key]?.message}
+            {errors[key]?.message?.toString()}
           </Form.Control.Feedback>
         </span>
       </>
     );
   };
 
-  const get_entry = (key, info) => {
+  const get_entry: FieldRenderFunction = (key, info) => {
     return (
       <>
         <Form.Control
           type={info.field_type}
-          as={info?.is_textarea ? TextareaAutosize : undefined}
-          required={info.is_required}
+          as={info?.is_textarea ? (TextareaAutosize as any) : undefined}
+          required={!!info.is_required}
           defaultValue={isNewForm ? null : info?.value}
           disabled={isNewForm ? false : !info.is_editable || !isEdit}
-          isInvalid={errors[key]}
+          isInvalid={!!errors[key]}
           step={
             info.numeric_scale
               ? "0." + "1".padStart(info.numeric_scale, "0")
@@ -186,38 +160,40 @@ export default function DynamicForm({
           max={info?.max_limit_value && Number(info.max_limit_value)}
           {...register(key, {
             required: {
-              value: info.is_required,
-              message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
+              value: !!info.is_required,
+              message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL") as string,
             },
             maxLength: {
-              value: info.length,
+              value: Number(info.length),
               message: getLabel("FORM_ERRORS.MAX_FIELD_LABEL", {
-                max_length: info.length,
-              }),
+                max_length: String(info.length ?? ""),
+              }) as string,
             },
             min: {
               value: Number(info?.min_limit_value),
               message: getLabel("FORM_ERRORS.MIN_NUMBER_LABEL", {
-                min_value: info?.min_limit_value,
-              }),
+                min_value: String(info?.min_limit_value ?? ""),
+              }) as string,
             },
             max: {
               value: Number(info?.max_limit_value),
               message: getLabel("FORM_ERRORS.MAX_NUMBER_LABEL", {
-                max_value: info?.max_limit_value,
-              }),
+                max_value: String(info?.max_limit_value ?? ""),
+              }) as string,
             },
             pattern:
-              info.field_type === "email"
+              (info.field_type as string) === "email"
                 ? {
                     value: /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                    message: getLabel("FORM_ERRORS.INVALID_EMAIL_LABEL"),
+                    message: getLabel(
+                      "FORM_ERRORS.INVALID_EMAIL_LABEL",
+                    ) as string,
                   }
                 : undefined,
           })}
         />
         <Form.Control.Feedback type="invalid">
-          {errors[key]?.message}
+          {errors[key]?.message?.toString()}
         </Form.Control.Feedback>
         {info?.is_textarea ? (
           <div>{getLabel("GENERIC.TEXT_AREA_HELP_LABEL")}</div>
@@ -237,15 +213,15 @@ export default function DynamicForm({
     >
       {Object.entries(fields).map(([key, info]) => {
         const isFloatingNotAllowed = [
-          fieldTypes.RADIO,
-          fieldTypes.CHECKBOX,
+          FieldType.RADIO,
+          FieldType.CHECKBOX,
         ].includes(info.field_type);
         if (isFloatingNotAllowed) {
           return (
             <Form.Group
               key={key}
               className={
-                info.field_type === fieldTypes.RADIO ? "mb-3" : "mb-3 d-flex"
+                info.field_type === FieldType.RADIO ? "mb-3" : "mb-3 d-flex"
               }
             >
               <Form.Label>
@@ -256,14 +232,13 @@ export default function DynamicForm({
           );
         }
 
-        const isImage = info.field_type === fieldTypes.IMG;
+        const isImage = info.field_type === FieldType.IMG;
         if (isImage) {
           return (
             <DynamicImage
               key={key}
               fieldKey={key}
               info={info}
-              fieldTypes={fieldTypes}
               isNewForm={isNewForm}
               isEdit={isEdit}
               errors={errors}

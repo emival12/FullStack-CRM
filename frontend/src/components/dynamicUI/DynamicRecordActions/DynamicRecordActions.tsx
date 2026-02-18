@@ -2,25 +2,14 @@ import axios from "axios";
 import { useState } from "react";
 import { Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import type { DynamicRecordActionsProps } from "./DynamicRecordActions.types.js";
 
-import { useLabels } from "../../config/Label";
-import ModalScreen from "../ModalScreen";
+import { useLabels } from "@context/Label/Label.js";
+import ModalScreen from "@components/ModalScreen/ModalScreen.js";
+import type { ModalConfig } from "@/commot.types.js";
 
 /**
  * Shows an Action bar with buttons (based on the configuration)
- *
- * @param {Function} props.setLoading         - Function to update the loading variable
- * @param {String} props.editLabel            - Label used for the first button near the delete (generally is New or Edit)
- * @param {Boolean} props.isEdit              - Variable to understand if is in edit or in view
- * @param {Function} props.setIsEdit          - Function to update the isEdit variable
- * @param {Function} props.reset              - Function used to refresh the form
- * @param {Object} props.setToastConfig       - Object with all the information to show the toast in case of error
- * @param {Object} props.hasDeleteButton      - Flag to decide if the deleted button is needed
- * @param {Object} props.pathAPI              - Path used in the API call
- * @param {Object} props.payloadAPI           - Payload used in the API call
- * @param {Object} props.redirectAPI          - Path used to redirect after the API success
- * @param {Function} props.extraActionOnDelete- Extra function with some extra actions to perform on delete
- * @param {Object} props.extraDescription     - Variable with an optional text to be shown near the Delete/New buttons
  */
 export default function DynamicRecordActions({
   setLoading,
@@ -35,17 +24,19 @@ export default function DynamicRecordActions({
   redirectAPI,
   extraActionOnDelete,
   extraDescription,
-}) {
+}: DynamicRecordActionsProps): React.ReactElement {
   const { getLabel } = useLabels();
-
   const navigate = useNavigate();
-  const [modalConfig, setModalConfig] = useState({
+
+  const [modalConfig, setModalConfig] = useState<ModalConfig>({
     show: false,
     title: "",
     body: "",
   });
 
   const deleteRecord = () => {
+    if (!pathAPI || !redirectAPI) return;
+
     setLoading(true);
     axios
       .post(pathAPI, payloadAPI)
@@ -54,8 +45,8 @@ export default function DynamicRecordActions({
         if (res.data.result === 0) {
           setToastConfig({
             show: true,
-            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-            body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
+            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL") as string,
+            body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL") as string,
           });
         } else {
           navigate(redirectAPI);
@@ -68,10 +59,10 @@ export default function DynamicRecordActions({
         console.error("DynamicRecordActions - Error:", err);
         setToastConfig({
           show: true,
-          title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
+          title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL") as string,
           body:
             err?.response?.data?.detail ||
-            getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
+            (getLabel("TOAST.ERROR_TOAST_BODY_LABEL") as string),
         });
       })
       .finally(() => setLoading(false));
@@ -95,8 +86,12 @@ export default function DynamicRecordActions({
             onClick={() => {
               setModalConfig({
                 show: true,
-                title: getLabel("MODAL.DELETE.TITLE_MODAL_DELETE_LABEL"),
-                body: getLabel("MODAL.DELETE.BODY_MODAL_DELETE_LABEL"),
+                title: getLabel(
+                  "MODAL.DELETE.TITLE_MODAL_DELETE_LABEL",
+                ) as string,
+                body: getLabel(
+                  "MODAL.DELETE.BODY_MODAL_DELETE_LABEL",
+                ) as string,
               });
             }}
           >

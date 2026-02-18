@@ -16,7 +16,11 @@ export const PASSWORD_LOGIN_BASE = {
 };
 
 // SINGLE FIELDS FOR MASSIVE IMPORT
-export const OPERTION_TYPE_BASE = (Operations) => {
+type OperationsType = {
+  insert: string;
+  update: string;
+};
+export const OPERTION_TYPE_BASE = (Operations: OperationsType) => {
   return {
     field_name: "operation_type",
     field_type: "lookup",

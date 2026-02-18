@@ -1,13 +1,8 @@
 import { Toast, ToastContainer } from "react-bootstrap";
+import type { ToastMsgProps } from "./ToastMsg.types.js";
 
 /**
- * Shows a Toast message
- *
- * @param {Object} props.showToast        - Boolean to show or hide the Toast message
- * @param {Function} props.setShowToast   - Function to set the Boolean
- * @param {string} props.color            - Background Color of the Toast
- * @param {Object} props.title            - Text to set as title
- * @param {Object} props.body             - Text to set in the body
+ *  Displays a Toast message
  */
 export default function ToastMsg({
   showToast,
@@ -15,7 +10,7 @@ export default function ToastMsg({
   color,
   title,
   body,
-}) {
+}: ToastMsgProps): React.ReactElement {
   return (
     <ToastContainer position="bottom-end" className="p-3">
       <Toast

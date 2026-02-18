@@ -1,21 +1,18 @@
 import { Pagination } from "react-bootstrap";
+import type { PaginationControlProps } from "./PaginationControl.types.js";
 
 /**
- * Shows a Pagination item to change the records showed
- *
- * @param {Number} props.numTotPages        - Number of total pages available for the table
- * @param {Number} props.currentPage        - Current page selected
- * @param {Function} props.setCurrentPage   - Function to update the current page
+ * Displays a Pagination item to change the records showed
  */
 export default function PaginationControl({
   numTotPages,
   currentPage,
   setCurrentPage,
-}) {
+}: PaginationControlProps): React.ReactElement | null {
   const MAX_VISIBLE_PAGES = 3;
 
   // Calculate the pages number to show in the pagination component
-  const pageNumbers = [];
+  const pageNumbers: number[] = [];
   const startPage = Math.max(
     1,
     currentPage - Math.floor(MAX_VISIBLE_PAGES / 2),
@@ -25,11 +22,12 @@ export default function PaginationControl({
     pageNumbers.push(i);
   }
 
-  const goToPage = (page) => {
+  const goToPage = (page: number) => {
     if (page < 1 || page > numTotPages) return;
     setCurrentPage(page);
   };
 
+  // If there are just one page, we don't need to see the pagination UI
   if (numTotPages <= 1) return null;
 
   return (

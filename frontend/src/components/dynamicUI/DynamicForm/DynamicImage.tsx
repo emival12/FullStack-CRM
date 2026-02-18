@@ -7,29 +7,22 @@ import {
   Col,
   Image,
 } from "react-bootstrap";
-import { useLabels } from "../../config/Label";
-import { API_BASE_URL } from "../../config/K";
+import { FieldType, type DynamicImageProps } from "./DynamicForm.types.js";
+
+import { useLabels } from "@context/Label/Label.js";
+import { API_BASE_URL } from "@config/K.js";
 
 /**
  * Shows an image with his name
- *
- * @param {String} props.fieldKey               - Fields key
- * @param {Object} props.info                   - Object with all the information of the field
- * @param {Function} props.fieldTypes           - Dictionary with the field type names
- * @param {Boolean} props.isNewForm             - Flag to understand which form is
- * @param {Boolean} props.isEdit                - Flag to understand if is in view or edit mode
- * @param {Object[]} props.errors               - Collection of errors messages (standard of react-hook-form)
- * @param {Function} props.register             - Function to register the form element (standard of react-hook-form)
  */
 export default function DynamicImage({
   fieldKey,
   info,
-  fieldTypes,
   isNewForm,
   isEdit,
   errors,
   register,
-}) {
+}: DynamicImageProps): React.ReactElement {
   const { getLabel } = useLabels();
   const [imgError, setImgError] = useState(false);
 
@@ -61,26 +54,28 @@ export default function DynamicImage({
             }
           >
             <Form.Control
-              type={fieldTypes.TEXT}
-              required={info.is_required}
+              type={FieldType.TEXT}
+              required={!!info.is_required}
               defaultValue={isNewForm ? null : info?.value}
               disabled={isNewForm ? false : !info.is_editable || !isEdit}
-              isInvalid={errors[fieldKey]}
+              isInvalid={!!errors[fieldKey]}
               {...register(fieldKey, {
                 required: {
-                  value: info.is_required,
-                  message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
+                  value: !!info.is_required,
+                  message: getLabel(
+                    "FORM_ERRORS.MANDATORY_FIELD_LABEL",
+                  ) as string,
                 },
                 maxLength: {
-                  value: info.length,
+                  value: Number(info.length),
                   message: getLabel("FORM_ERRORS.MAX_FIELD_LABEL", {
-                    max_length: info.length,
-                  }),
+                    max_length: String(info.length ?? ""),
+                  }) as string,
                 },
               })}
             />
             <Form.Control.Feedback type="invalid">
-              {errors[fieldKey]?.message}
+              {errors[fieldKey]?.message?.toString()}
             </Form.Control.Feedback>
           </FloatingLabel>
         </Col>

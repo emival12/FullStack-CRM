@@ -1,8 +1,9 @@
-import "../App.css";
-import Spinner from "react-bootstrap/Spinner";
-import { useLabels } from "../config/Label";
+import { Spinner } from "react-bootstrap";
 
-export default function LoadingScreen() {
+import "@App.css";
+import { useLabels } from "@context/Label/Label.js";
+
+export default function LoadingScreen(): React.ReactElement {
   const { getLabel } = useLabels();
 
   return (

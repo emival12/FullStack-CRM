@@ -1,21 +1,32 @@
 import { useEffect, useState } from "react";
 import { Table, Form, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import type {
+  DynamicRecordsListProps,
+  FormatDateSimpleFunction,
+  RecordCellProps,
+  RecordListStructure,
+} from "./DynamicRecordsList.types.js";
 
-import { PATH_DATABASE } from "../../config/K";
-import { useLabels } from "../../config/Label";
-import MissingPage from "../MissingPage";
-import PaginationControl from "../PaginationControl";
+import { useLabels } from "@context/Label/Label.js";
+import { NUM_RECORD_TO_SHOW, PATH_DATABASE } from "@config/K.js";
+import MissingPage from "@components/MissingPage/MissingPage.js";
+import PaginationControl from "@components/PaginationControl/PaginationControl.js";
 
 //Dinamic construction of the body entry
-const RecordCell = ({ fieldValue, fieldType, isPrimaryKey, onNavigate }) => {
+const RecordCell = ({
+  fieldValue,
+  fieldType,
+  isPrimaryKey,
+  onNavigate,
+}: RecordCellProps) => {
   let correctFormatDate = formatDateSimple(fieldValue, fieldType);
 
   if (isPrimaryKey) {
     return (
       <td
         className="cursor-pointer text-primary"
-        onClick={() => onNavigate(fieldValue)}
+        onClick={() => onNavigate(String(fieldValue))}
       >
         {fieldValue}
       </td>
@@ -24,7 +35,7 @@ const RecordCell = ({ fieldValue, fieldType, isPrimaryKey, onNavigate }) => {
   return <td>{correctFormatDate || fieldValue}</td>;
 };
 
-const formatDateSimple = (fieldValue, fieldType) => {
+const formatDateSimple: FormatDateSimpleFunction = (fieldValue, fieldType) => {
   if (!fieldValue) return undefined;
 
   if (fieldType === "date") {
@@ -41,45 +52,20 @@ const formatDateSimple = (fieldValue, fieldType) => {
 
 /**
  * Shows a table with all the records
- *
- * @param {Object[]} props.data                 - List of the record retrieved
- * @param {String} props.redirectKey            - Table currently selected
- */
-/**
- * Records structure:
- * {
- *   "fields": [ "nameOfField_1", ... ],
- *   "primary_key_name": "nameOfPrimaryKeyField",
- *   "table": {
- *      "object_name": "...",
- *      ...
- *      "key": "..."
- *    },
- *   "records": [
- *       {
- *           "nameOfField_1": value_1,
- *           ...
- *       },
- *       ...
- *   ]
- * }
  */
 export default function DynamicRecordsList({
   data,
   redirectKey,
   pathRedirect = PATH_DATABASE,
-}) {
+}: DynamicRecordsListProps): React.ReactElement {
   const { getLabel } = useLabels();
-
   const navigate = useNavigate();
+
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const NUM_RECORD_TO_SHOW = 15;
-  const primary_key_name = data?.primary_key_name;
-
   // Calculate the data filtered by searchTerm
-  const filteredData = searchTerm
+  const filteredData: RecordListStructure = searchTerm
     ? {
         ...data,
         records: data?.records.filter((record) => {
@@ -92,19 +78,23 @@ export default function DynamicRecordsList({
     : data;
 
   // Calculate the slice of the data to show
-  const dataStart = (currentPage - 1) * NUM_RECORD_TO_SHOW;
-  const dataEnd = currentPage * NUM_RECORD_TO_SHOW;
-  const recordsToShow = filteredData
+  const dataStart: number = (currentPage - 1) * NUM_RECORD_TO_SHOW;
+  const dataEnd: number = currentPage * NUM_RECORD_TO_SHOW;
+
+  // Calculate the total page number
+  const numTotPages: number = filteredData
+    ? Math.ceil(filteredData.records.length / NUM_RECORD_TO_SHOW)
+    : 0;
+
+  // Calculate the actual record showed in the UI
+  const recordsToShow: RecordListStructure | null = filteredData
     ? {
         ...filteredData,
         records: filteredData.records.slice(dataStart, dataEnd),
       }
     : null;
 
-  // Calculate the total page number
-  const numTotPages = filteredData
-    ? Math.ceil(filteredData.records.length / NUM_RECORD_TO_SHOW)
-    : 0;
+  const primary_key_name = data?.primary_key_name;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -116,7 +106,7 @@ export default function DynamicRecordsList({
         <Col xs={12} md={4}>
           <Form.Control
             type="text"
-            placeholder={getLabel("GENERIC.SEARCH_PLACEHOLDER_LABEL")}
+            placeholder={getLabel("GENERIC.SEARCH_PLACEHOLDER_LABEL") as string}
             onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
           />
         </Col>
@@ -130,7 +120,7 @@ export default function DynamicRecordsList({
           </tr>
         </thead>
         <tbody>
-          {recordsToShow.records.map((record, index) => (
+          {recordsToShow?.records.map((record, index) => (
             <tr key={index}>
               {data.fields.map((field) => (
                 <RecordCell
@@ -138,7 +128,7 @@ export default function DynamicRecordsList({
                   fieldValue={record[field.key]}
                   fieldType={field.field_type}
                   isPrimaryKey={field.key === primary_key_name}
-                  onNavigate={(val) =>
+                  onNavigate={(val: string) =>
                     navigate(`${pathRedirect}/${redirectKey}/${val}`)
                   }
                 />
@@ -152,10 +142,10 @@ export default function DynamicRecordsList({
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
       />
-      {recordsToShow.records.length === 0 && (
+      {recordsToShow?.records.length === 0 && (
         <MissingPage
-          missingText={getLabel("MISSING.MISSING_RECORD_LABEL")}
-          ShowImg={false}
+          missingText={getLabel("MISSING.MISSING_RECORD_LABEL") as string}
+          showImg={false}
         />
       )}
     </>

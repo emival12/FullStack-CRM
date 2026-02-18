@@ -1,0 +1,24 @@
+import type { AxiosResponse } from "axios";
+
+export interface UserData {
+  id: number;
+  email: string;
+  profile_name: string;
+  db_name: string;
+}
+
+export type LoginFunc = (
+  email: string,
+  password: string,
+) => Promise<AxiosResponse<UserData>>;
+
+export interface AuthContextType {
+  user: UserData | null;
+  login: LoginFunc;
+  logout: () => void;
+  loading: boolean;
+}
+
+export interface AuthProviderProps {
+  children: React.ReactNode;
+}

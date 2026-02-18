@@ -1,14 +1,10 @@
 import { Button, Modal } from "react-bootstrap";
-import { useLabels } from "../config/Label";
+import type { ModalScreenProps } from "./ModalScreen.types.js";
+
+import { useLabels } from "@context/Label/Label.js";
 
 /**
- * Shows a modal with a message and two buttons: one to confirm, the other one to cancel
- *
- * @param {Boolean} props.showModal               - Flag to decide to show or hide the modal
- * @param {Function} props.setShowModal           - Method to set the flag showModal
- * @param {Function} props.successFunction        - Function executed in case of confirm
- * @param {String} props.titleText                - Text showed as title inside the modal
- * @param {String} props.bodyText                 - Text showed as body inside the modal
+ * Displays a modal with a message and two buttons: one to confirm, the other one to cancel
  */
 export default function ModalScreen({
   showModal,
@@ -16,7 +12,7 @@ export default function ModalScreen({
   successFunction,
   titleText,
   bodyText,
-}) {
+}: ModalScreenProps): React.ReactElement {
   const { getLabel } = useLabels();
 
   return (
