@@ -1,14 +1,4 @@
-export interface FieldDefinition {
-  key: string;
-  label: string;
-  field_type: string;
-}
-
-export interface RecordListStructure {
-  fields: FieldDefinition[];
-  primary_key_name: string;
-  records: Record<string, any>[];
-}
+import type { FieldDefinition, RecordListStructure } from "commot.types";
 
 export interface DynamicRecordsListProps {
   /** Data structure of the record retrieved on the DB */

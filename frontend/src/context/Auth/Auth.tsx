@@ -5,9 +5,9 @@ import type {
   AuthProviderProps,
   UserData,
   LoginFunc,
-} from "./Auth.types.js";
+} from "./Auth.types";
 
-import { API_BASE_URL } from "@config/K.js";
+import { API_BASE_URL } from "config/K";
 
 //Creation of context (place where i can save things and avoid the props)
 const AuthContext = createContext<AuthContextType | null>(null);

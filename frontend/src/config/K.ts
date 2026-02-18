@@ -1,9 +1,10 @@
+import type { MetadataFieldStructure } from "commot.types";
 import {
   EMAIL_LOGIN_BASE,
   OBJECT_NAME_MASSIVE_IMPORT_BASE,
   OPERTION_TYPE_BASE,
   PASSWORD_LOGIN_BASE,
-} from "./K_FieldBaseStructure.js";
+} from "./K_FieldBaseStructure";
 
 export const API_BASE_URL = "http://127.0.0.1:8000/api";
 export const PATH_LOGIN = "/login";
@@ -23,7 +24,7 @@ export const NUM_RECORD_TO_SHOW = 15;
 
 //LOGIN
 //Structure form login
-export const LOGIN_FIELD_STRUCTURE = {
+export const LOGIN_FIELD_STRUCTURE: MetadataFieldStructure = {
   email: EMAIL_LOGIN_BASE,
   password: PASSWORD_LOGIN_BASE,
 };

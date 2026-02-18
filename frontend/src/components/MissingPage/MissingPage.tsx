@@ -1,7 +1,7 @@
-import type { MissingPageProps } from "./MissingPage.types.js";
+import type { MissingPageProps } from "./MissingPage.types";
 
-import "@App.css";
-import { useLabels } from "@context/Label/Label.js";
+import "App.css";
+import { useLabels } from "context/Label/Label";
 
 /**
  * Displays error messages or a 'data missing' notification.

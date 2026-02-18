@@ -1,3 +1,5 @@
+import type { ToastConfig } from "commot.types";
+
 export interface ToastMsgProps {
   /** Flag to decide to show or hide the Toast message */
   showToast: boolean;
@@ -6,7 +8,7 @@ export interface ToastMsgProps {
   setShowToast: (showToast: boolean) => void;
 
   /** Background Color of the Toast */
-  color: "success" | "danger" | "warning";
+  color?: ToastConfig["color"];
 
   /** Text showed as title */
   title: string;

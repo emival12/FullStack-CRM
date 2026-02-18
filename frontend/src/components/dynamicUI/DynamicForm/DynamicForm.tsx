@@ -1,13 +1,13 @@
 import { Form, FloatingLabel } from "react-bootstrap";
 import TextareaAutosize from "react-textarea-autosize";
+import { FieldType } from "commot.types";
 import {
-  FieldType,
   type DynamicFormProps,
   type FieldRenderFunction,
-} from "./DynamicForm.types.js";
+} from "./DynamicForm.types";
 
-import { useLabels } from "@context/Label/Label.js";
-import DynamicImage from "./DynamicImage.js";
+import { useLabels } from "context/Label/Label";
+import DynamicImage from "./DynamicImage";
 
 /**
  * Shows a form with some fields
@@ -16,11 +16,11 @@ export default function DynamicForm({
   fields,
   validated,
   onSubmit,
-  tableKey,
+  tableKey = undefined,
   errors,
   register,
   isNewForm,
-  isEdit,
+  isEdit = undefined,
 }: DynamicFormProps): React.ReactElement {
   const { getLabel } = useLabels();
 
@@ -46,7 +46,7 @@ export default function DynamicForm({
           defaultValue={
             isNewForm
               ? info.reference_field === "record_type_name"
-                ? tableKey.split("_")[1]
+                ? tableKey?.split("_")[1]
                 : null
               : info?.value
           }
@@ -240,7 +240,7 @@ export default function DynamicForm({
               fieldKey={key}
               info={info}
               isNewForm={isNewForm}
-              isEdit={isEdit}
+              isEdit={!!isEdit}
               errors={errors}
               register={register}
             />

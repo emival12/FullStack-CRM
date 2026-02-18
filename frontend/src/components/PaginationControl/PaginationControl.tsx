@@ -1,5 +1,5 @@
 import { Pagination } from "react-bootstrap";
-import type { PaginationControlProps } from "./PaginationControl.types.js";
+import type { PaginationControlProps } from "./PaginationControl.types";
 
 /**
  * Displays a Pagination item to change the records showed

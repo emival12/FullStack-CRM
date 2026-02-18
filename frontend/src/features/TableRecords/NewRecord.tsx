@@ -2,39 +2,36 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Modal } from "react-bootstrap";
+import type { ToastConfig } from "commot.types";
+import type { NewRecordProps } from "./TableRecors.types";
+import type { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
-import { API_BASE_URL, PATH_INSERT } from "../../config/K";
-import { useAuth } from "../../context/AuthContext";
-import { useLabels } from "../../config/Label";
-import ToastMsg from "../../components/ToastMsg";
-import DynamicForm from "../../components/dynamicUI/DynamicForm";
+import { API_BASE_URL, PATH_INSERT } from "config/K";
+import { useAuth } from "context/Auth/Auth";
+import { useLabels } from "context/Label/Label";
+import ToastMsg from "components/ToastMsg/ToastMsg";
+import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
 
 /**
  * Shows a modal with all the field of the object in order to create a new record
- *
- * @param {String} props.tableKey               - Table currently selected
- * @param {Boolean} props.showNewModal          - Flag to show or hide the modal
- * @param {Function} props.setShowNewModal      - Function to update flag to show or hide the modal
- * @param {Function} props.refreshData          - Function to run the refresh on the record list
  */
 export default function NewRecord({
   tableKey,
   showNewModal,
   setShowNewModal,
   refreshData,
-}) {
+}: NewRecordProps): React.ReactElement {
   const { getLabel } = useLabels();
+  const { user } = useAuth();
 
-  const [fields, setFields] = useState([]);
+  const [fields, setFields] = useState<DataFieldStructure>({});
   const [validated, setValidated] = useState(false);
 
-  const [toastConfig, setToastConfig] = useState({
+  const [toastConfig, setToastConfig] = useState<ToastConfig>({
     show: false,
     title: "",
     body: "",
   });
-
-  const { user } = useAuth();
 
   const {
     register,
@@ -47,7 +44,7 @@ export default function NewRecord({
     if (!tableKey) return; // Blocks execution if the selected tabel is not correct
 
     axios
-      .get(`${API_BASE_URL}/${tableKey}/new-record`)
+      .get<DataFieldStructure>(`${API_BASE_URL}/${tableKey}/new-record`)
       .then((res) => {
         console.log("NewRecord - Structure Record Received:", res.data);
         setFields(res.data);
@@ -57,7 +54,7 @@ export default function NewRecord({
   }, [tableKey]);
 
   //Method fired when the button Save is pressed
-  const onSubmit = (data) => {
+  const onSubmit = (data: Record<string, any>) => {
     axios
       .post(`${API_BASE_URL}${PATH_INSERT}`, {
         table: tableKey,
@@ -72,8 +69,8 @@ export default function NewRecord({
         if (res.data.result === 0) {
           setToastConfig({
             show: true,
-            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-            body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
+            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL") as string,
+            body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL") as string,
           });
         } else {
           setValidated(false);
@@ -86,10 +83,10 @@ export default function NewRecord({
         console.error("NewRecord - Sumbit - Error:", err);
         setToastConfig({
           show: true,
-          title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
+          title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL") as string,
           body:
             err?.response?.data?.detail ||
-            getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
+            (getLabel("TOAST.ERROR_TOAST_BODY_LABEL") as string),
         });
       });
 
@@ -120,7 +117,6 @@ export default function NewRecord({
             errors={errors}
             register={register}
             isNewForm={true}
-            isEdit={null}
           />
         </Modal.Body>
 
@@ -133,7 +129,6 @@ export default function NewRecord({
       <ToastMsg
         showToast={toastConfig.show}
         setShowToast={(val) => setToastConfig({ ...toastConfig, show: val })}
-        color="danger"
         title={toastConfig.title}
         body={toastConfig.body}
       />

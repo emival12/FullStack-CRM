@@ -1,5 +1,7 @@
+import type { BaseFieldInfo } from "commot.types";
+
 // SINGLE FIELDS FOR LOGIN
-export const EMAIL_LOGIN_BASE = {
+export const EMAIL_LOGIN_BASE: BaseFieldInfo = {
   field_name: "email",
   field_type: "email",
   is_editable: 1,
@@ -7,7 +9,7 @@ export const EMAIL_LOGIN_BASE = {
   order: 1,
 };
 
-export const PASSWORD_LOGIN_BASE = {
+export const PASSWORD_LOGIN_BASE: BaseFieldInfo = {
   field_name: "password",
   field_type: "password",
   is_editable: 1,

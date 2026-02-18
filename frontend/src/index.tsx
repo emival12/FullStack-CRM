@@ -6,10 +6,14 @@ import reportWebVitals from "./reportWebVitals";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./index.css";
 
-import { AuthProvider } from "./context/AuthContext";
-import LabelManager from "./config/Label";
+import { AuthProvider } from "./context/Auth/Auth";
+import LabelManager from "./context/Label/Label";
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  throw new Error("Failed to find the root element. Check your index.html");
+}
+const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <LabelManager>
@@ -20,4 +24,4 @@ root.render(
   </React.StrictMode>,
 );
 
-reportWebVitals();
+reportWebVitals(console.log);

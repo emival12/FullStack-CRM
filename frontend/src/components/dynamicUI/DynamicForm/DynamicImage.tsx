@@ -7,10 +7,11 @@ import {
   Col,
   Image,
 } from "react-bootstrap";
-import { FieldType, type DynamicImageProps } from "./DynamicForm.types.js";
+import { FieldType } from "commot.types";
+import type { DynamicImageProps } from "./DynamicForm.types";
 
-import { useLabels } from "@context/Label/Label.js";
-import { API_BASE_URL } from "@config/K.js";
+import { useLabels } from "context/Label/Label";
+import { API_BASE_URL } from "config/K";
 
 /**
  * Shows an image with his name

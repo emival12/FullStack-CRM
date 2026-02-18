@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { Table, Form, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import type { RecordListStructure } from "commot.types";
 import type {
   DynamicRecordsListProps,
   FormatDateSimpleFunction,
   RecordCellProps,
-  RecordListStructure,
-} from "./DynamicRecordsList.types.js";
+} from "./DynamicRecordsList.types";
 
-import { useLabels } from "@context/Label/Label.js";
-import { NUM_RECORD_TO_SHOW, PATH_DATABASE } from "@config/K.js";
-import MissingPage from "@components/MissingPage/MissingPage.js";
-import PaginationControl from "@components/PaginationControl/PaginationControl.js";
+import { useLabels } from "context/Label/Label";
+import { NUM_RECORD_TO_SHOW, PATH_DATABASE } from "config/K";
+import MissingPage from "components/MissingPage/MissingPage";
+import PaginationControl from "components/PaginationControl/PaginationControl";
 
 //Dinamic construction of the body entry
 const RecordCell = ({
@@ -114,7 +114,7 @@ export default function DynamicRecordsList({
       <Table bordered hover className="m-0">
         <thead>
           <tr>
-            {Object.values(data.fields).map((fieldName, i) => (
+            {Object.values(data?.fields).map((fieldName, i) => (
               <th key={i}>{fieldName.label.toUpperCase()}</th>
             ))}
           </tr>
@@ -122,7 +122,7 @@ export default function DynamicRecordsList({
         <tbody>
           {recordsToShow?.records.map((record, index) => (
             <tr key={index}>
-              {data.fields.map((field) => (
+              {data?.fields.map((field) => (
                 <RecordCell
                   key={field.key}
                   fieldValue={record[field.key]}

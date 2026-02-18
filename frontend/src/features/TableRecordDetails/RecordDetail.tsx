@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { Tab, Tabs } from "react-bootstrap";
+import type { ToastConfig, DatabaseOutletContext } from "commot.types";
 
 import {
   API_BASE_URL,
@@ -10,34 +11,38 @@ import {
   PATH_DATABASE,
   PATH_DELETE,
   PATH_UPDATE,
-} from "../../config/K";
-import { useAuth } from "../../context/AuthContext";
-import { useLabels } from "../../config/Label";
-import MissingPage from "../../components/MissingPage";
-import LoadingScreen from "../../components/LoadingScreen";
-import ToastMsg from "../../components/ToastMsg";
-import DynamicRecordActions from "../../components/dynamicUI/DynamicRecordActions";
-import DynamicRecordsList from "../../components/dynamicUI/DynamicRecordsList";
-import DynamicForm from "../../components/dynamicUI/DynamicForm";
+} from "config/K";
+import { useAuth } from "context/Auth/Auth";
+import { useLabels } from "context/Label/Label";
+import MissingPage from "components/MissingPage/MissingPage";
+import LoadingScreen from "components/LoadingScreen/LoadingScreen";
+import ToastMsg from "components/ToastMsg/ToastMsg";
+import DynamicRecordActions from "components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
+import DynamicRecordsList from "components/dynamicUI/DynamicRecordsList/DynamicRecordsList";
+import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
+import type { DataRecordStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
 export default function RecordDetail() {
+  const { tableKey, recordId } = useOutletContext<DatabaseOutletContext>();
+  const { user } = useAuth();
   const { getLabel } = useLabels();
   const navigate = useNavigate();
-  const { tableKey, recordId } = useOutletContext();
 
   const [loading, setLoading] = useState(true);
-  const [fields, setFields] = useState([]);
   const [isEdit, setIsEdit] = useState(false);
   const [validated, setValidated] = useState(false);
-
-  const [toastConfig, setToastConfig] = useState({
+  const [controlledError, setControlledError] = useState(false);
+  const [toastConfig, setToastConfig] = useState<ToastConfig>({
     show: false,
     title: "",
     body: "",
   });
-  const [controlledError, setControlledError] = useState(false);
 
-  const { user } = useAuth();
+  const [fields, setFields] = useState<DataRecordStructure>({
+    primary_key_name: "",
+    field_structure: {},
+    related_list: [],
+  });
 
   const {
     register,
@@ -52,7 +57,9 @@ export default function RecordDetail() {
     setLoading(true);
     setIsEdit(false);
     axios
-      .get(`${API_BASE_URL}/${tableKey}/record/${recordId}`)
+      .get<DataRecordStructure>(
+        `${API_BASE_URL}/${tableKey}/record/${recordId}`,
+      )
       .then((res) => {
         console.log("RecordDetail - List of Fields Received:", res.data);
         setFields(res.data);
@@ -69,7 +76,7 @@ export default function RecordDetail() {
       .catch((err) => {
         console.error("RecordDetail - Error:", err);
         const errMsg = err.response.data.detail;
-        if (errMsg === ERROR_MISSING_RECORD(recordId)) {
+        if (errMsg === ERROR_MISSING_RECORD) {
           setControlledError(true);
         }
       })
@@ -81,11 +88,11 @@ export default function RecordDetail() {
   }, [fetchData]);
 
   //Method fired when the button Save is pressed
-  const onSubmit = (data) => {
-    let modified_data = {};
+  const onSubmit = (data: Record<string, any>) => {
+    let modified_data: any = {};
     let new_PK = null;
     for (const key in fields.field_structure) {
-      if (fields.field_structure[key].value !== data[key]) {
+      if (fields?.field_structure[key]?.value !== data[key]) {
         modified_data[key] = data[key];
         new_PK =
           key.toLowerCase() === fields.primary_key_name.toLowerCase()
@@ -113,8 +120,8 @@ export default function RecordDetail() {
           if (res.data.result === 0) {
             setToastConfig({
               show: true,
-              title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-              body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
+              title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL") as string,
+              body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL") as string,
             });
           } else {
             if (new_PK) {
@@ -130,10 +137,10 @@ export default function RecordDetail() {
           console.error("RecordDetail - Error:", err);
           setToastConfig({
             show: true,
-            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
+            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL") as string,
             body:
               err?.response?.data?.detail ||
-              getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
+              (getLabel("TOAST.ERROR_TOAST_BODY_LABEL") as string),
           });
         })
         .finally(() => setLoading(false));
@@ -146,7 +153,9 @@ export default function RecordDetail() {
 
   if (controlledError) {
     return (
-      <MissingPage missingText={getLabel("MISSING.MISSING_RECORD_LABEL")} />
+      <MissingPage
+        missingText={getLabel("MISSING.MISSING_RECORD_LABEL") as string}
+      />
     );
   }
 
@@ -163,7 +172,7 @@ export default function RecordDetail() {
         >
           <DynamicRecordActions
             setLoading={setLoading}
-            editLabel={getLabel("BUTTONS.EDIT_LABEL")}
+            editLabel={getLabel("BUTTONS.EDIT_LABEL") as string}
             isEdit={isEdit}
             setIsEdit={setIsEdit}
             reset={reset}
@@ -175,8 +184,6 @@ export default function RecordDetail() {
               id: recordId,
             }}
             redirectAPI={PATH_DATABASE + "/" + tableKey}
-            extraActionOnDelete={null}
-            extraDescription={null}
           />
           <DynamicForm
             fields={fields.field_structure}
@@ -193,7 +200,6 @@ export default function RecordDetail() {
             setShowToast={(val) =>
               setToastConfig({ ...toastConfig, show: val })
             }
-            color="danger"
             title={toastConfig.title}
             body={toastConfig.body}
           />

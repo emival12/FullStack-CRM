@@ -1,5 +1,5 @@
 import type { UseFormReset, FieldValues } from "react-hook-form";
-import type { ToastConfig } from "@/commot.types.js";
+import type { ToastConfig } from "commot.types";
 
 export interface DynamicRecordActionsProps {
   /** Set method of the flag Loading */

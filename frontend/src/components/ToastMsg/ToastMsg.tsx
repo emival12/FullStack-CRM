@@ -1,5 +1,5 @@
 import { Toast, ToastContainer } from "react-bootstrap";
-import type { ToastMsgProps } from "./ToastMsg.types.js";
+import type { ToastMsgProps } from "./ToastMsg.types";
 
 /**
  *  Displays a Toast message
@@ -7,7 +7,7 @@ import type { ToastMsgProps } from "./ToastMsg.types.js";
 export default function ToastMsg({
   showToast,
   setShowToast,
-  color,
+  color = "danger",
   title,
   body,
 }: ToastMsgProps): React.ReactElement {

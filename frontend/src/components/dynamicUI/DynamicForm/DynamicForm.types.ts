@@ -3,35 +3,14 @@ import type {
   FieldErrors,
   FieldValues,
 } from "react-hook-form";
+import type {
+  BaseFieldInfo,
+  FieldOptionLookup,
+  FieldOptionRadio,
+  FieldType,
+} from "commot.types";
 
-export enum FieldType {
-  TEXT = "text",
-  NUMBER = "number",
-  LOOKUP = "lookup",
-  PICKLIST = "picklist",
-  ROLLUP = "rollup",
-  RADIO = "radio",
-  CHECKBOX = "checkbox",
-  DATE = "date",
-  DATE_TIME = "datetime-local",
-  IMG = "image",
-  AUTO_NUMBER = "auto_number",
-}
-
-export interface FieldOptionRadio {
-  object_name: string;
-  record_type_name: string;
-  field_name: string;
-  option_label: string;
-  option_key: string;
-}
-
-export interface FieldOptionLookup {
-  reference_field: string;
-  id: string | number;
-}
-
-export interface FieldInfo {
+export interface FieldInfo extends BaseFieldInfo {
   object_name: string;
   record_type_name: string;
   field_name: string;
@@ -54,9 +33,10 @@ export interface FieldInfo {
   label?: string; //used only in the setup
 }
 
+export type DataFieldStructure = Record<string, FieldInfo>;
 export interface DynamicFormProps {
   /** Fields to show with their structure */
-  fields: Record<string, FieldInfo>;
+  fields: DataFieldStructure;
 
   /** Flag to show or hide the validation */
   validated: boolean;
@@ -65,7 +45,7 @@ export interface DynamicFormProps {
   onSubmit: React.SubmitEventHandler<HTMLFormElement>;
 
   /** Key of the selected table */
-  tableKey: string;
+  tableKey?: string;
 
   /** Collection of errors messages (standard of react-hook-form) */
   errors: FieldErrors<FieldValues>;
@@ -77,7 +57,7 @@ export interface DynamicFormProps {
   isNewForm: boolean;
 
   /** Flag to understand if is in view or edit mode */
-  isEdit: boolean;
+  isEdit?: boolean;
 }
 
 export type FieldRenderFunction = (
@@ -103,4 +83,10 @@ export interface DynamicImageProps {
 
   /** Function to register the form element (standard of react-hook-form) */
   register: UseFormRegister<FieldValues>;
+}
+
+export interface DataRecordStructure {
+  primary_key_name: string;
+  field_structure: DataFieldStructure;
+  related_list: any[]; //TODO FIX
 }

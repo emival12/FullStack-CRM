@@ -1,22 +1,26 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import type {
+  SidebarStructure,
+  TablesSidebarProps,
+} from "./TableSidebar.types";
 
-import { API_BASE_URL } from "../../config/K";
-import { useLabels } from "../../config/Label";
-import ScreenAdaptiveSidebar from "../../components/ScreenAdaptiveSidebar";
+import { API_BASE_URL } from "config/K";
+import { useLabels } from "context/Label/Label";
+import ScreenAdaptiveSidebar from "components/ScreenAdaptiveSidebar/ScreenAdaptiveSidebar";
+import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 import TablesSidebarAccordion from "./TablesSidebarAccordion";
-import LoadingScreen from "../../components/LoadingScreen";
 
 /**
  * Shows a list of availables tables grouped by category and recordTypes
- *
- * @param {String} props.tableKey       - Table currently selected
  */
-export default function TablesSidebar({ tableKey }) {
+export default function TablesSidebar({
+  tableKey,
+}: TablesSidebarProps): React.ReactElement {
   const { getLabel } = useLabels();
 
   const [loading, setLoading] = useState(true);
-  const [tablesData, setTablesData] = useState([]);
+  const [tablesData, setTablesData] = useState<SidebarStructure>({});
 
   //Mobile variables
   const [showSidebar, setShowSidebar] = useState(false);
@@ -25,7 +29,7 @@ export default function TablesSidebar({ tableKey }) {
   useEffect(() => {
     setLoading(true);
     axios
-      .get(`${API_BASE_URL}/tables`)
+      .get<SidebarStructure>(`${API_BASE_URL}/tables`)
       .then((res) => {
         console.log("TablesSidebar - List of Tables Received:", res.data);
         setTablesData(res.data);
@@ -45,7 +49,7 @@ export default function TablesSidebar({ tableKey }) {
           toggleSidebar={toggleSidebar}
         />
       }
-      labelPhoneButton={getLabel("MOBILE.TABLES_LABEL")}
+      labelPhoneButton={getLabel("MOBILE.TABLES_LABEL") as string}
       toggleSidebar={toggleSidebar}
       showSidebar={showSidebar}
     />

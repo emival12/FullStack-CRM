@@ -2,22 +2,24 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Button } from "react-bootstrap";
+import type { ToastConfig } from "commot.types";
+import type { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
-import { LOGIN_FIELD_STRUCTURE, PATH_DATABASE } from "../../config/K";
-import { useAuth } from "../../context/AuthContext";
-import { useLabels } from "../../config/Label";
-import DynamicForm from "../../components/dynamicUI/DynamicForm";
-import ToastMsg from "../../components/ToastMsg";
-import LoadingScreen from "../../components/LoadingScreen";
+import { useAuth } from "context/Auth/Auth";
+import { useLabels } from "context/Label/Label";
+import { LOGIN_FIELD_STRUCTURE, PATH_DATABASE } from "config/K";
+import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
+import ToastMsg from "components/ToastMsg/ToastMsg";
+import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 
-export default function LoginPage() {
+export default function LoginPage(): React.ReactElement {
   const { login } = useAuth();
   const { getLabel } = useLabels();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
   const [validated] = useState(false);
-  const [toastConfig, setToastConfig] = useState({
+  const [toastConfig, setToastConfig] = useState<ToastConfig>({
     show: false,
     title: "",
     body: "",
@@ -29,7 +31,7 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => {
+  const onSubmit = (data: Record<string, any>) => {
     setLoading(true);
     login(data["email"], data["password"])
       .then((res) => {
@@ -40,19 +42,19 @@ export default function LoginPage() {
         console.error("LoginPage - Error:", err);
         if (err?.response?.status === 401) {
           const errorCode = err.response.data?.detail?.error_code;
-          const message = getLabel(`LOGIN.${errorCode}`);
+          const message = getLabel(`LOGIN.${errorCode}`) as string;
           setToastConfig({
             show: true,
-            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
+            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL") as string,
             body: message,
           });
         } else {
           setToastConfig({
             show: true,
-            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
+            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL") as string,
             body:
               err?.response?.data?.detail ||
-              getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
+              (getLabel("TOAST.ERROR_TOAST_BODY_LABEL") as string),
           });
         }
       })
@@ -73,10 +75,9 @@ export default function LoginPage() {
           <Col />
           <Col>
             <DynamicForm
-              fields={LOGIN_FIELD_STRUCTURE}
+              fields={LOGIN_FIELD_STRUCTURE as DataFieldStructure}
               validated={validated}
               onSubmit={handleSubmit(onSubmit)}
-              tableKey={null}
               errors={errors}
               register={register}
               isNewForm={false}
@@ -100,7 +101,6 @@ export default function LoginPage() {
       <ToastMsg
         showToast={toastConfig.show}
         setShowToast={(val) => setToastConfig({ ...toastConfig, show: val })}
-        color="danger"
         title={toastConfig.title}
         body={toastConfig.body}
       />

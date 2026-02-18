@@ -1,21 +1,23 @@
+import "./App.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import NavBar from "./components/NavBar";
 
-import "./App.css";
-import { useAuth } from "./context/AuthContext";
 import { PATH_DATABASE, PATH_IMPORT, PATH_LOGIN, PATH_SETUP } from "./config/K";
-import { useLabels } from "./config/Label";
+import { useAuth } from "./context/Auth/Auth";
+import { useLabels } from "./context/Label/Label";
 import DatabaseMainPage from "./features/MainScreen/DatabaseMainPage";
 import RecordsListView from "./features/TableRecords/RecordsListView";
 import RecordDetail from "./features/TableRecordDetails/RecordDetail";
+/*
 import SetupMainPage from "./features/MainScreen/SetupMainPage";
 import SetupNewObject from "./features/Setup/SetupPages/SetupNewObject";
 import SetupSections from "./features/Setup/SetupPages/SetupSections";
 import MassiveImport from "./features/MassiveImport/MassiveImport";
-import MissingPage from "./components/MissingPage";
+*/
+import MissingPage from "./components/MissingPage/MissingPage";
 import LoginPage from "./features/Login/LoginPage";
-import LoadingScreen from "./components/LoadingScreen";
+import LoadingScreen from "./components/LoadingScreen/LoadingScreen";
+import NavBar from "./components/NavBar/NavBar";
 
 function App() {
   const { user, loading } = useAuth();
@@ -56,6 +58,8 @@ function App() {
               <Route path=":tableKey" element={<RecordsListView />} />
               <Route path=":tableKey/:recordId" element={<RecordDetail />} />
             </Route>
+
+            {/*
             <Route path={PATH_IMPORT} element={<MassiveImport />} />
             <Route path={PATH_SETUP} element={<SetupMainPage />}>
               <Route index element={<SetupNewObject />} />
@@ -69,6 +73,7 @@ function App() {
                 element={<SetupSections />}
               />
             </Route>
+            */}
             <Route path="*" element={<MissingPage />} />
           </Routes>
         </>

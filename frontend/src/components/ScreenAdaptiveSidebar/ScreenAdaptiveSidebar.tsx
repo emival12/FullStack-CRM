@@ -3,7 +3,7 @@ import type {
   ScreenAdaptiveSidebarProps,
   DesktopSidebarProps,
   ScreenAdaptiveSidebarProps as PhoneSidebarProps,
-} from "./ScreenAdaptiveSidebar.types.js";
+} from "./ScreenAdaptiveSidebar.types";
 
 const PhoneSidebar = ({
   sidebarComponent,

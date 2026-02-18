@@ -1,19 +1,21 @@
 import { Accordion } from "react-bootstrap";
+import type {
+  SidebarItem,
+  SidebarStructure,
+  TablesSidebarAccordionProps,
+} from "./TableSidebar.types";
+
 import TablesSidebarList from "./TablesSidebarList";
 
 /**
  * Shows a series of accordion, continues to shows accordion until it reach the deepes level
  * On the deepest level there is a list of options, each option is a tables
- *
- * @param {Object[]} props.tablesData             - Contains the data retrieved from the query
- * @param {String} props.tableKey                 - TableKey currently selected
- * @param {Function} props.toggleSidebar          - Function to close the Sidebar (phone sidebar only)
  */
 export default function TablesSidebarAccordion({
   tablesData,
   tableKey,
   toggleSidebar,
-}) {
+}: TablesSidebarAccordionProps): React.ReactElement {
   return (
     <Accordion alwaysOpen>
       {Object.entries(tablesData).map(([key, value]) => (
@@ -26,7 +28,7 @@ export default function TablesSidebarAccordion({
                 return (
                   <TablesSidebarAccordion
                     key={idx}
-                    tablesData={item}
+                    tablesData={item as SidebarStructure}
                     tableKey={tableKey}
                     toggleSidebar={toggleSidebar}
                   />
@@ -36,7 +38,7 @@ export default function TablesSidebarAccordion({
               return (
                 <TablesSidebarList
                   key={idx}
-                  tableItem={item}
+                  tableItem={item as SidebarItem}
                   tableKey={tableKey}
                   toggleSidebar={toggleSidebar}
                 />

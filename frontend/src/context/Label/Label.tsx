@@ -5,9 +5,9 @@ import type {
   LabelManagerProps,
   TranslationData,
   GetLabelFunc,
-} from "./Label.types.js";
+} from "./Label.types";
 
-import { API_BASE_URL } from "@config/K.js";
+import { API_BASE_URL } from "config/K";
 
 //Creation of context (place where i can save things and avoid the props)
 const LabelContext = createContext<LabelContextType | null>(null);

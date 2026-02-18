@@ -2,11 +2,11 @@ import axios from "axios";
 import { useState } from "react";
 import { Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import type { DynamicRecordActionsProps } from "./DynamicRecordActions.types.js";
+import type { DynamicRecordActionsProps } from "./DynamicRecordActions.types";
 
-import { useLabels } from "@context/Label/Label.js";
-import ModalScreen from "@components/ModalScreen/ModalScreen.js";
-import type { ModalConfig } from "@/commot.types.js";
+import { useLabels } from "context/Label/Label";
+import ModalScreen from "components/ModalScreen/ModalScreen";
+import type { ModalConfig } from "commot.types";
 
 /**
  * Shows an Action bar with buttons (based on the configuration)
@@ -22,8 +22,8 @@ export default function DynamicRecordActions({
   pathAPI,
   payloadAPI,
   redirectAPI,
-  extraActionOnDelete,
-  extraDescription,
+  extraActionOnDelete = undefined,
+  extraDescription = undefined,
 }: DynamicRecordActionsProps): React.ReactElement {
   const { getLabel } = useLabels();
   const navigate = useNavigate();
