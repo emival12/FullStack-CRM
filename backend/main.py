@@ -42,12 +42,14 @@ def get_correct_path(file_name, is_external=False, dev_folder_path = None):
 def log_message(msg):
     if getattr(sys, 'frozen', False):
         logging.error(msg)
+        return True 
     else:
         print(msg)
+        return False
 
 def log_err_and_throw_exception(msg, same_msg = True, throw_exc = True):
-    log_message(msg)
-    if throw_exc:
+    is_prod = log_message(msg)
+    if throw_exc and is_prod:
         raise Exception(msg if same_msg else msg.split(":")[0])
 
 def get_config():
