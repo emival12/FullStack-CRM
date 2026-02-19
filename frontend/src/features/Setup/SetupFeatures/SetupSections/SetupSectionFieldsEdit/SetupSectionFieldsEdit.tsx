@@ -32,12 +32,7 @@ export default function SetupSectionFieldsEdit({
   const [isEdit, setIsEdit] = useState(false);
   const [validated, setValidated] = useState(false);
   const [isDeletable, setIsDeletable] = useState(true);
-  const [fields, setFields] = useState<SetupFieldStructure>({
-    object_primary_key_name: "",
-    field_type: "",
-    primary_key_name: "",
-    field_structure: {},
-  });
+  const [fields, setFields] = useState<SetupFieldStructure | null>(null);
 
   const [controlledError, setControlledError] = useState(false);
   const [toastConfig, setToastConfig] = useState<ToastConfig>({
@@ -149,7 +144,7 @@ export default function SetupSectionFieldsEdit({
         redirectAPI={`${PATH_SETUP}/${tableKey}/${sectionKey}`}
       />
       <DynamicForm
-        fields={fields.field_structure as DataFieldStructure}
+        fields={fields?.field_structure as DataFieldStructure}
         validated={validated}
         onSubmit={handleSubmit(onSubmit)}
         tableKey={tableKey}

@@ -154,6 +154,8 @@ export const generateOptions: GenerateOptionsFunc = (
   options,
   usePicklistOptionFormat = true,
 ) => {
+  if (!options) return;
+
   const optionsArray = Array.isArray(options)
     ? options
     : Object.values(options);
