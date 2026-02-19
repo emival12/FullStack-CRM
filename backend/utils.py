@@ -834,7 +834,7 @@ def build_query(cursor, table_name, record_type_name, fields_text, joins, group)
         {" ".join(joins) if joins else ""}
         WHERE {table_name_alias}.record_type_name = %s
         {group}
-        ORDER BY {SystemFieldName.CREATE_DATE} DESC;
+        ORDER BY {table_name_alias}.{SystemFieldName.CREATE_DATE} DESC;
     '''
     cursor.execute(query, (record_type_name,))
     return cursor.fetchall()
