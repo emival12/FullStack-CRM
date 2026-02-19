@@ -16,7 +16,7 @@ import NewFieldRecord from "./NewFieldRecord";
 export default function SetupSectionFieldsListView({
   tableKey,
   sectionKey,
-}: SetupSectionBaseProps) {
+}: SetupSectionBaseProps): React.ReactElement {
   const { getLabel } = useLabels();
 
   const [loading, setLoading] = useState(true);

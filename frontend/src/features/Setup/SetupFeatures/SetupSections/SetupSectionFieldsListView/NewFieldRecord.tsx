@@ -21,7 +21,7 @@ export default function NewFieldRecord({
   showNewModal,
   setShowNewModal,
   refreshData,
-}: NewFieldRecordProps) {
+}: NewFieldRecordProps): React.ReactElement {
   const { getLabel } = useLabels();
 
   const [pageNumber, setPageNumber] = useState(1);

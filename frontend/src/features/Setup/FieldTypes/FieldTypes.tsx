@@ -29,13 +29,7 @@ import { FieldOptionLookup, FieldOptionRadio } from "commot.types";
 export function FieldTypes() {
   const [loading, setLoading] = useState(true);
   const [databaseMetadata, setDatabaseMetadata] =
-    useState<NewSetupFieldStructure>({
-      field_types: {},
-      lookup_options: [],
-      fields_options: {},
-      fields_options_rollup: {},
-      rt_options: {},
-    });
+    useState<NewSetupFieldStructure | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -54,7 +48,9 @@ export function FieldTypes() {
   }, []);
 
   const formsData = useMemo(() => {
-    if (!databaseMetadata) return null;
+    if (!databaseMetadata) {
+      return null;
+    }
 
     const { field_types, lookup_options } = databaseMetadata;
 
@@ -114,6 +110,8 @@ export function FieldTypes() {
 
   const updateDependentOptions: UpdateDependentOptionsFunc = useCallback(
     (fieldType, referenceObject, fieldName, target = undefined) => {
+      if (!databaseMetadata) return;
+
       const sourceMap =
         fieldName === "reference_object_record_type"
           ? databaseMetadata.rt_options

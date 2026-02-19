@@ -25,7 +25,7 @@ export default function SetupSectionFieldsEdit({
   tableKey,
   sectionKey,
   recordId,
-}: SetupSectionCompleteProps) {
+}: SetupSectionCompleteProps): React.ReactElement {
   const { getLabel } = useLabels();
 
   const [loading, setLoading] = useState(true);
@@ -73,7 +73,6 @@ export default function SetupSectionFieldsEdit({
         apiData,
       )
       .then((res) => {
-        console.log(res);
         console.log("SetupSectionFieldsEdit - Edit Field Received:", res.data);
         setFields(res.data);
         setIsDeletable(res.data.object_primary_key_name !== recordId); // prevent delete of PrimaryKey
@@ -97,7 +96,7 @@ export default function SetupSectionFieldsEdit({
       })
       .catch((err) => {
         console.error("SetupSectionFieldsEdit - Error:", err);
-        const errorCode = err.response.data.detail.error_code;
+        const errorCode = err?.response?.data?.detail?.error_code;
         if (
           errorCode === ERROR_MISSING_TABLE ||
           errorCode === ERROR_MISSING_RECORD
