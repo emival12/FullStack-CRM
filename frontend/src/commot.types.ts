@@ -11,7 +11,48 @@ export type ModalConfig = {
   body: string;
 };
 
-//Types for the Dynamic List
+//###############################################
+// DATABASE
+//###############################################
+export interface DatabaseOutletContext {
+  /** Key of the table selected: table_name + table_record_type_name */
+  tableKey: string;
+
+  /** Id of the record selected */
+  recordId: string | undefined;
+}
+
+//###############################################
+// SETUP
+//###############################################
+export enum Sections {
+  HOME = "home",
+  FIELDS = "fields",
+  LAYOUT = "layout",
+  RECORD_TYPES = "record_types",
+  RELATED_LISTS = "related_lists",
+}
+
+export interface SetupOutletContext {
+  /** Key of the table selected: table_name */
+  tableKey: string | undefined;
+
+  /** Key of the section selected */
+  sectionKey: Sections | undefined;
+
+  /** Id of the record selected */
+  recordId: string | undefined;
+
+  /** Flag to decide to refrshef the info inside the sidebar */
+  refreshSidebar: boolean;
+
+  /** Set method of the flag refreshSidebar */
+  setRefreshSidebar: (refreshSidebar: boolean) => void;
+}
+
+//###############################################
+// DYNAMIC LIST
+//###############################################
 export interface FieldDefinition {
   key: string;
   label: string;
@@ -24,7 +65,9 @@ export interface RecordListStructure {
   records: Record<string, any>[];
 }
 
-//Types for the Dynamic Form
+//###############################################
+// DYNAMIC FORM
+//###############################################
 export enum FieldType {
   TEXT = "text",
   NUMBER = "number",
@@ -40,9 +83,9 @@ export enum FieldType {
 }
 
 export interface FieldOptionRadio {
-  object_name: string;
-  record_type_name: string;
-  field_name: string;
+  object_name?: string;
+  record_type_name?: string;
+  field_name?: string;
   option_label: string;
   option_key: string;
 }
@@ -68,8 +111,8 @@ export interface BaseFieldInfo {
   lookup_filter?: string;
   options?: (FieldOptionRadio | FieldOptionLookup)[];
   value?: any;
-  max_limit_value?: string;
-  min_limit_value?: string;
+  max_limit_value?: string | number;
+  min_limit_value?: string | number;
 
   order?: number;
   is_textarea?: boolean; //used only in the setup
@@ -77,12 +120,3 @@ export interface BaseFieldInfo {
 }
 
 export type MetadataFieldStructure = Record<string, BaseFieldInfo>;
-
-//Types for the outlet of Database
-export interface DatabaseOutletContext {
-  /** Key of the table selected: table_name + table_record_type_name */
-  tableKey: string;
-
-  /** Id of the record selected */
-  recordId: string | undefined;
-}

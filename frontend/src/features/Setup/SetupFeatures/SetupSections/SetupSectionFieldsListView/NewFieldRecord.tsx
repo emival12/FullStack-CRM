@@ -2,34 +2,32 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Modal } from "react-bootstrap";
+import { ToastConfig } from "commot.types";
+import { NewFieldRecordProps } from "./SetupSectionFieldsListView.types";
 
-import { API_BASE_URL, PATH_SETUP } from "../../../../config/K";
-import { useLabels } from "../../../../config/Label";
-import { FieldTypes } from "../../FieldTypes";
-import ToastMsg from "../../../../components/ToastMsg";
-import LoadingScreen from "../../../../components/LoadingScreen";
-import DynamicForm from "../../../../components/dynamicUI/DynamicForm";
+import { API_BASE_URL, PATH_SETUP } from "config/K";
+import { useLabels } from "context/Label/Label";
+import ToastMsg from "components/ToastMsg/ToastMsg";
+import LoadingScreen from "components/LoadingScreen/LoadingScreen";
+import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
+import { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
+import { FieldTypes } from "features/Setup/FieldTypes/FieldTypes";
 
 /**
  * Modal used to retrieve the info needed on the field creation
- *
- * @param {String} props.tableKey             - Table currently selected
- * @param {Boolean} props.showNewModal        - Flag to show or hide the modal
- * @param {Function} props.setShowNewModal    - Function to update the flag showNewModal
- * @param {Function} props.refreshData        - Function to run the refresh on the record list
  */
 export default function NewFieldRecord({
   tableKey,
   showNewModal,
   setShowNewModal,
   refreshData,
-}) {
+}: NewFieldRecordProps) {
   const { getLabel } = useLabels();
 
   const [pageNumber, setPageNumber] = useState(1);
   const [validated, setValidated] = useState(false);
 
-  const [toastConfig, setToastConfig] = useState({
+  const [toastConfig, setToastConfig] = useState<ToastConfig>({
     show: false,
     title: "",
     body: "",
@@ -53,7 +51,7 @@ export default function NewFieldRecord({
   } = useForm();
 
   //Method fired when the button Save is pressed
-  const onSubmit = (data) => {
+  const onSubmit = (data: Record<string, any>) => {
     const apiData = {
       table: tableKey,
       record: data,
@@ -93,6 +91,7 @@ export default function NewFieldRecord({
     if (!selectedFieldType) return;
 
     const formStructure = getSpecificFormByType(selectedFieldType);
+    if (!formStructure) return;
     const formValues = Object.fromEntries(
       Object.entries(formStructure).map(([key, info]) => [key, info.value]),
     );
@@ -151,8 +150,10 @@ export default function NewFieldRecord({
           <DynamicForm
             fields={
               pageNumber === 1
-                ? selectionForm
-                : getSpecificFormByType(selectedFieldType)
+                ? (selectionForm as DataFieldStructure)
+                : (getSpecificFormByType(
+                    selectedFieldType,
+                  ) as DataFieldStructure)
             }
             validated={validated}
             onSubmit={handleSubmit(onSubmit)}

@@ -19,7 +19,7 @@ export default function DynamicForm({
   tableKey = undefined,
   errors,
   register,
-  isNewForm,
+  isNewForm = undefined,
   isEdit = undefined,
 }: DynamicFormProps): React.ReactElement {
   const { getLabel } = useLabels();

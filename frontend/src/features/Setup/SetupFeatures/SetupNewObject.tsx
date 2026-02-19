@@ -2,24 +2,27 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { SetupOutletContext, ToastConfig } from "commot.types";
 
-import { API_BASE_URL, PATH_SETUP } from "../../../config/K";
-import { NEW_OBJECT_FIELD_STRUCTURE } from "../K_Setup";
-import { useLabels } from "../../../config/Label";
-import LoadingScreen from "../../../components/LoadingScreen";
-import ToastMsg from "../../../components/ToastMsg";
-import DynamicForm from "../../../components/dynamicUI/DynamicForm";
-import DynamicRecordActions from "../../../components/dynamicUI/DynamicRecordActions";
+import { API_BASE_URL, PATH_SETUP } from "config/K";
+import { NEW_OBJECT_FIELD_STRUCTURE } from "features/Setup/K_SetupFormsStructure";
+import { useLabels } from "context/Label/Label";
+import LoadingScreen from "components/LoadingScreen/LoadingScreen";
+import ToastMsg from "components/ToastMsg/ToastMsg";
+import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
+import DynamicRecordActions from "components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
+import { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
-export default function SetupNewObject() {
+export default function SetupNewObject(): React.ReactElement {
   const { getLabel } = useLabels();
-  const { refreshSidebar, setRefreshSidebar } = useOutletContext();
+  const { refreshSidebar, setRefreshSidebar } =
+    useOutletContext<SetupOutletContext>();
 
   const [loading, setLoading] = useState(false);
   const [validated, setValidated] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
 
-  const [toastConfig, setToastConfig] = useState({
+  const [toastConfig, setToastConfig] = useState<ToastConfig>({
     show: false,
     title: "",
     body: "",
@@ -35,7 +38,7 @@ export default function SetupNewObject() {
   } = useForm();
 
   //Method fired when the button Save is pressed
-  const onSubmit = (data) => {
+  const onSubmit = (data: Record<string, any>) => {
     setLoading(true);
 
     const apiData = {
@@ -95,19 +98,14 @@ export default function SetupNewObject() {
         reset={reset}
         setToastConfig={setToastConfig}
         hasDeleteButton={false}
-        pathAPI={null}
-        payloadAPI={null}
-        redirectAPI={null}
-        extraActionOnDelete={null}
         extraDescription={getLabel("GENERIC.SETUP_MSG_SELECT_TABLE_LABEL")}
       />
       {showNewForm ? (
         <>
           <DynamicForm
-            fields={NEW_OBJECT_FIELD_STRUCTURE}
+            fields={NEW_OBJECT_FIELD_STRUCTURE as DataFieldStructure}
             validated={validated}
             onSubmit={handleSubmit(onSubmit)}
-            tableKey={null}
             errors={errors}
             register={register}
             isNewForm={false}
@@ -118,7 +116,6 @@ export default function SetupNewObject() {
             setShowToast={(val) =>
               setToastConfig({ ...toastConfig, show: val })
             }
-            color="danger"
             title={toastConfig.title}
             body={toastConfig.body}
           />

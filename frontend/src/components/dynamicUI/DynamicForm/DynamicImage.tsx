@@ -19,7 +19,7 @@ import { API_BASE_URL } from "config/K";
 export default function DynamicImage({
   fieldKey,
   info,
-  isNewForm,
+  isNewForm = undefined,
   isEdit,
   errors,
   register,

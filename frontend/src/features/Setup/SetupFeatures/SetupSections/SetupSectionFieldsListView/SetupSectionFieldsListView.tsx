@@ -1,32 +1,40 @@
 import axios from "axios";
 import { useEffect, useState, useCallback } from "react";
 import { Button } from "react-bootstrap";
+import { RecordListStructure } from "commot.types";
+import { SetupSectionBaseProps } from "features/Setup/SetupFeatures/SetupSections/SetupSections.types";
 
-import { API_BASE_URL, PATH_SETUP } from "../../../../config/K";
-import { useLabels } from "../../../../config/Label";
-import LoadingScreen from "../../../../components/LoadingScreen";
+import { API_BASE_URL, PATH_SETUP } from "config/K";
+import { useLabels } from "context/Label/Label";
+import LoadingScreen from "components/LoadingScreen/LoadingScreen";
+import DynamicRecordsList from "components/dynamicUI/DynamicRecordsList/DynamicRecordsList";
 import NewFieldRecord from "./NewFieldRecord";
-import DynamicRecordsList from "../../../../components/dynamicUI/DynamicRecordsList";
 
 /**
  * Page used for the section Fields of an object in the setup
- *
- * @param {String} props.tableKey       - Table currently selected
- * @param {String} props.sectionKey     - Section currently selected
  */
-export default function SetupSectionFieldsListView({ tableKey, sectionKey }) {
+export default function SetupSectionFieldsListView({
+  tableKey,
+  sectionKey,
+}: SetupSectionBaseProps) {
   const { getLabel } = useLabels();
 
   const [loading, setLoading] = useState(true);
-  const [records, setRecords] = useState([]);
   const [showNewModal, setShowNewModal] = useState(false);
+  const [records, setRecords] = useState<RecordListStructure>({
+    fields: [],
+    primary_key_name: "",
+    records: [],
+  });
 
   const fetchData = useCallback(() => {
     if (!tableKey || !sectionKey) return; // Blocks execution if the selected table is not correct
 
     setLoading(true);
     axios
-      .get(`${API_BASE_URL}${PATH_SETUP}/${tableKey}/${sectionKey}`)
+      .get<RecordListStructure>(
+        `${API_BASE_URL}${PATH_SETUP}/${tableKey}/${sectionKey}`,
+      )
       .then((res) => {
         console.log(
           "SetupSectionFieldsListView - List of Fields Object received:",

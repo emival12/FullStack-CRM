@@ -55,33 +55,33 @@ export const OBJECT_NAME_MASSIVE_IMPORT_BASE: BaseFieldInfo = {
 };
 
 // SINGLE FIELDS FOR OBJECT CREATION
-export const OBJECT_LABEL_BASE = {
+export const OBJECT_LABEL_BASE: BaseFieldInfo = {
   field_name: "object_label",
-  field_type: "text",
+  field_type: FieldType.TEXT,
   length: 100,
   is_editable: 1,
   is_required: 1,
 };
 
-export const OBJECT_NAME_BASE = {
+export const OBJECT_NAME_BASE: BaseFieldInfo = {
   field_name: "object_name",
-  field_type: "text",
+  field_type: FieldType.TEXT,
   length: 100,
   is_editable: 0,
   is_required: 1,
 };
 
-export const CATEGORY_BASE = {
+export const CATEGORY_BASE: BaseFieldInfo = {
   field_name: "category",
-  field_type: "text",
+  field_type: FieldType.TEXT,
   length: 50,
   is_editable: 1,
   is_required: 1,
 };
 
-export const SORT_ORDER_BASE = {
+export const SORT_ORDER_BASE: BaseFieldInfo = {
   field_name: "sort_order",
-  field_type: "number",
+  field_type: FieldType.NUMBER,
   numeric_precision: 5,
   numeric_scale: null,
   is_editable: 1,
@@ -90,17 +90,17 @@ export const SORT_ORDER_BASE = {
   min_limit_value: 1,
 };
 
-export const ID_FIELD_NAME_BASE = {
+export const ID_FIELD_NAME_BASE: BaseFieldInfo = {
   field_name: "id_field_name",
-  field_type: "text",
+  field_type: FieldType.TEXT,
   length: 255,
   is_editable: 1,
   is_required: 1,
 };
 
-export const ID_FIELD_TYPE_BASE = {
+export const ID_FIELD_TYPE_BASE: BaseFieldInfo = {
   field_name: "id_field_type",
-  field_type: "radio",
+  field_type: FieldType.RADIO,
   length: 255,
   is_editable: 1,
   is_required: 1,
@@ -117,17 +117,17 @@ export const ID_FIELD_TYPE_BASE = {
 };
 
 // SINGLE FIELDS FOR FIELD CREATION
-export const FIELD_TYPE_BASE = {
+export const FIELD_TYPE_BASE: BaseFieldInfo = {
   field_name: "field_type",
-  field_type: "radio",
+  field_type: FieldType.RADIO,
   is_editable: 1,
   is_required: 1,
   options: [],
 };
 
-export const FIELD_NAME_BASE = {
+export const FIELD_NAME_BASE: BaseFieldInfo = {
   field_name: "field_name",
-  field_type: "text",
+  field_type: FieldType.TEXT,
   length: 255,
   is_editable: 1,
   is_required: 1,
@@ -135,9 +135,9 @@ export const FIELD_NAME_BASE = {
   is_primary_key: 1,
 };
 
-export const IS_ACTIVE_BASE = {
+export const IS_ACTIVE_BASE: BaseFieldInfo = {
   field_name: "is_active",
-  field_type: "checkbox",
+  field_type: FieldType.CHECKBOX,
   is_editable: 0,
   is_required: 1,
   label: "",
@@ -145,9 +145,9 @@ export const IS_ACTIVE_BASE = {
   order: 97,
 };
 
-export const IS_VISIBLE_BASE = {
+export const IS_VISIBLE_BASE: BaseFieldInfo = {
   field_name: "is_visible",
-  field_type: "checkbox",
+  field_type: FieldType.CHECKBOX,
   is_editable: 0,
   is_required: 1,
   label: "",
@@ -155,9 +155,9 @@ export const IS_VISIBLE_BASE = {
   order: 98,
 };
 
-export const IS_EDITABLE_BASE = {
+export const IS_EDITABLE_BASE: BaseFieldInfo = {
   field_name: "is_editable",
-  field_type: "checkbox",
+  field_type: FieldType.CHECKBOX,
   is_editable: 1,
   is_required: 0,
   label: "",
@@ -165,9 +165,9 @@ export const IS_EDITABLE_BASE = {
   order: 99,
 };
 
-export const IS_REQUIRED_BASE = {
+export const IS_REQUIRED_BASE: BaseFieldInfo = {
   field_name: "is_required",
-  field_type: "checkbox",
+  field_type: FieldType.CHECKBOX,
   is_editable: 1,
   is_required: 0,
   label: "",
@@ -175,9 +175,9 @@ export const IS_REQUIRED_BASE = {
   order: 100,
 };
 
-export const LENGTH_BASE = {
+export const LENGTH_BASE: BaseFieldInfo = {
   field_name: "length",
-  field_type: "number",
+  field_type: FieldType.NUMBER,
   numeric_precision: 3,
   numeric_scale: null,
   is_editable: 1,
@@ -187,9 +187,9 @@ export const LENGTH_BASE = {
   order: 2,
 };
 
-export const NUMERIC_PRECISION_BASE = {
+export const NUMERIC_PRECISION_BASE: BaseFieldInfo = {
   field_name: "numeric_precision",
-  field_type: "number",
+  field_type: FieldType.NUMBER,
   numeric_precision: 2,
   numeric_scale: null,
   is_editable: 1,
@@ -199,9 +199,9 @@ export const NUMERIC_PRECISION_BASE = {
   order: 2,
 };
 
-export const NUMERIC_SCALE_BASE = {
+export const NUMERIC_SCALE_BASE: BaseFieldInfo = {
   field_name: "numeric_scale",
-  field_type: "number",
+  field_type: FieldType.NUMBER,
   numeric_precision: 2,
   numeric_scale: null,
   is_editable: 1,
@@ -211,45 +211,45 @@ export const NUMERIC_SCALE_BASE = {
   order: 3,
 };
 
-export const REFERENCE_OBJECT_BASE = {
+export const REFERENCE_OBJECT_BASE: BaseFieldInfo = {
   field_name: "reference_object",
-  field_type: "lookup",
+  field_type: FieldType.LOOKUP,
   is_editable: 1,
   is_required: 1,
   options: [],
   order: 2,
 };
 
-export const REFERENCE_OBJECT_RECORD_TYPE_BASE = {
+export const REFERENCE_OBJECT_RECORD_TYPE_BASE: BaseFieldInfo = {
   field_name: "reference_object_record_type",
-  field_type: "lookup",
+  field_type: FieldType.LOOKUP,
   is_editable: 1,
   is_required: 1,
   options: [],
   order: 3,
 };
 
-export const REFERENCE_FIELD_BASE = {
+export const REFERENCE_FIELD_BASE: BaseFieldInfo = {
   field_name: "reference_field",
-  field_type: "lookup",
+  field_type: FieldType.LOOKUP,
   is_editable: 1,
   is_required: 1,
   options: [],
   order: 3,
 };
 
-export const LOOKUP_FILTER_BASE = {
+export const LOOKUP_FILTER_BASE: BaseFieldInfo = {
   field_name: "lookup_filter",
-  field_type: "text",
+  field_type: FieldType.TEXT,
   length: 1000,
   is_editable: 1,
   is_required: 0,
   order: 4,
 };
 
-export const AGGREGATION_FUNCTION_BASE = {
+export const AGGREGATION_FUNCTION_BASE: BaseFieldInfo = {
   field_name: "aggregation_function",
-  field_type: "picklist",
+  field_type: FieldType.PICKLIST,
   is_editable: 1,
   is_required: 1,
   options: [
@@ -269,9 +269,9 @@ export const AGGREGATION_FUNCTION_BASE = {
   order: 5,
 };
 
-export const OPTION_VALUES_BASE = {
+export const OPTION_VALUES_BASE: BaseFieldInfo = {
   field_name: "options_values",
-  field_type: "text",
+  field_type: FieldType.TEXT,
   is_textarea: true,
   length: 1000,
   is_editable: 1,

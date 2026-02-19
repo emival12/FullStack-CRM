@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import { Outlet, useParams } from "react-router-dom";
-import SetupSidebar from "../Setup/SetupSidebar";
+import { Sections } from "commot.types";
 
-export default function SetupMainPage() {
+import SetupSidebar from "features/Setup/SetupSidebar/SetupSidebar";
+
+export default function SetupMainPage(): React.ReactElement {
   const { tableKey, sectionKey, recordId } = useParams();
   const [refreshSidebar, setRefreshSidebar] = useState(false);
 
@@ -17,7 +19,7 @@ export default function SetupMainPage() {
       <Row>
         <SetupSidebar
           tableKey={tableKey}
-          sectionKey={sectionKey}
+          sectionKey={sectionKey as Sections}
           refreshSidebar={refreshSidebar}
         />
 

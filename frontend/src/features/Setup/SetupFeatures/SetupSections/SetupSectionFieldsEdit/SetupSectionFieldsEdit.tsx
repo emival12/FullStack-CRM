@@ -1,6 +1,8 @@
 import axios from "axios";
 import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
+import { SetupSectionCompleteProps } from "../SetupSections.types";
+import { SetupFieldStructure } from "./SetupSectionFieldsEdit.types";
 
 import {
   API_BASE_URL,
@@ -8,30 +10,37 @@ import {
   ERROR_MISSING_TABLE,
   PATH_DELETE,
   PATH_SETUP,
-} from "../../../../config/K";
-import { useLabels } from "../../../../config/Label";
-import LoadingScreen from "../../../../components/LoadingScreen";
-import MissingPage from "../../../../components/MissingPage";
-import ToastMsg from "../../../../components/ToastMsg";
-import { FieldTypes } from "../../FieldTypes";
-import DynamicRecordActions from "../../../../components/dynamicUI/DynamicRecordActions";
-import DynamicForm from "../../../../components/dynamicUI/DynamicForm";
+} from "config/K";
+import { useLabels } from "context/Label/Label";
+import LoadingScreen from "components/LoadingScreen/LoadingScreen";
+import MissingPage from "components/MissingPage/MissingPage";
+import ToastMsg from "components/ToastMsg/ToastMsg";
+import DynamicRecordActions from "components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
+import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
+import { FieldTypes } from "features/Setup/FieldTypes/FieldTypes";
+import { FieldType, ToastConfig } from "commot.types";
+import { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
 export default function SetupSectionFieldsEdit({
   tableKey,
   sectionKey,
   recordId,
-}) {
+}: SetupSectionCompleteProps) {
   const { getLabel } = useLabels();
 
   const [loading, setLoading] = useState(true);
-  const [fields, setFields] = useState([]);
   const [isEdit, setIsEdit] = useState(false);
   const [validated, setValidated] = useState(false);
   const [isDeletable, setIsDeletable] = useState(true);
+  const [fields, setFields] = useState<SetupFieldStructure>({
+    object_primary_key_name: "",
+    field_type: "",
+    primary_key_name: "",
+    field_structure: {},
+  });
 
   const [controlledError, setControlledError] = useState(false);
-  const [toastConfig, setToastConfig] = useState({
+  const [toastConfig, setToastConfig] = useState<ToastConfig>({
     show: false,
     title: "",
     body: "",
@@ -59,7 +68,7 @@ export default function SetupSectionFieldsEdit({
       listFields: formsByType,
     };
     axios
-      .post(
+      .post<SetupFieldStructure>(
         `${API_BASE_URL}${PATH_SETUP}/${tableKey}/fields/${recordId}`,
         apiData,
       )
@@ -79,7 +88,7 @@ export default function SetupSectionFieldsEdit({
         reset(formValues);
 
         updateDependentOptions(
-          res.data.field_type,
+          res.data.field_type as FieldType,
           res.data.field_structure?.Reference_object?.value,
           "Reference_field",
           res.data.field_structure,
@@ -111,7 +120,7 @@ export default function SetupSectionFieldsEdit({
     fetchData();
   }, [fetchData]);
 
-  const onSubmit = (data) => {
+  const onSubmit = (data: Record<string, any>) => {
     console.log("TODO submit"); // TODO when we work on the setup implementations
   };
 
@@ -139,11 +148,9 @@ export default function SetupSectionFieldsEdit({
           fieldName: recordId,
         }}
         redirectAPI={`${PATH_SETUP}/${tableKey}/${sectionKey}`}
-        extraActionOnDelete={null}
-        extraDescription={null}
       />
       <DynamicForm
-        fields={fields.field_structure}
+        fields={fields.field_structure as DataFieldStructure}
         validated={validated}
         onSubmit={handleSubmit(onSubmit)}
         tableKey={tableKey}

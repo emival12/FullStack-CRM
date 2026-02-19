@@ -54,7 +54,7 @@ export interface DynamicFormProps {
   register: UseFormRegister<FieldValues>;
 
   /** Flag to understand if the form is and edit or new record form */
-  isNewForm: boolean;
+  isNewForm?: boolean;
 
   /** Flag to understand if is in view or edit mode */
   isEdit?: boolean;
@@ -73,7 +73,7 @@ export interface DynamicImageProps {
   info: FieldInfo;
 
   /** Flag to understand if the form is and edit or new record form */
-  isNewForm: boolean;
+  isNewForm?: boolean;
 
   /** Flag to understand if is in view or edit mode */
   isEdit: boolean;

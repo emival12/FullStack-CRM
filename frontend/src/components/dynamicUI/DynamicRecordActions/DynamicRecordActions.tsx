@@ -19,9 +19,9 @@ export default function DynamicRecordActions({
   reset,
   setToastConfig,
   hasDeleteButton,
-  pathAPI,
-  payloadAPI,
-  redirectAPI,
+  pathAPI = undefined,
+  payloadAPI = undefined,
+  redirectAPI = undefined,
   extraActionOnDelete = undefined,
   extraDescription = undefined,
 }: DynamicRecordActionsProps): React.ReactElement {

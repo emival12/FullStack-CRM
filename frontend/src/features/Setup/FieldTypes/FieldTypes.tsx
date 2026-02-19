@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { API_BASE_URL, PATH_SETUP } from "../../config/K";
+import { API_BASE_URL, PATH_SETUP } from "config/K";
 
 import {
   NEW_FIELD_OBJECT_STRUCTURE as NEW_FIELDS,
@@ -14,29 +14,37 @@ import {
   FULL_AUTO_NUMBER_FIELD_STRUCTURE,
   NEW_DATE_FIELD_OBJECT_STRUCTURE,
   NEW_IMG_FIELD_OBJECT_STRUCTURE,
-} from "./K_Setup";
+} from "features/Setup/K_SetupFormsStructure";
+import {
+  CloneAndAddOptionsFunc,
+  GenerateOptionsFunc,
+  GetSpecificFormByTypeFunc,
+  MergeDictFunc,
+  NewSetupFieldStructure,
+  SortDictFunc,
+  UpdateDependentOptionsFunc,
+} from "./FieldTypes.types";
+import { FieldOptionLookup, FieldOptionRadio } from "commot.types";
 
 export function FieldTypes() {
   const [loading, setLoading] = useState(true);
-  const [databaseMetadata, setDatabaseMetadata] = useState(null);
+  const [databaseMetadata, setDatabaseMetadata] =
+    useState<NewSetupFieldStructure>({
+      field_types: {},
+      lookup_options: [],
+      fields_options: {},
+      fields_options_rollup: {},
+      rt_options: {},
+    });
 
   useEffect(() => {
     setLoading(true);
     axios
-      .get(`${API_BASE_URL}${PATH_SETUP}/field/new/structure`)
+      .get<NewSetupFieldStructure>(
+        `${API_BASE_URL}${PATH_SETUP}/field/new/structure`,
+      )
       .then((res) => {
         console.log("FieldTypes - New Field structure Received:", res.data);
-
-        /*
-        res.data structure:
-          {
-            "field_types": {"TEXT": "text", ....},
-            "lookup_options": [{...}, ..],
-            "fields_options": {"product": [....], ..},
-            "fields_options_rollup": {"product": [....], ..},
-            "rt_options": {"product": [....], ..},
-          }
-        */
         setDatabaseMetadata(res.data);
       })
       .catch((err) => console.error("FieldTypes - Error:", err))
@@ -51,7 +59,7 @@ export function FieldTypes() {
     const { field_types, lookup_options } = databaseMetadata;
 
     //Complete the configuration with the options retrieved from the DB
-    const commonLookupOptions = generateOptions(lookup_options);
+    const commonLookupOptions = generateOptions(lookup_options) ?? [];
     const COMPLETE_LOOKUP_FIELDS = cloneAndAddOptions(
       NEW_LOOKUP_FIELDS,
       "reference_object",
@@ -73,7 +81,8 @@ export function FieldTypes() {
     const selectionForm = cloneAndAddOptions(
       NEW_FIELDS,
       "field_type",
-      generateOptions(field_types_without_auto_number, false),
+      generateOptions(Object.values(field_types_without_auto_number), false) ??
+        [],
     );
 
     const formsByType = {
@@ -96,14 +105,14 @@ export function FieldTypes() {
     };
   }, [databaseMetadata]);
 
-  const getSpecificFormByType = useCallback(
+  const getSpecificFormByType: GetSpecificFormByTypeFunc = useCallback(
     (fieldType) => {
       return formsData?.formsByType?.[fieldType] || null;
     },
     [formsData],
   );
 
-  const updateDependentOptions = useCallback(
+  const updateDependentOptions: UpdateDependentOptionsFunc = useCallback(
     (fieldType, referenceObject, fieldName, target = undefined) => {
       const sourceMap =
         fieldName === "reference_object_record_type"
@@ -132,35 +141,40 @@ export function FieldTypes() {
 
 // Receive a structure dict, a field name and some options
 // Clones the options inside the field name options of a clone of the structure dict
-export const cloneAndAddOptions = (structureObject, fieldName, options) => {
+export const cloneAndAddOptions: CloneAndAddOptionsFunc = (
+  structureObject,
+  fieldName,
+  options,
+) => {
   let clone = structuredClone(structureObject);
   clone[fieldName].options = options;
   return clone;
 };
 
 // Receive an array with some values and convert them into an array of object with the format of Form options
-export const generateOptions = (options, usePicklistOptionFormat = true) => {
-  if (!options) return;
-
+export const generateOptions: GenerateOptionsFunc = (
+  options,
+  usePicklistOptionFormat = true,
+) => {
   const optionsArray = Array.isArray(options)
     ? options
     : Object.values(options);
 
-  return optionsArray.map((item) => {
+  return optionsArray.map((item: any) => {
     const value = item?.key ?? item;
     const label = item?.label ?? item;
 
     if (usePicklistOptionFormat) {
       // Picklist format
-      return { id: value, reference_field: label };
+      return { id: value, reference_field: label } as FieldOptionLookup;
     } else {
       // Radio format
-      return { option_key: value, option_label: label };
+      return { option_key: value, option_label: label } as FieldOptionRadio;
     }
   });
 };
 
-export const mergeDict = (dict1, dict2) => {
+export const mergeDict: MergeDictFunc = (dict1, dict2) => {
   const merged = {
     ...dict1,
     ...dict2,
@@ -169,8 +183,12 @@ export const mergeDict = (dict1, dict2) => {
   return sortDict(merged);
 };
 
-function sortDict(dict) {
+const sortDict: SortDictFunc = (dict) => {
   return Object.fromEntries(
-    Object.entries(dict).sort(([, a], [, b]) => a.order - b.order),
+    Object.entries(dict).sort(([, a], [, b]) => {
+      const orderA = a.order ?? 0;
+      const orderB = b.order ?? 0;
+      return orderA - orderB;
+    }),
   );
-}
+};

@@ -2,36 +2,39 @@ import axios from "axios";
 import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useOutletContext } from "react-router-dom";
-
 import {
-  API_BASE_URL,
-  PATH_DELETE,
-  PATH_SETUP,
-  PATH_UPDATE,
-} from "../../../../config/K";
-import { HOME_OBJECT_FIELD_STRUCTURE } from "../../K_Setup";
-import { useLabels } from "../../../../config/Label";
-import ToastMsg from "../../../../components/ToastMsg";
-import LoadingScreen from "../../../../components/LoadingScreen";
-import DynamicForm from "../../../../components/dynamicUI/DynamicForm";
-import DynamicRecordActions from "../../../../components/dynamicUI/DynamicRecordActions";
+  MetadataFieldStructure,
+  SetupOutletContext,
+  ToastConfig,
+} from "commot.types";
+import { SetupSectionBaseProps } from "../SetupSections.types";
+import { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
+
+import { API_BASE_URL, PATH_DELETE, PATH_SETUP, PATH_UPDATE } from "config/K";
+import { HOME_OBJECT_FIELD_STRUCTURE } from "features/Setup/K_SetupFormsStructure";
+import { useLabels } from "context/Label/Label";
+import ToastMsg from "components/ToastMsg/ToastMsg";
+import LoadingScreen from "components/LoadingScreen/LoadingScreen";
+import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
+import DynamicRecordActions from "components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
 
 /**
  * Page used for the section Home of an object in the setup
- *
- * @param {String} props.tableKey       - Table currently selected
- * @param {String} props.sectionKey     - Section currently selected
  */
-export default function SetupSectionHome({ tableKey, sectionKey }) {
+export default function SetupSectionHome({
+  tableKey,
+  sectionKey,
+}: SetupSectionBaseProps): React.ReactElement {
   const { getLabel } = useLabels();
-  const { refreshSidebar, setRefreshSidebar } = useOutletContext();
+  const { refreshSidebar, setRefreshSidebar } =
+    useOutletContext<SetupOutletContext>();
 
   const [loading, setLoading] = useState(true);
-  const [fields, setFields] = useState([]);
   const [isEdit, setIsEdit] = useState(false);
   const [validated, setValidated] = useState(false);
+  const [fields, setFields] = useState<MetadataFieldStructure>({});
 
-  const [toastConfig, setToastConfig] = useState({
+  const [toastConfig, setToastConfig] = useState<ToastConfig>({
     show: false,
     title: "",
     body: "",
@@ -51,7 +54,7 @@ export default function SetupSectionHome({ tableKey, sectionKey }) {
     setIsEdit(false);
     setValidated(false);
     axios
-      .get(`${API_BASE_URL}${PATH_SETUP}/${tableKey}`)
+      .get<MetadataFieldStructure>(`${API_BASE_URL}${PATH_SETUP}/${tableKey}`)
       .then((res) => {
         console.log(
           "SetupSectionHome - List of Object Fields Received:",
@@ -77,8 +80,8 @@ export default function SetupSectionHome({ tableKey, sectionKey }) {
   }, [fetchData]);
 
   //Method fired when the button Save is pressed
-  const onSubmit = (data) => {
-    let modified_data = {};
+  const onSubmit = (data: Record<string, any>) => {
+    let modified_data: Record<string, any> = {};
     for (const key in data) {
       if (fields[key.toLowerCase()] !== data[key]) {
         modified_data[key] = data[key];
@@ -145,22 +148,18 @@ export default function SetupSectionHome({ tableKey, sectionKey }) {
         extraActionOnDelete={() => {
           setRefreshSidebar(!refreshSidebar);
         }}
-        extraDescription={null}
       />
       <DynamicForm
-        fields={HOME_OBJECT_FIELD_STRUCTURE}
+        fields={HOME_OBJECT_FIELD_STRUCTURE as DataFieldStructure}
         validated={validated}
         onSubmit={handleSubmit(onSubmit)}
-        tableKey={null}
         errors={errors}
         register={register}
-        isNewForm={null}
         isEdit={isEdit}
       />
       <ToastMsg
         showToast={toastConfig.show}
         setShowToast={(val) => setToastConfig({ ...toastConfig, show: val })}
-        color="danger"
         title={toastConfig.title}
         body={toastConfig.body}
       />

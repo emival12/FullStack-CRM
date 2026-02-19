@@ -69,6 +69,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           logout();
         })
         .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
   }, []);
 
