@@ -40,17 +40,13 @@ export default function LabelManager({ children }: LabelManagerProps) {
       });
   }, [browserLang]);
 
-  const getLabel: GetLabelFunc = (labelName, params = null) => {
+  const getLabel: GetLabelFunc = (labelName, params = undefined) => {
     if (!labelName) return labelNotFound;
     const path = labelName.split(".");
 
     let currStep = translationJson;
     for (const key of path) {
-      if (
-        currStep &&
-        typeof currStep === "object" &&
-        currStep[key] !== undefined
-      ) {
+      if (currStep && currStep[key] !== undefined) {
         currStep = currStep[key];
       } else {
         return labelNotFound;
@@ -61,8 +57,8 @@ export default function LabelManager({ children }: LabelManagerProps) {
     if (params) {
       Object.keys(params).forEach((key) => {
         const value = params[key];
-        if (value) {
-          labelValue = labelValue.replace(`{{${key}}}`, value);
+        if (value !== undefined && value !== null) {
+          labelValue = labelValue.replaceAll(`{{${key}}}`, value);
         }
       });
     }

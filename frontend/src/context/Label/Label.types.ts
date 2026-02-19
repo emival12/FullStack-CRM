@@ -1,6 +1,6 @@
 export type GetLabelFunc = (
   labelName: string,
-  params?: Record<string, string> | null,
+  params?: Record<string, any>,
 ) => string;
 
 export interface LabelContextType {
