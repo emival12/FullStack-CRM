@@ -1225,18 +1225,18 @@ def create_new_object(cursor, db, object_data):
                 object_name,
                 "master",
                 SystemFieldName.RECORD_TYPE_NAME,
-                FieldTypes.PICKLIST.value,
+                FieldTypes.TEXT.value,
                 255,
                 None,
                 None,
-                "record_type_definition",
-                "record_type_name",
+                None,
+                None,
                 1,
                 0,
                 0,
                 1,
                 0,
-                f'object_name = \'{object_name}\' AND is_active = 1'
+                None
             ),
             (
                 object_name,
