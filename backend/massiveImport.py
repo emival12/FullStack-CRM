@@ -241,6 +241,8 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
                 raw_value = getattr(row, col)
                 if pd.isna(raw_value) or str(raw_value).strip() == "":
                     value = None
+                    new_record.append(value)
+                    continue
                 else:
                     value = str(raw_value).strip()
 
@@ -285,6 +287,7 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
                 value = value.replace(",", ".")
                 try:
                     value = Decimal(value)
+                    value = value.normalize()
                 except (InvalidOperation, TypeError):
                     raise_input_exception(
                         "INPUT_FIELD_INVALID_NUMBER", 
