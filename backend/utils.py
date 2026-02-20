@@ -1452,7 +1452,7 @@ def create_new_field(cursor, db, object_name, field_data):
     reference_object = field_data["reference_object"] if "reference_object" in field_data else None
     reference_object_record_type = field_data["reference_object_record_type"] if "reference_object_record_type" in field_data else None
     reference_field = field_data["reference_field"] if "reference_field" in field_data else None
-    lookup_filter = field_data["lookup_filter"] if "lookup_filter" in field_data else None
+    lookup_filter = field_data["lookup_filter"] if "lookup_filter" in field_data and field_data["lookup_filter"] else None
     aggregation_function = field_data["aggregation_function"] if "aggregation_function" in field_data else None
 
     options_values = field_data["options_values"].split("\n") if "options_values" in field_data else None
