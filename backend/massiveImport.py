@@ -38,7 +38,7 @@ def elaborate_import_file(db, cursor, operation_type, object_name, user_id, file
             file_decoded (str): CSV file content decoded as a string
     """
 
-    df = pd.read_csv(io.StringIO(file_decoded), delimiter=";", keep_default_na=False, na_values=[''])
+    df = pd.read_csv(io.StringIO(file_decoded), delimiter=";", keep_default_na=False, na_values=[''], dtype=str)
 
     if operation_type == OperationType.INSERT.value:
         insert_records(db, cursor, object_name, user_id, df)
@@ -69,7 +69,7 @@ def insert_records(db, cursor, object_name, user_id, df):
 
     df_cols = set(df.columns)
     df_cols.add(utils.SystemFieldName.LAST_MODIFIED_BY.lower())
-    df_cols = set(df_cols)
+    df_cols = set(col.lower() for col in df_cols if not col.lower().startswith("skip_"))
 
     params = process_input_rows(cursor, table_fields, is_single_record_type, object_name, user_id, df, df_cols)
     
@@ -176,7 +176,7 @@ def checks_input_columns(table_fields, df):
 
     sorted_db_fields = set(db_fields)
     sorted_required_fields = set(required_fields)
-    sorted_cols = set(col.lower() for col in df.columns)
+    sorted_cols = set(col.lower() for col in df.columns if not col.lower().startswith("skip_"))
 
     # Check if all the required field are been inserted
     missing_required_fields = sorted_required_fields.difference(sorted_cols)
