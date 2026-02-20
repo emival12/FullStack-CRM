@@ -182,7 +182,6 @@ export const LENGTH_BASE: BaseFieldInfo = {
   numeric_scale: null,
   is_editable: 1,
   is_required: 1,
-  max_limit_value: 255,
   min_limit_value: 1,
   order: 2,
 };
