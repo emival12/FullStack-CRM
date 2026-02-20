@@ -69,10 +69,10 @@ def insert_records(db, cursor, object_name, user_id, df):
 
     df_cols = set(df.columns)
     df_cols.add(utils.SystemFieldName.LAST_MODIFIED_BY.lower())
-    df_cols = set(col.lower() for col in df_cols if not col.lower().startswith("skip_"))
+    df_cols = set(col for col in df_cols if not col.lower().startswith("skip_"))
 
     params = process_input_rows(cursor, table_fields, is_single_record_type, object_name, user_id, df, df_cols)
-    
+
     # Insert the records
     try:
         command = f'''
@@ -234,7 +234,8 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
 
         new_record = []
         for col in df_cols:
-            if utils.SystemFieldName.LAST_MODIFIED_BY.lower() == col:
+            col_lower = col.lower()
+            if utils.SystemFieldName.LAST_MODIFIED_BY.lower() == col_lower:
                 value = str(user_id)
             else:
                 # Get the value of the cell
@@ -247,7 +248,7 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
                     value = str(raw_value).strip()
 
             # Get the definition of the field on the DB
-            field_definition = fields_dict[col.lower()]
+            field_definition = fields_dict[col_lower]
             field_type = field_definition["field_type"]
 
             if field_type in (utils.FieldTypes.TEXT.value):
@@ -338,7 +339,7 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
                 )      
             elif field_type in (utils.FieldTypes.RADIO.value):
                 value = value.lower()
-                if value not in map_checkbox_radio_index[get_options_map_key(object_name, record_type_name, col)]:
+                if value not in map_checkbox_radio_index[get_options_map_key(object_name, record_type_name, col_lower)]:
                     raise_input_exception(
                     "INPUT_FIELD_INVALID_RADIO", 
                     {
@@ -378,7 +379,7 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
                             }
                         )
             elif field_type in (utils.FieldTypes.PICKLIST.value, utils.FieldTypes.LOOKUP.value):
-                if value not in map_picklist_lookup_index[get_options_map_key(object_name, record_type_name, col)]:
+                if value not in map_picklist_lookup_index[get_options_map_key(object_name, record_type_name, col_lower)]:
                     raise_input_exception(
                     "INPUT_FIELD_INVALID_LOOKUP_PICKLIST", 
                     {
