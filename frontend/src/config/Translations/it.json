@@ -75,6 +75,7 @@
     "INPUT_FIELD_INVALID_RADIO": "La riga {{row}} nella colonna \"{{column}}\" ha un valore inesistente.\nValore attuale: {{actual_value}}",
     "INPUT_FIELD_INVALID_DATE_FORMAT": "La riga {{row}} nella colonna \"{{column}}\" ha una data formattata male.\nValore attuale: {{actual_value}}, Formato accettato: {{expected_format}}",
     "INPUT_FIELD_INVALID_DATE": "La riga {{row}} nella colonna \"{{column}}\" non è una data corretta.\nValore attuale: {{actual_value}}",
-    "INPUT_FIELD_INVALID_LOOKUP_PICKLIST": "La riga {{row}} nella colonna \"{{column}}\" ha un valore inesistente.\nValore attuale: {{actual_value}}"
+    "INPUT_FIELD_INVALID_LOOKUP_PICKLIST": "La riga {{row}} nella colonna \"{{column}}\" ha un valore inesistente.\nValore attuale: {{actual_value}}",
+    "IMPORT_FILE_WITH_MULTIPLE_RECORD_TYPE": "Record type trovati: [ {{record_type_name}} ]\nE' possibile caricare solo 1 record type alla volta"
   }
 }

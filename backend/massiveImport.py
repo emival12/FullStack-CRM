@@ -62,7 +62,7 @@ def insert_records(db, cursor, object_name, user_id, df):
     """
 
     # Take the column on the table on the DB
-    table_fields, is_auto_number, is_single_record_type = get_active_field_list(cursor, object_name)
+    table_fields, is_auto_number, is_single_record_type = get_active_field_list(cursor, object_name, df)
 
     # Checks if the excel file have the right fields 
     checks_input_columns(table_fields, df)
@@ -87,7 +87,7 @@ def insert_records(db, cursor, object_name, user_id, df):
         print('Error in the table insert: ' + str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
-def get_active_field_list(cursor, object_name):
+def get_active_field_list(cursor, object_name, df):
     """
         Retrieve the active field definitions and metadata for a given object
         Excludes auto-number primary keys and record_type_name if the object is single record type
@@ -102,6 +102,34 @@ def get_active_field_list(cursor, object_name):
                 - int: Flag indicating if there is an auto_number primary key
                 - int: Flag indicating if the object is single record type
     """
+
+    query = """
+        SELECT 
+            is_single_record_type
+        FROM object_definition
+        WHERE 
+            object_name = %s
+    """
+    cursor.execute(query, (object_name,))
+    object_def = cursor.fetchall()
+
+    is_single_record_type = object_def[0]["is_single_record_type"]
+    if is_single_record_type:
+        record_type_name = "master"
+    else:
+        record_type_name = None
+        for idx, row in enumerate(df.itertuples()):
+            curr_record_type_name = getattr(row, "record_type_name")
+            if not record_type_name:
+                record_type_name = curr_record_type_name
+            
+            if record_type_name != curr_record_type_name:
+                raise_input_exception(
+                    "IMPORT_FILE_WITH_MULTIPLE_RECORD_TYPE", 
+                    {
+                        "record_type_name": [curr_record_type_name, record_type_name],
+                    }
+                )
 
     query = """
         SELECT 
@@ -120,24 +148,13 @@ def get_active_field_list(cursor, object_name):
         FROM field_definition
         WHERE 
             object_name = %s
-            AND record_type_name = 'master'
-            AND is_active = 1 
+            AND record_type_name = %s
+            AND is_active = 1
         ORDER BY field_name ASC;
     """
-    cursor.execute(query, (object_name,))
+    cursor.execute(query, (object_name, record_type_name))
     fields = cursor.fetchall()
 
-    query = """
-        SELECT 
-            is_single_record_type
-        FROM object_definition
-        WHERE 
-            object_name = %s
-    """
-    cursor.execute(query, (object_name,))
-    object_def = cursor.fetchall()
-
-    is_single_record_type = object_def[0]["is_single_record_type"]
     is_auto_number = 0
     new_field = []
     for f in fields:
@@ -227,7 +244,7 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
     map_picklist_lookup_index = {
         field_name: {str(opt["id"]) for opt in options} for field_name, options in map_picklist_lookup_options.items()
     }
-
+    
     params = []
     for idx, row in enumerate(df.itertuples()):
         record_type_name = "master" if is_single_record_type else getattr(row, "record_type_name")
