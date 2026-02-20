@@ -555,9 +555,11 @@ def execute_with_transaction(cursor, db, query, params, error_msg, many=False):
         print(error_msg + str(e))
         raise_input_exception(500, str(e), simple_detail=True)
 
-def convert_into_SQL_field_type(field_type, length):
-    if field_type in (FieldTypes.TEXT.value, FieldTypes.RADIO.value, FieldTypes.CHECKBOX.value, FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value):
+def convert_into_SQL_field_type(field_type, length, reference_field_type=None):
+    if field_type in (FieldTypes.TEXT.value, FieldTypes.RADIO.value, FieldTypes.CHECKBOX.value):
         return f'VARCHAR ({length})'
+    elif field_type in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value):
+        return convert_into_SQL_field_type(reference_field_type, length).replace('AUTO_INCREMENT', '')
     elif field_type in (FieldTypes.NUMBER.value, FieldTypes.ROLLUP.value):
         return f'DECIMAL ({length})'
     elif field_type in (FieldTypes.DATE.value):
@@ -1457,14 +1459,23 @@ def create_new_field(cursor, db, object_name, field_data):
 
     options_values = field_data["options_values"].split("\n") if "options_values" in field_data else None
     try:
-        field_length, sql_length = get_length_based_on_field_type(cursor, field_type, field_length, numeric_precision, numeric_scale, reference_object, reference_field)
+        field_length, sql_length, reference_field_type = get_length_based_on_field_type(
+            cursor, 
+            field_type, 
+            field_length, 
+            numeric_precision, 
+            numeric_scale, 
+            reference_object
+        )
         # Create the actual field
         add_column(                
             cursor, 
             object_name, 
             field_name, 
             field_type, 
-            sql_length
+            sql_length,
+            reference_field_type,
+            reference_object
         )  
         
         params = [
@@ -1523,7 +1534,7 @@ def create_new_field(cursor, db, object_name, field_data):
         print('Error in the table create: ' + str(e))
         raise_input_exception(500, str(e), simple_detail=True)
 
-def get_length_based_on_field_type(cursor, field_type, field_length, numeric_precision, numeric_scale, reference_object, reference_field):
+def get_length_based_on_field_type(cursor, field_type, field_length, numeric_precision, numeric_scale, reference_object):
     """
         Determine the logical and SQL-level length of a field based on its type and configuration
 
@@ -1544,20 +1555,22 @@ def get_length_based_on_field_type(cursor, field_type, field_length, numeric_pre
     """
     
     if field_type == FieldTypes.TEXT.value:   
-        return (field_length, field_length)                         # A text has already the field length setted from the user input
+        return (field_length, field_length, field_type)                         # A text has already the field length setted from the user input
     elif field_type == FieldTypes.NUMBER.value:
-        return (None, f'{numeric_precision}, {numeric_scale}')      # A number has a field length empty but an SQL length composed by the precision + scale
+        return (None, f'{numeric_precision}, {numeric_scale}', field_type)      # A number has a field length empty but an SQL length composed by the precision + scale
     elif field_type == FieldTypes.CHECKBOX.value:
-        return (1, 1)                                               # A bool needs just one bit
+        return (1, 1, field_type)                                               # A bool needs just one bit
     elif field_type == FieldTypes.RADIO.value:
-        return (255, 255)                                           # A radio is a text with a specific set of values
+        return (255, 255, field_type)                                           # A radio is a text with a specific set of values
     elif field_type in (FieldTypes.DATE.value, FieldTypes.DATE_TIME.value):
-        return (None, None)
+        return (None, None, field_type)
     elif field_type == FieldTypes.IMG.value:
-        return (255, 255)
+        return (255, 255, field_type)
     elif field_type in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value, FieldTypes.ROLLUP.value):
+        primary_key_reference_object = get_primary_keys_from_multiple_objects(cursor, [reference_object]).get(reference_object)
         query = f'''
         SELECT 
+            field_type,
             length, 
             numeric_precision, 
             numeric_scale
@@ -1566,11 +1579,17 @@ def get_length_based_on_field_type(cursor, field_type, field_length, numeric_pre
             object_name = %s 
             AND field_name = %s;
         '''
-        cursor.execute(query, (reference_object, reference_field))
+        cursor.execute(query, (reference_object, primary_key_reference_object))
         related_field = cursor.fetchall()[0]
 
-        sql_length = related_field['length'] if related_field['length'] else f'{related_field["numeric_precision"]}, {related_field["numeric_scale"]}'
-        return (related_field['length'], sql_length)                # Pointer fields inherit their length from the reference field
+        reference_field_type = related_field['field_type']
+        sql_length = None
+        if related_field['length']:
+            sql_length = f'{related_field["length"]}'
+        elif related_field["numeric_precision"] or related_field["numeric_scale"]:
+            sql_length = f'{related_field["numeric_precision"]}, {related_field["numeric_scale"]}'
+
+        return (related_field['length'], sql_length, reference_field_type)     # Pointer fields inherit their length from the reference field
 
 def insert_ausiliar_extra_system_object(cursor, field_type, data):
     """
@@ -1693,13 +1712,22 @@ def create_table(cursor, object_data, object_name, pk_field_name, pk_field_type,
     '''
     cursor.execute(command)
 
-def add_column(cursor, object_name, column_name, field_type, field_length):
-    sql_field_type = convert_into_SQL_field_type(field_type, field_length)     # get the SQL field type
+def add_column(cursor, object_name, column_name, field_type, field_length, reference_field_type, reference_object):
+    sql_field_type = convert_into_SQL_field_type(field_type, field_length, reference_field_type)     # get the SQL field type
 
-    # for Lookup fields there isn't a real contraint (from the DB point of view is a simple field unrelated) this because we can link also to non Id field 
+    constraint = None
+    if field_type in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value):
+        primary_key_reference_object = get_primary_keys_from_multiple_objects(cursor, [reference_object]).get(reference_object)
+        constraint = f''' 
+        , ADD CONSTRAINT fk_{column_name} 
+        FOREIGN KEY ({column_name}) REFERENCES {reference_object}({primary_key_reference_object})
+        ON DELETE SET NULL
+        '''
+
     command = f'''
     ALTER TABLE {object_name}
     ADD {column_name} {sql_field_type}
+    {constraint if constraint else ""}
     '''
     cursor.execute(command)
 
@@ -1708,8 +1736,24 @@ def delete_table(cursor, table_name):
     cursor.execute(command)
 
 def delete_field(cursor, table_name, column_name):
+    query = f'''
+    SELECT 
+        field_type
+    FROM field_definition
+    WHERE 
+        object_name = %s 
+        AND field_name = %s;
+    '''
+    cursor.execute(query, (table_name, column_name))
+    field = cursor.fetchall()[0]
+
+    constraint = None
+    if field['field_type'] in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value):
+        constraint = f'''DROP CONSTRAINT fk_{column_name}, '''
+
     command = f'''
     ALTER TABLE {table_name}
+    {constraint if constraint else ""}
     DROP COLUMN {column_name};
     '''
     cursor.execute(command)
@@ -1920,9 +1964,9 @@ def delete_field_from_table(cursor, db, table_name, field_name, current_field_ty
     try:
         fields_to_filter = ["object_name", "field_name"]
         params = [table_name, field_name]
-        delete_record(cursor, "field_definition", fields_to_filter, params)
-
         delete_field(cursor, table_name, field_name)
+
+        delete_record(cursor, "field_definition", fields_to_filter, params)
         db.commit() 
         return {"result": 1}
     except Exception as e:
