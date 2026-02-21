@@ -1786,7 +1786,7 @@ def delete_field(cursor, table_name, column_name, field_type=None):
 
     constraint = None
     if field_type in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value):
-        constraint = f'''DROP CONSTRAINT fk_{object_name}_{column_name}, '''
+        constraint = f'''DROP CONSTRAINT fk_{table_name}_{column_name}, '''
 
     command = f'''
     ALTER TABLE {table_name}
