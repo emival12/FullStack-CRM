@@ -270,10 +270,19 @@ def get_record_info(table_name: str, record_id: str, db = Depends(get_db)):
     field_structure = utils.get_field_structure_and_value(cursor, table_name, fields, record_id)                # retrive structure and values of the field 
 
     related_lists = utils.get_related_list_definition_fields(cursor, table_name, record_type_name)              # retrieve all the related list of the object
+    related_list_key_field_map = { rl["child_object_name"]: rl["child_join_key"] for rl in related_lists}
     tables = utils.get_object_definition_records_join_rt(cursor, [rl["child_object_name"] for rl in related_lists])     # retrieve the description of the child table
     
     tables_dict = {table["key"]: table for table in tables}
-    rel_lists = utils.get_related_list_value(cursor, table_name, record_id, record_type_name, related_lists, tables_dict)  # create the relatedList structure with values
+    rel_lists = utils.get_related_list_value(                                                                   # create the relatedList structure with values
+        cursor, 
+        table_name, 
+        record_id, 
+        record_type_name, 
+        related_lists, 
+        related_list_key_field_map, 
+        tables_dict
+    )  
 
     cursor.close()
     return { 

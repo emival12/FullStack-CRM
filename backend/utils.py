@@ -1001,7 +1001,7 @@ def get_single_record(cursor, table_name, fields, filter_fields, params):
         raise_input_exception(500, "INPUT_RECORD_ID_NOT_FOUND")
     return record
 
-def get_related_list_value(cursor, table_name, record_id, record_type_name, related_lists, tables_dict):
+def get_related_list_value(cursor, table_name, record_id, record_type_name, related_lists, related_list_key_field_map, tables_dict):
     """
         Retrieve data and structure for all related lists of a specific table and record type
 
@@ -1050,8 +1050,9 @@ def get_related_list_value(cursor, table_name, record_id, record_type_name, rela
         table_name_alias = get_alias(table_name)
         table_id_name = map_object_primary_key_names.get(table_name)
         child_table_name_alias = get_alias(child_table_name)
+        child_table_id_name = related_list_key_field_map.get(child_table_name)
 
-        join_current_table = f" LEFT JOIN {table_name} {table_name_alias} ON {table_name_alias}.{table_id_name} = {child_table_name_alias}.{table_name}"
+        join_current_table = f" LEFT JOIN {table_name} {table_name_alias} ON {table_name_alias}.{table_id_name} = {child_table_name_alias}.{child_table_id_name}"
         joins.append(join_current_table)
 
         filters = [f"{table_name_alias}.{map_object_primary_key_names.get(table_name)} = %s",]
