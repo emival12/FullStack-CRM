@@ -1680,16 +1680,16 @@ def insert_ausiliar_extra_system_object(cursor, field_type, data):
             [(reference_object, 'master', object_name)]
         )
         primary_key_field = get_primary_keys_from_multiple_objects(cursor, [object_name]).get(object_name)
-        reference_object_label = get_object_definition_records(cursor, [reference_object])[0]["label"]
+        object_name_label = get_object_definition_records(cursor, [object_name])[0]["label"]
         related_list_def_params = [
             (
                 reference_object,           # master_object_name
                 'master',                   # master_record_type_name
-                detail_join_key,            # master_primary_key
+                primary_key_field,          # master_primary_key
                 object_name,                # child_object_name
                 'master',                   # child_record_type_name
-                primary_key_field,          # detail_join_key
-                reference_object_label,     # label
+                detail_join_key,            # detail_join_key
+                object_name_label,          # label
                 next_order+1,               # sort_order
                 None,                       # filter_condition
                 1                           # is_active
