@@ -1736,7 +1736,7 @@ def add_column(cursor, object_name, column_name, field_type, field_length, refer
     if field_type in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value):
         primary_key_reference_object = get_primary_keys_from_multiple_objects(cursor, [reference_object]).get(reference_object)
         constraint = f''' 
-        , ADD CONSTRAINT fk_{column_name} 
+        , ADD CONSTRAINT fk_{object_name}_{column_name} 
         FOREIGN KEY ({column_name}) REFERENCES {reference_object}({primary_key_reference_object})
         ON DELETE SET NULL
         '''
@@ -1768,7 +1768,7 @@ def delete_field(cursor, table_name, column_name, field_type=None):
 
     constraint = None
     if field_type in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value):
-        constraint = f'''DROP CONSTRAINT fk_{column_name}, '''
+        constraint = f'''DROP CONSTRAINT fk_{object_name}_{column_name}, '''
 
     command = f'''
     ALTER TABLE {table_name}
