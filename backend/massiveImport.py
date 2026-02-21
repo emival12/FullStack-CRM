@@ -67,9 +67,9 @@ def insert_records(db, cursor, object_name, user_id, df):
     # Checks if the excel file have the right fields 
     checks_input_columns(table_fields, df)
 
-    df_cols = set(df.columns)
-    df_cols.add(utils.SystemFieldName.LAST_MODIFIED_BY.lower())
-    df_cols = set(col for col in df_cols if not col.lower().startswith("skip_"))
+
+    df_cols = [col for col in df.columns if not col.lower().startswith("skip_") and col.lower() != utils.SystemFieldName.LAST_MODIFIED_BY.lower()]
+    df_cols.append(utils.SystemFieldName.LAST_MODIFIED_BY.lower())
 
     params = process_input_rows(cursor, table_fields, is_single_record_type, object_name, user_id, df, df_cols)
 
