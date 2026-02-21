@@ -1530,6 +1530,7 @@ def create_new_field(cursor, db, object_name, field_data):
         raise e
     except Exception as e:
         db.rollback()
+        delete_field(cursor, object_name, field_name, field_type)
 
         print('Error in the table create: ' + str(e))
         raise_input_exception(500, str(e), simple_detail=True)
@@ -1637,6 +1638,46 @@ def insert_ausiliar_extra_system_object(cursor, field_type, data):
             )
 
         insert_radio_checkbox_options(cursor, radio_checkbox_options_params)    # Create the radio options (must be created after the field for FK references)
+    elif field_type == FieldTypes.LOOKUP.value:
+        query = f'''
+        SELECT 
+            field_name
+        FROM field_definition
+        WHERE 
+            object_name = %s 
+            AND field_type = '{FieldTypes.LOOKUP.value}'
+            AND reference_object = %s
+            AND is_active = 1
+        '''
+        cursor.execute(query, (object_name, reference_object))
+        detail_join_key = cursor.fetchall()
+        if len(detail_join_key) <= 0:
+            raise_input_exception(500, "Missing lookup field", simple_detail=True)
+
+        detail_join_key = detail_join_key[0]["field_name"]
+        next_order = get_next_sort_order(
+            cursor, 
+            "related_list_definition", 
+            ["master_object_name", "master_record_type_name", "child_object_name"],
+            [(reference_object, 'master', object_name)]
+        )
+        primary_key_field = get_primary_keys_from_multiple_objects(cursor, [object_name]).get(object_name)
+        reference_object_label = get_object_definition_records(cursor, [reference_object])[0]["label"]
+        related_list_def_params = [
+            (
+                reference_object,           # master_object_name
+                'master',                   # master_record_type_name
+                detail_join_key,            # master_primary_key
+                object_name,                # child_object_name
+                'master',                   # child_record_type_name
+                primary_key_field,          # detail_join_key
+                reference_object_label,     # label
+                next_order+1,               # sort_order
+                None,                       # filter_condition
+                1                           # is_active
+            )
+        ]
+        insert_related_list_definition(cursor, related_list_def_params)     # Create the related list definition
     elif field_type == FieldTypes.ROLLUP.value: 
         query = f'''
         SELECT 
@@ -1669,30 +1710,6 @@ def insert_ausiliar_extra_system_object(cursor, field_type, data):
             )
         ]
         insert_rollup_definition(cursor, rollup_def_params)                 # Create the structure definition of the rollup field
-
-
-        next_order = get_next_sort_order(
-            cursor, 
-            "related_list_definition", 
-            ["master_object_name", "master_record_type_name", "child_object_name"],
-            [(object_name, 'master', reference_object)]
-        )
-        reference_object_label = get_object_definition_records(cursor, [reference_object])[0]["label"]
-        related_list_def_params = [
-            (
-                object_name,                # master_object_name
-                'master',                   # master_record_type_name
-                primary_key_field,          # master_primary_key
-                reference_object,           # child_object_name
-                data["reference_object_rt"],# child_record_type_name
-                detail_join_key,            # detail_join_key
-                reference_object_label,     # label
-                next_order+1,               # sort_order
-                None,                       # filter_condition
-                1                           # is_active
-            )   
-        ]
-        insert_related_list_definition(cursor, related_list_def_params)     # Create the related list definition
 
 
 
@@ -1735,20 +1752,22 @@ def delete_table(cursor, table_name):
     command = f'DROP TABLE IF EXISTS {table_name}'
     cursor.execute(command)
 
-def delete_field(cursor, table_name, column_name):
-    query = f'''
-    SELECT 
-        field_type
-    FROM field_definition
-    WHERE 
-        object_name = %s 
-        AND field_name = %s;
-    '''
-    cursor.execute(query, (table_name, column_name))
-    field = cursor.fetchall()[0]
+def delete_field(cursor, table_name, column_name, field_type=None):
+    if(not field_type):
+        query = f'''
+        SELECT 
+            field_type
+        FROM field_definition
+        WHERE 
+            object_name = %s 
+            AND field_name = %s;
+        '''
+        cursor.execute(query, (table_name, column_name))
+        field = cursor.fetchall()[0]
+        field_type = field['field_type']
 
     constraint = None
-    if field['field_type'] in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value):
+    if field_type in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value):
         constraint = f'''DROP CONSTRAINT fk_{column_name}, '''
 
     command = f'''
