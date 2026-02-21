@@ -337,6 +337,7 @@ async def update_record(request: Request, db = Depends(get_db)):
     utils.check_allowed_tables(cursor, table_name)                              # Evaluate input value (Avoid SQLInjection)
     (table_name, record_type_name) = split_table_name(table_name)               # table_name == ObjectName_RecordTypeName
 
+    record["record_type_name"] = record_type_name
     result = utils.insert_new_record(cursor, db, table_name, [record], user["id"])    # execute the actual insert
     cursor.close()
     return result

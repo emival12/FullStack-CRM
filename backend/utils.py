@@ -1123,7 +1123,7 @@ def insert_new_record(cursor, db, table_name, records, user_id):
     for r in records:
         record_values = []
         for v in r.values():
-            record_values.append(None if v == "" else v)
+            record_values.append(None if v == "" or v == "NULL" else v)
         record_values.append(user_id)
         params.append(tuple(record_values))
 
