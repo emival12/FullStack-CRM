@@ -810,7 +810,7 @@ def build_group_by_clause(field_syntax_list, exclude_from_group):
 
     return f' GROUP BY {", ".join(fields_to_group)}'
 
-def build_query(cursor, table_name, record_type_name, fields_text, joins, group):
+def build_query(cursor, table_name, record_type_name, fields_text, joins, group, filters=None, extra_params=None):
     """
         Build and execute an SQL SELECT statement for the specified table and record type
 
@@ -824,21 +824,32 @@ def build_query(cursor, table_name, record_type_name, fields_text, joins, group)
             fields_text (str): Comma-separated list of SQL fields to select
             joins (list[str]): List of SQL JOIN clauses
             group (str): The GROUP BY clause, or an empty string if not applicable
+            filters (list[str]): extra filter to add in the Where condition
+            extra_params (list[str]): params of the extra_filters
 
         Returns:
             list[dict]: Query results as a list of dictionaries
     """
 
     table_name_alias = get_alias(table_name)
+    where_filter = [f"{table_name_alias}.record_type_name = %s"]
+    if filters:
+        where_filter.extend(filters)
+
     query = f'''
         SELECT {fields_text} 
         FROM {table_name} {table_name_alias}
         {" ".join(joins) if joins else ""}
-        WHERE {table_name_alias}.record_type_name = %s
+        WHERE {" AND ".join(where_filter)}
         {group}
         ORDER BY {table_name_alias}.{SystemFieldName.CREATE_DATE} DESC;
     '''
-    cursor.execute(query, (record_type_name,))
+
+    params = [record_type_name]
+    if extra_params:
+        params.extend(extra_params)
+
+    cursor.execute(query, (params))
     return cursor.fetchall()
 
 
@@ -990,7 +1001,7 @@ def get_single_record(cursor, table_name, fields, filter_fields, params):
         raise_input_exception(500, "INPUT_RECORD_ID_NOT_FOUND")
     return record
 
-def get_related_list_value(cursor, table_name, record_type_name, related_lists, tables_dict):
+def get_related_list_value(cursor, table_name, record_id, record_type_name, related_lists, tables_dict):
     """
         Retrieve data and structure for all related lists of a specific table and record type
 
@@ -1016,15 +1027,13 @@ def get_related_list_value(cursor, table_name, record_type_name, related_lists, 
     dict_fields = get_list_view_definition_fields(cursor, params_tables)
 
     # Precalculate a map of {object_name: primary_key_field_name}. In this way the query is done 1 time
-    list_object = []
+    list_object = [table_name]
     for rl in related_lists:
         fields = dict_fields.get(get_table_key(rl, "child_object_name", "child_record_type_name"))
         for row in fields:
             if row["field_type"] in (FieldTypes.PICKLIST.value, FieldTypes.LOOKUP.value):
                 list_object.append(row["reference_object"])
-
     map_object_primary_key_names = get_primary_keys_from_multiple_objects(cursor, list_object)
-
 
     # Build and execute a query for each related list
     rel_lists = []
@@ -1034,9 +1043,20 @@ def get_related_list_value(cursor, table_name, record_type_name, related_lists, 
 
         fields = dict_fields.get(get_table_key(related_list, "child_object_name", "child_record_type_name"))
 
+        # Those joins and group are needed to handle the field to display
         (fields_text, joins, group) = build_field_value_select_clause(cursor, fields, child_table_name)
-        related_records = build_query(cursor, child_table_name, child_record_type_name, fields_text, joins, group)
- 
+
+        # This joins is used to filter on the correct value based on the record selected
+        table_name_alias = get_alias(table_name)
+        table_id_name = map_object_primary_key_names.get(table_name)
+        child_table_name_alias = get_alias(child_table_name)
+
+        join_current_table = f" LEFT JOIN {table_name} {table_name_alias} ON {table_name_alias}.{table_id_name} = {child_table_name_alias}.{table_name}"
+        joins.append(join_current_table)
+
+        filters = [f"{table_name_alias}.{map_object_primary_key_names.get(table_name)} = %s",]
+        params = [record_id]
+        related_records = build_query(cursor, child_table_name, child_record_type_name, fields_text, joins, group, filters, params)
         tempDictionary = {
             "label": related_list['label'].capitalize(),
             "table":  tables_dict.get(get_table_key(related_list, "child_object_name", "child_record_type_name")),
@@ -1047,8 +1067,6 @@ def get_related_list_value(cursor, table_name, record_type_name, related_lists, 
         rel_lists.append(tempDictionary)
     
     return rel_lists
-
-
 
 def delete_record_by_id(cursor, db, table_name, record_type_name, primary_key_field, record_id):
     """

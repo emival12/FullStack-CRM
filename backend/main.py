@@ -273,7 +273,7 @@ def get_record_info(table_name: str, record_id: str, db = Depends(get_db)):
     tables = utils.get_object_definition_records_join_rt(cursor, [rl["child_object_name"] for rl in related_lists])     # retrieve the description of the child table
     
     tables_dict = {table["key"]: table for table in tables}
-    rel_lists = utils.get_related_list_value(cursor, table_name, record_type_name, related_lists, tables_dict)  # create the relatedList structure with values
+    rel_lists = utils.get_related_list_value(cursor, table_name, record_id, record_type_name, related_lists, tables_dict)  # create the relatedList structure with values
 
     cursor.close()
     return { 

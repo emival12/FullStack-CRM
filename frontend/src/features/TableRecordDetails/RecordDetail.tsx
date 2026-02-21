@@ -212,7 +212,7 @@ export default function RecordDetail() {
                 <div className="fw-bold mb-2">{related_list.label}</div>
                 <DynamicRecordsList
                   data={related_list}
-                  redirectKey={tableKey}
+                  redirectKey={related_list?.table?.key}
                 />
               </div>
             ))}
