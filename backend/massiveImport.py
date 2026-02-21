@@ -253,7 +253,7 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
         for col in df_cols:
             col_lower = col.lower()
             if utils.SystemFieldName.LAST_MODIFIED_BY.lower() == col_lower:
-                value = str(user_id)
+                continue # added at the end
             else:
                 # Get the value of the cell
                 raw_value = getattr(row, col)
@@ -407,7 +407,11 @@ def process_input_rows(cursor, fields, is_single_record_type, object_name, user_
                 )  
             
             new_record.append(value)
-        params.append(tuple(new_record))
+        
+
+        if any(new_record):
+            new_record.append(str(user_id)) # Insert last modifyByUser
+            params.append(tuple(new_record))
         
     return params 
 
