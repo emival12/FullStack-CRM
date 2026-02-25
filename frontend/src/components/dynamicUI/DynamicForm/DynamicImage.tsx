@@ -31,21 +31,26 @@ export default function DynamicImage({
     setImgError(false);
   }, [info?.value]);
 
+  const renderImage = () => {
+    if (!info?.value) return <></>;
+    if (imgError) return <div>{getLabel("FORM_ERRORS.IMAGE_NOT_FOUND")}</div>;
+
+    return (
+      <Image
+        src={`${API_BASE_URL}/images/${info?.value}`}
+        fluid
+        rounded
+        onError={() => setImgError(true)}
+        style={{ maxHeight: "300px" }}
+      />
+    );
+  };
+
   return (
     <Container fluid className="mb-3 p-0">
       <Row className="align-items-center">
         <Col xs={12} md={8} className="d-flex justify-content-center">
-          {!imgError ? (
-            <Image
-              src={`${API_BASE_URL}/images/${info?.value}`}
-              fluid
-              rounded
-              onError={() => setImgError(true)}
-              style={{ maxHeight: "300px" }}
-            />
-          ) : (
-            <div>{getLabel("FORM_ERRORS.IMAGE_NOT_FOUND")}</div>
-          )}
+          {renderImage()}
         </Col>
         <Col>
           <FloatingLabel
