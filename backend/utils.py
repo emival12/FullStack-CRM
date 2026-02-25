@@ -77,7 +77,7 @@ def get_object_definition_records(cursor, object_names=None):
 
     return tables
 
-def get_object_definition_records_join_rt(cursor, object_names=None):
+def get_object_definition_records_join_rt(cursor, object_names=None, is_rt_active=1):
     """
         Retrieve all active records from the 'object_definition' table
 
@@ -91,17 +91,29 @@ def get_object_definition_records_join_rt(cursor, object_names=None):
                 (e.g. object_name, record_type_name, category, etc.)
     """
 
-    filter_object_name = ""
+    where_filter = ["od.is_system_object = 0"]
+
+    if is_rt_active:
+        where_filter.append(f"rtd.is_active = {is_rt_active}")
+
     params = ()
     if object_names:
-        filter_object_name = f'AND od.object_name IN ({", ".join(["%s"] * len(object_names))})'
+        where_filter.append(f'od.object_name IN ({", ".join(["%s"] * len(object_names))})')
         params = tuple(object_names)
 
     query = f'''
-    SELECT od.object_label, od.object_name, rtd.record_type_name, od.category, od.sort_order, od.is_system_object, od.is_single_record_type
+    SELECT 
+        od.object_label, 
+        od.object_name, 
+        rtd.record_type_name, 
+        rtd.is_active,
+        od.category, 
+        od.sort_order, 
+        od.is_system_object, 
+        od.is_single_record_type
     FROM object_definition od
     LEFT JOIN record_type_definition rtd ON od.object_name = rtd.object_name
-    WHERE rtd.is_active = 1 AND od.is_system_object = 0 {filter_object_name}
+    WHERE {" AND ".join(where_filter)}
     ORDER BY od.sort_order ASC;
     '''
     cursor.execute(query, params)
@@ -180,7 +192,7 @@ def get_list_view_definition_fields(cursor, list_params):
 
 RLD_VISIBLE_AND_EDITABLE_FILTER = "((fd.is_visible = 1 AND fd.is_editable = 1) OR fd.field_name = 'record_type_name')"
 RLD_SINGLE_FIELD_NAME_FILTER = f'fd.is_visible = 1 AND fd.field_name = %s'
-def get_record_layout_definition_fields(cursor, table_name, record_type_name, where_additional_condition=None, where_additional_params=[]):
+def get_record_layout_definition_fields(cursor, table_name, record_type_name, is_active=1, where_additional_condition=None, where_additional_params=[]):
     """
         Return all active and visible fields defined in the record layout for a specific object
 
@@ -197,6 +209,10 @@ def get_record_layout_definition_fields(cursor, table_name, record_type_name, wh
 
     if not where_additional_condition:
         where_additional_condition = "fd.is_visible = 1"
+
+    filter_is_active = ""
+    if is_active:
+        filter_is_active = "AND fd.is_active = 1"
 
     query = f'''
     SELECT 
@@ -221,7 +237,7 @@ def get_record_layout_definition_fields(cursor, table_name, record_type_name, wh
     WHERE 
         fd.object_name = %s 
         AND fd.record_type_name = %s 
-        AND fd.is_active = 1 
+        {filter_is_active} 
         AND {where_additional_condition}
     ORDER BY rvd.sort_order ASC;
     '''
@@ -909,9 +925,7 @@ def get_field_structure_and_value_data(cursor, table_name, fields, mode, record_
     if mode == FieldStructureMode.STRUCTURE_AND_DATA:
         primary_key_field = get_primary_key_from_fields(fields)
         record = get_single_record(cursor, table_name, fields, [primary_key_field], [record_id])
-
         map_record_info_rollup_record = get_rollup_definition(cursor, map_field_by_type["rollup_fields"])
-
 
     field_structure = {}
     for row in fields:
@@ -997,7 +1011,6 @@ def get_single_record(cursor, table_name, fields, filter_fields, params):
     record = cursor.fetchone()
 
     if not record:
-        print(query, params)
         raise_input_exception(500, "INPUT_RECORD_ID_NOT_FOUND")
     return record
 
@@ -1464,7 +1477,7 @@ def create_new_field(cursor, db, object_name, field_data):
         Raises:
             HTTPException: If a database error occurs
     """
-    
+
     field_name = field_data["field_name"].replace(" ", "_").lower()
     field_type = field_data["field_type"]
     field_length = field_data["length"] if "length" in field_data else None
@@ -1497,50 +1510,56 @@ def create_new_field(cursor, db, object_name, field_data):
             reference_object
         )  
         
-        params = [
-            (
-                object_name,                        # object_name
-                "master",                           # record_type_name
-                field_name,                         # field_name
-                field_type,                         # field_type
-                field_length,                       # length
-                numeric_precision,                  # numeric_precision
-                numeric_scale,                      # numeric_scale
-                reference_object,                   # reference_object
-                reference_field,                    # reference_field
-                field_data["is_active"],            # is_active
-                field_data["is_visible"],           # is_visible
-                field_data["is_editable"],          # is_editable
-                field_data["is_required"],          # is_required
-                0,                                  # is_primary_key
-                lookup_filter                       # lookup_filter
-            ),
-        ]
-        insert_field_definition(cursor, params)                 # Create the field_definition
+        tables_rt = get_object_definition_records_join_rt(cursor, [object_name], 0)
+        for rt in tables_rt:
+            record_type = rt["record_type_name"]
+            is_rt_active = rt["is_active"]
 
-        next_order = get_next_sort_order(cursor, "record_layout_definition", ["object_name"], [object_name])
-        params = [
-            (
-                object_name,            # object_name
-                "master",               # record_type_name
-                field_name,             # field_name
-                next_order+1            # sort_order
-            )
-        ]
-        insert_record_layout_definition(cursor, params)         # Create the record_layout_definition
+            params = [
+                (
+                    object_name,                                                # object_name
+                    record_type,                                                # record_type_name
+                    field_name,                                                 # field_name
+                    field_type,                                                 # field_type
+                    field_length,                                               # length
+                    numeric_precision,                                          # numeric_precision
+                    numeric_scale,                                              # numeric_scale
+                    reference_object,                                           # reference_object
+                    reference_field,                                            # reference_field
+                    field_data["is_active"] if is_rt_active else is_rt_active,  # is_active
+                    field_data["is_visible"],                                   # is_visible
+                    field_data["is_editable"],                                  # is_editable
+                    field_data["is_required"],                                  # is_required
+                    0,                                                          # is_primary_key
+                    lookup_filter                                               # lookup_filter
+                ),
+            ]
+            insert_field_definition(cursor, params)                 # Create the field_definition
 
-        # Create the ausiliar System object for the special types (ex: radio_checkbox_options, rollup_definition, related_list_definition, ..)
-        data = {
-            "object_name": object_name,
-            "field_name": field_name,
-            "reference_object": reference_object,
-            "reference_object_rt": reference_object_record_type,
-            "reference_field": reference_field,
-            "aggregation_function": aggregation_function,
-            "lookup_filter": lookup_filter,
-            "options_values": options_values,
-        }
-        insert_ausiliar_extra_system_object(cursor, field_type, data)       
+            next_order = get_next_sort_order(cursor, "record_layout_definition", ["object_name"], [object_name])
+            params = [
+                (
+                    object_name,            # object_name
+                    record_type,            # record_type_name
+                    field_name,             # field_name
+                    next_order+1            # sort_order
+                )
+            ]
+            insert_record_layout_definition(cursor, params)         # Create the record_layout_definition
+
+            # Create the ausiliar System object for the special types (ex: radio_checkbox_options, rollup_definition, related_list_definition, ..)
+            data = {
+                "object_name": object_name,
+                "object_rt": record_type,
+                "field_name": field_name,
+                "reference_object": reference_object,
+                "reference_object_rt": reference_object_record_type,
+                "reference_field": reference_field,
+                "aggregation_function": aggregation_function,
+                "lookup_filter": lookup_filter,
+                "options_values": options_values,
+            }
+            insert_ausiliar_extra_system_object(cursor, field_type, data)       
 
         db.commit() 
         return {"result": 1}
@@ -1638,6 +1657,7 @@ def insert_ausiliar_extra_system_object(cursor, field_type, data):
     """
 
     object_name = data["object_name"]
+    record_type = data["object_rt"]
     field_name = data["field_name"]
     reference_object = data["reference_object"]
     
@@ -1647,7 +1667,7 @@ def insert_ausiliar_extra_system_object(cursor, field_type, data):
             radio_checkbox_options_params.append(
                 (
                     object_name,
-                    "master",
+                    record_type,
                     field_name,
                     idx,
                     option.replace(" ", "_").lower()[:255],
@@ -1678,7 +1698,7 @@ def insert_ausiliar_extra_system_object(cursor, field_type, data):
             cursor, 
             "related_list_definition", 
             ["master_object_name", "master_record_type_name", "child_object_name"],
-            [(reference_object, 'master', object_name)]
+            [(reference_object, record_type, object_name)]
         )
         primary_key_field = get_primary_keys_from_multiple_objects(cursor, [object_name]).get(object_name)
         object_name_label = get_object_definition_records(cursor, [object_name])[0]["label"]
@@ -1688,7 +1708,7 @@ def insert_ausiliar_extra_system_object(cursor, field_type, data):
                 'master',                   # master_record_type_name
                 primary_key_field,          # master_primary_key
                 object_name,                # child_object_name
-                'master',                   # child_record_type_name
+                record_type,                # child_record_type_name
                 detail_join_key,            # detail_join_key
                 object_name_label,          # label
                 next_order+1,               # sort_order
@@ -1718,7 +1738,7 @@ def insert_ausiliar_extra_system_object(cursor, field_type, data):
         rollup_def_params = [
             (
                 object_name,
-                'master',
+                record_type,
                 primary_key_field,  # master_primary_key
                 field_name,
                 reference_object,
@@ -1881,7 +1901,6 @@ def get_next_sort_order(cursor, system_object_name, field_to_filter, params):
     FROM {system_object_name}
     WHERE {where_filter} IN ({placeholders});
     '''
-
     cursor.execute(query, tuple(flat_params,))
     order = cursor.fetchone()["sort_order"]
     return order if order else 1
@@ -1913,6 +1932,7 @@ def get_field_definition_by_field_name(cursor, table_name, field_name):
         cursor, 
         table_name, 
         "master", 
+        0,
         RLD_SINGLE_FIELD_NAME_FILTER, 
         [field_name]
     )
@@ -1960,7 +1980,7 @@ def setup_get_field_structure_and_value_data(cursor, table_name, fields, record_
                 real_fields.append(f)
 
     # Get the record infos
-    record = get_single_record(cursor, table_name, real_fields, [primary_key_field, "object_name"], [record_id, field_attributes["object_name"]])    
+    record = get_single_record(cursor, table_name, real_fields, [primary_key_field, "object_name", "record_type_name"], [record_id, field_attributes["object_name"], "master"])    
 
     # Calculate the ausiliar fields
     if current_field_type == FieldTypes.ROLLUP.value:
