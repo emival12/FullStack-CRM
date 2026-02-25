@@ -203,7 +203,10 @@ async def import_records_from_csv(
     db = Depends(get_db)
 ):
     file_contents = await file.read()
-    file_decoded = file_contents.decode('utf-8')
+    try:
+        file_decoded = file_contents.decode('utf-8')
+    except Exception as err:
+        utils.raise_input_exception(400, "IMPORT_FILE_ENCODING_INVALID")
 
     cursor = db.cursor(dictionary=True)
     massiveImport.elaborate_import_file(db, cursor, operation_type, object_name, user_id, file_decoded)

@@ -64,6 +64,7 @@
     "TEXT_AREA_HELP_LABEL": "Dividere ogni valore con l'accapo"
   },
   "API_MASSIVE_IMPORT_ERROR_MESSAGES": {
+    "IMPORT_FILE_ENCODING_INVALID": "Impossibile leggere il file.\nAssicurati che il file sia salvato in formato CSV con codifica UTF-8 e che non contenga caratteri speciali non riconosciuti.",
     "IMPORT_FILE_MISSING_REQUIRED_FIELDS": "Le colonne: [ {{columns}} ] sono obbligatorie",
     "IMPORT_FILE_UNKNOWN_FIELDS": "Le colonne: [ {{columns}} ] non esistono sull'oggetto indicato",
     "IMPORT_FIELD_LENGTH_EXCEEDED": "La riga {{row}} nella colonna \"{{column}}\" ha un valore troppo lungo.\nLunghezza massima: {{max_length}}, Lunghezza attuale: {{actual_length}}",
