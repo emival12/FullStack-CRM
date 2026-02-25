@@ -208,7 +208,10 @@ export default function RecordDetail() {
             title={getLabel("DETAIL_TABS.RELATED_TAB_LABEL")}
           >
             {Object.entries(fields.related_list).map(([key, related_list]) => (
-              <div className="border border-2 p-3 pt-2 rounded-4" key={key}>
+              <div
+                className="border border-2 p-3 pt-2 rounded-4 mb-3"
+                key={key}
+              >
                 <div className="fw-bold mb-2">{related_list.label}</div>
                 <DynamicRecordsList
                   data={related_list}
