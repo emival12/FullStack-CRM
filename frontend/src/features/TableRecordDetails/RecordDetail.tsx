@@ -207,24 +207,18 @@ export default function RecordDetail() {
             eventKey="relatedLists"
             title={getLabel("DETAIL_TABS.RELATED_TAB_LABEL")}
           >
-            {Object.entries(fields.related_list).map(([key, related_list]) => {
-              if (related_list?.records.length > 0) {
-                return (
-                  <div
-                    className="border border-2 p-3 pt-2 rounded-4 mb-3"
-                    key={key}
-                  >
-                    <div className="fw-bold mb-2">{related_list.label}</div>
-                    <DynamicRecordsList
-                      data={related_list}
-                      redirectKey={related_list?.table?.key}
-                    />
-                  </div>
-                );
-              } else {
-                return <></>;
-              }
-            })}
+            {Object.entries(fields.related_list).map(([key, related_list]) => (
+              <div
+                className="border border-2 p-3 pt-2 rounded-4 mb-3"
+                key={key}
+              >
+                <div className="fw-bold mb-2">{related_list.label}</div>
+                <DynamicRecordsList
+                  data={related_list}
+                  redirectKey={related_list?.table?.key}
+                />
+              </div>
+            ))}
           </Tab>
         ) : null}
       </Tabs>
