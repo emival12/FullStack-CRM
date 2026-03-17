@@ -32,7 +32,7 @@ const RecordCell = ({
       </td>
     );
   }
-  return <td>{correctFormatDate || fieldValue}</td>;
+  return <td>{correctFormatDate || String(fieldValue)}</td>;
 };
 
 const formatDateSimple: FormatDateSimpleFunction = (fieldValue, fieldType) => {

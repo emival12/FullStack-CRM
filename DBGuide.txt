@@ -55,6 +55,7 @@ CREATE TABLE field_definition (
     reference_object VARCHAR(100),
     reference_field VARCHAR(255),
     lookup_filter VARCHAR(1000),
+    formula_definition VARCHAR(1000),
     is_active BOOL DEFAULT 1,
     is_visible BOOL DEFAULT 1,
     is_editable BOOL DEFAULT 1,

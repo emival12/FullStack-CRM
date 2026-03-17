@@ -14,6 +14,7 @@ import {
   FULL_AUTO_NUMBER_FIELD_STRUCTURE,
   NEW_DATE_FIELD_OBJECT_STRUCTURE,
   NEW_IMG_FIELD_OBJECT_STRUCTURE,
+  NEW_FORMULA_FIELD_STRUCTURE,
 } from "features/Setup/K_SetupFormsStructure";
 import {
   CloneAndAddOptionsFunc,
@@ -93,6 +94,7 @@ export function FieldTypes() {
       [field_types.DATE_TIME]: sortDict(NEW_DATE_FIELD_OBJECT_STRUCTURE),
       [field_types.IMG]: sortDict(NEW_IMG_FIELD_OBJECT_STRUCTURE),
       [field_types.AUTO_NUMBER]: sortDict(FULL_AUTO_NUMBER_FIELD_STRUCTURE),
+      [field_types.FORMULA]: sortDict(NEW_FORMULA_FIELD_STRUCTURE),
     };
 
     return {

@@ -277,3 +277,12 @@ export const OPTION_VALUES_BASE: BaseFieldInfo = {
   is_required: 1,
   order: 2,
 };
+
+export const FORMULA_BASE: BaseFieldInfo = {
+  field_name: "formula_definition",
+  field_type: FieldType.TEXT,
+  length: 1000,
+  is_editable: 1,
+  is_required: 1,
+  order: 2,
+};

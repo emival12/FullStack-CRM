@@ -4,6 +4,7 @@ import {
   CATEGORY_BASE,
   FIELD_NAME_BASE,
   FIELD_TYPE_BASE,
+  FORMULA_BASE,
   ID_FIELD_NAME_BASE,
   ID_FIELD_TYPE_BASE,
   IS_ACTIVE_BASE,
@@ -113,6 +114,25 @@ export const NEW_DATE_FIELD_OBJECT_STRUCTURE: MetadataFieldStructure = {
 
 export const NEW_IMG_FIELD_OBJECT_STRUCTURE: MetadataFieldStructure = {
   ...BASE_FIELD_OBJECT_STRUCTURE,
+};
+
+export const NEW_FORMULA_FIELD_STRUCTURE: MetadataFieldStructure = {
+  field_name: FIELD_NAME_BASE,
+  formula_definition: FORMULA_BASE,
+  is_active: IS_ACTIVE_BASE,
+  is_visible: {
+    ...IS_VISIBLE_BASE,
+    is_editable: 1,
+  },
+  is_editable: {
+    ...IS_EDITABLE_BASE,
+    is_editable: 0,
+    value: false,
+  },
+  is_required: {
+    ...IS_REQUIRED_BASE,
+    is_editable: 0,
+  },
 };
 
 // this is used only on the primary key (the autonumber type is not available)

@@ -252,7 +252,7 @@ def get_table_records(table_name: str, db = Depends(get_db)):
     fields = dict_fields.get(utils.get_table_key_from_strings(table_name, record_type_name))
 
     (fields_text, joins, group) = utils.build_field_value_select_clause(cursor, fields, table_name)      # retrieve SQL clause from the fields, to extract the values of the fields
-    records = utils.build_query(cursor, table_name, record_type_name, fields_text, joins, group)         # make the query using the clauses created 
+    records = utils.build_query(cursor, table_name, record_type_name, fields, fields_text, joins, group) # make the query using the clauses created 
 
     cursor.close()
     return {

@@ -80,6 +80,7 @@ export enum FieldType {
   DATE_TIME = "datetime-local",
   IMG = "image",
   AUTO_NUMBER = "auto_number",
+  FORMULA = "formula",
 }
 
 export interface FieldOptionRadio {
