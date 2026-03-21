@@ -133,9 +133,11 @@ def cast_record_types(record, fields_definition):
     type_map = {f['field_name']: f['field_type'] for f in fields_definition}
 
     for key, value in record.items():
+        if not value: continue
+        
         f_type = type_map.get(key)
         if f_type == utils.FieldTypes.NUMBER.value:
-            record[key] = Decimal(value)            
+            record[key] = Decimal(value or 0)            
         elif f_type in (utils.FieldTypes.DATE.value, utils.FieldTypes.DATE_TIME.value):
             if isinstance(value, str):
                 record[key] = parser.parse(value)
