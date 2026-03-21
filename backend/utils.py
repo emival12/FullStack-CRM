@@ -1338,7 +1338,8 @@ def create_new_object(cursor, db, object_data):
                 is_primary_key_text,                # is_editable
                 is_primary_key_text,                # is_required
                 1,                                  # is_primary_key
-                None                                # lookup_filter
+                None,                               # lookup_filter
+                None                                # formula_description
             ),
             (
                 object_name,
@@ -1355,6 +1356,7 @@ def create_new_object(cursor, db, object_data):
                 0,
                 1,
                 0,
+                None,
                 None
             ),
             (
@@ -1372,6 +1374,7 @@ def create_new_object(cursor, db, object_data):
                 0,
                 0,
                 0,
+                None,
                 None
             ),
             (
@@ -1389,6 +1392,7 @@ def create_new_object(cursor, db, object_data):
                 0,
                 0,
                 0,
+                None,
                 None
             ),
             (
@@ -1406,6 +1410,7 @@ def create_new_object(cursor, db, object_data):
                 0,
                 0,
                 0,
+                None,
                 None
             ),
         ]
