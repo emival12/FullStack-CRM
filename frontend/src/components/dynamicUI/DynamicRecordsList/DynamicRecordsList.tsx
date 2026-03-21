@@ -32,7 +32,12 @@ const RecordCell = ({
       </td>
     );
   }
-  return <td>{correctFormatDate || String(fieldValue)}</td>;
+
+  fieldValue =
+    String(fieldValue) === "false" || String(fieldValue) === "true"
+      ? String(fieldValue)
+      : fieldValue;
+  return <td>{correctFormatDate || fieldValue}</td>;
 };
 
 const formatDateSimple: FormatDateSimpleFunction = (fieldValue, fieldType) => {
