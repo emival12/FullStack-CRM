@@ -1,9 +1,6 @@
 from fastapi import HTTPException
 from enum import Enum, auto
-from types import SimpleNamespace
-from decimal import Decimal
 import bcrypt
-import re
 
 """
 Python naming convention:
@@ -582,7 +579,7 @@ def execute_with_transaction(cursor, db, query, params, error_msg, many=False):
         raise_input_exception(500, str(e), simple_detail=True)
 
 def convert_into_SQL_field_type(field_type, length, reference_field_type=None):
-    if field_type in (FieldTypes.TEXT.value, FieldTypes.RADIO.value, FieldTypes.CHECKBOX.value):
+    if field_type in (FieldTypes.TEXT.value, FieldTypes.RADIO.value, FieldTypes.CHECKBOX.value, FieldTypes.FORMULA.value):
         return f'VARCHAR ({length})'
     elif field_type in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value):
         return convert_into_SQL_field_type(reference_field_type, length).replace('AUTO_INCREMENT', '')
@@ -786,40 +783,14 @@ def build_field_value_select_clause(cursor, fields, table_name, map_object_prima
 
             has_group = True
             exclude_from_group.append(fieldSyntax)
-        elif row["field_type"] in (FieldTypes.FORMULA.value):
-            continue
         else:
             fieldSyntax = f'{table_name_alias}.{row["field_name"]}'
 
         field_syntax_list.append(fieldSyntax)
 
-    field_set = set(field_syntax_list)
-    get_fields_from_formulas(
-        map_field_by_type["formula_fields"], 
-        lambda field_name: f"{table_name_alias}.{field_name}", 
-        lambda field_name: f"{table_name_alias}.{field_name}", 
-        field_set, 
-        field_syntax_list
-    )
-
     fields_text = ", ".join(field_syntax_list)
     group = build_group_by_clause(field_syntax_list, exclude_from_group) if has_group else ""
     return (fields_text, joins, group)
-
-
-def get_fields_from_formulas(map_formula_fields, transform_field_key, transform_field_name, already_extracted_field, return_field_list):
-    regex = "field\.([A-Za-z0-9_]*)"
-
-    for field in map_formula_fields:
-        matched_fields = re.findall(regex, field["formula_definition"])
-        for mf in matched_fields:
-            f_key = transform_field_key(mf)
-            if f_key not in already_extracted_field:
-                f = transform_field_name(mf)
-                return_field_list.append(f)
-                already_extracted_field.add(f)
-    
-    return return_field_list, already_extracted_field
 
 def build_field_join_clause(table_name, table_field, join_table_name, join_field, join_reference_field):
     join_table_alias = get_alias(join_table_name)
@@ -862,7 +833,7 @@ def build_group_by_clause(field_syntax_list, exclude_from_group):
 
     return f' GROUP BY {", ".join(fields_to_group)}'
 
-def build_query(cursor, table_name, record_type_name, fields, fields_text, joins, group, filters=None, extra_params=None):
+def build_query(cursor, table_name, record_type_name, fields_text, joins, group, filters=None, extra_params=None):
     """
         Build and execute an SQL SELECT statement for the specified table and record type
 
@@ -902,40 +873,7 @@ def build_query(cursor, table_name, record_type_name, fields, fields_text, joins
         params.extend(extra_params)
 
     cursor.execute(query, (params))
-    records = cursor.fetchall()
-
-    formula_fields = [f for f in fields if f["field_type"] == FieldTypes.FORMULA.value]
-    if formula_fields and records:
-        for rec in records:
-            for f_field in formula_fields:
-                calculate_formula_field(rec, f_field["field_name"], f_field["formula_definition"])
-    
-    return records
-
-def calculate_formula_field(record, field_name, formula_definition):
-    safe_methods = {
-        "round": round,
-        "abs": abs,
-        "len": len,
-        "max": max,
-        "min": min,
-        "str": str,
-        "int": int,
-        "decimal": Decimal,
-    }
-
-    try:
-        ns = SimpleNamespace(**record)
-        context = {"field": ns, **safe_methods}
-        
-        calculated_value = eval(formula_definition, {"__builtins__": None}, context)
-        record[field_name] = calculated_value
-    except Exception as e:
-        print(f"Error in the formula {field_name}: {e}")
-        record[field_name] = "ERROR"
-    
-    return record
-
+    return cursor.fetchall()
 
 def get_field_structure(cursor, table_name, fields):
     return get_field_structure_and_value_data(
@@ -991,23 +929,7 @@ def get_field_structure_and_value_data(cursor, table_name, fields, mode, record_
     # If is needed only the structure the Rollup (readOnly fields) and the record values are useless
     if mode == FieldStructureMode.STRUCTURE_AND_DATA:
         primary_key_field = get_primary_key_from_fields(fields)
-
-        map_field_to_retrieve = set()
-        fields_to_retrieve = []
-        for row in fields:
-            if row["field_type"] != FieldTypes.FORMULA.value:
-                fields_to_retrieve.append(row)
-                map_field_to_retrieve.add(row["field_name"])
-
-        get_fields_from_formulas(
-            map_field_by_type["formula_fields"], 
-            lambda field_name: field_name,
-            lambda field_name: {"field_name": field_name}, 
-            map_field_to_retrieve, 
-            fields_to_retrieve
-        )
-
-        record = get_single_record(cursor, table_name, fields_to_retrieve, [primary_key_field], [record_id])
+        record = get_single_record(cursor, table_name, fields, [primary_key_field], [record_id])
         map_record_info_rollup_record = get_rollup_definition(cursor, map_field_by_type["rollup_fields"])
 
     field_structure = {}
@@ -1060,8 +982,6 @@ def get_field_structure_and_value_data(cursor, table_name, fields, mode, record_
                 cursor.execute(query, (record_id,))
                 rollup_record = cursor.fetchone()
                 record[row["field_name"]] = rollup_record[rollup_definition["master_field_name"]]  # Save the calculated value into the respective field
-            elif row["field_type"] in (FieldTypes.FORMULA.value):
-                calculate_formula_field(record, row["field_name"], row["formula_definition"])
 
             copy_row["value"] = record[row["field_name"]]
         field_structure[row["field_name"].capitalize()] = copy_row
@@ -1591,18 +1511,17 @@ def create_new_field(cursor, db, object_name, field_data):
             reference_object
         )
 
-        if expect_column_on_table(field_type):
-            # Create the actual field
-            add_column(                
-                cursor, 
-                object_name, 
-                field_name, 
-                field_type, 
-                sql_length,
-                reference_field_type,
-                reference_object
-            )  
-        
+        # Create the actual field
+        add_column(                
+            cursor, 
+            object_name, 
+            field_name, 
+            field_type, 
+            sql_length,
+            reference_field_type,
+            reference_object
+        )  
+    
         tables_rt = get_object_definition_records_join_rt(cursor, [object_name], 0)
         for rt in tables_rt:
             record_type = rt["record_type_name"]
@@ -1629,7 +1548,7 @@ def create_new_field(cursor, db, object_name, field_data):
                 ),
             ]
             insert_field_definition(cursor, params)                 # Create the field_definition
-
+            
             next_order = get_next_sort_order(cursor, "record_layout_definition", ["object_name"], [object_name])
             params = [
                 (
@@ -1640,7 +1559,7 @@ def create_new_field(cursor, db, object_name, field_data):
                 )
             ]
             insert_record_layout_definition(cursor, params)         # Create the record_layout_definition
-
+            
             # Create the ausiliar System object for the special types (ex: radio_checkbox_options, rollup_definition, related_list_definition, ..)
             data = {
                 "object_name": object_name,
@@ -1666,9 +1585,6 @@ def create_new_field(cursor, db, object_name, field_data):
 
         print('Error in the table create: ' + str(e))
         raise_input_exception(500, str(e), simple_detail=True)
-
-def expect_column_on_table(field_type):
-    return field_type != FieldTypes.FORMULA.value
 
 def get_length_based_on_field_type(cursor, field_type, field_length, numeric_precision, numeric_scale, reference_object):
     """
@@ -1703,8 +1619,8 @@ def get_length_based_on_field_type(cursor, field_type, field_length, numeric_pre
     elif field_type == FieldTypes.IMG.value:
         return (255, 255, field_type)
     elif field_type == FieldTypes.FORMULA.value:
-        return (255, None, field_type)
-    elif field_type in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value, FieldTypes.ROLLUP.value):
+        return (255, 255, field_type)
+    elif field_type in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value):
         primary_key_reference_object = get_primary_keys_from_multiple_objects(cursor, [reference_object]).get(reference_object)
         query = f'''
         SELECT 
@@ -1728,6 +1644,8 @@ def get_length_based_on_field_type(cursor, field_type, field_length, numeric_pre
             sql_length = f'{related_field["numeric_precision"]}, {related_field["numeric_scale"]}'
 
         return (related_field['length'], sql_length, reference_field_type)     # Pointer fields inherit their length from the reference field
+    elif field_type == FieldTypes.ROLLUP.value:
+        return (None, "16, 2", field_type) 
 
 def insert_ausiliar_extra_system_object(cursor, field_type, data):
     """
@@ -1823,7 +1741,7 @@ def insert_ausiliar_extra_system_object(cursor, field_type, data):
         FROM field_definition
         WHERE 
             object_name = %s 
-            AND field_type = {FieldTypes.LOOKUP.value}
+            AND field_type = '{FieldTypes.LOOKUP.value}'
             AND reference_object = %s
             AND is_active = 1
         '''
@@ -2123,9 +2041,7 @@ def delete_field_from_table(cursor, db, table_name, field_name, current_field_ty
         fields_to_filter = ["object_name", "field_name"]
         params = [table_name, field_name]
 
-        if expect_column_on_table(current_field_type):
-            delete_field(cursor, table_name, field_name)
-
+        delete_field(cursor, table_name, field_name)
         delete_record(cursor, "field_definition", fields_to_filter, params)
         db.commit() 
         return {"result": 1}
@@ -2134,3 +2050,8 @@ def delete_field_from_table(cursor, db, table_name, field_name, current_field_ty
         
         print('Error in the field table delete: ' + str(e))
         raise_input_exception(500, str(e), simple_detail=True)
+
+
+
+
+

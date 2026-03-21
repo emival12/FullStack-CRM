@@ -137,6 +137,13 @@ CREATE TABLE aggregation_function (
     name VARCHAR(15) PRIMARY KEY
 );
 
+INSERT INTO aggregation_function(name)
+VALUES
+    ('SUM'), 
+    ('MIN'),
+    ('MAX');
+
+
 # Creazione Tabella rollup_definition
 #   La tabella descrive la struttura di un campo rollup, la funzione da applicare e gli eventuali filtri
 CREATE TABLE rollup_definition (
@@ -173,6 +180,38 @@ CREATE TABLE related_list_definition (
     FOREIGN KEY (child_object_name, child_record_type_name, child_join_key) 
         REFERENCES field_definition(object_name, record_type_name, field_name) ON DELETE CASCADE
 );
+
+
+# Creazione Tabella trigger_definition
+#   La tabella descrive la lista dei trigger presenti a sistema
+CREATE TABLE trigger_definition (
+    object_name VARCHAR(100),
+    trigger_timing ENUM('BEFORE', 'AFTER') NOT NULL,
+    trigger_event ENUM('INSERT', 'UPDATE', 'DELETE') NOT NULL,
+    is_active BOOL DEFAULT 1,
+    PRIMARY KEY (object_name, trigger_event, trigger_timing),
+    FOREIGN KEY (object_name) REFERENCES object_definition(object_name) ON DELETE CASCADE
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ######################################

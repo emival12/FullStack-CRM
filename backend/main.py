@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse
 import utils
 import massiveImport
 import backup_manager
+import trigger_manager
 
 
 app = FastAPI()
@@ -66,6 +67,13 @@ def get_config():
 
 def get_current_config():
     return get_config() # Get the configuration file (outside the .exe) 
+
+def get_triggers_folder():
+    triggers_dir = get_correct_path("triggers", is_external=True)
+    if not os.path.exists(triggers_dir):
+        os.makedirs(triggers_dir)
+
+    return triggers_dir
 
 # Connect to MySQL database 
 def get_db(config = Depends(get_current_config)):  
@@ -252,7 +260,7 @@ def get_table_records(table_name: str, db = Depends(get_db)):
     fields = dict_fields.get(utils.get_table_key_from_strings(table_name, record_type_name))
 
     (fields_text, joins, group) = utils.build_field_value_select_clause(cursor, fields, table_name)      # retrieve SQL clause from the fields, to extract the values of the fields
-    records = utils.build_query(cursor, table_name, record_type_name, fields, fields_text, joins, group) # make the query using the clauses created 
+    records = utils.build_query(cursor, table_name, record_type_name, fields_text, joins, group) # make the query using the clauses created 
 
     cursor.close()
     return {
@@ -341,7 +349,21 @@ async def update_record(request: Request, db = Depends(get_db)):
     (table_name, record_type_name) = split_table_name(table_name)               # table_name == ObjectName_RecordTypeName
 
     record["record_type_name"] = record_type_name
+
+    record = trigger_manager.get_record_for_processing(
+        cursor, 
+        table_name, 
+        record_type_name, 
+        record=record
+    )
+    record = trigger_manager.process_system_formulas(cursor, table_name, record)
+    record = trigger_manager.run_triggers(cursor, get_triggers_folder(), table_name, "BEFORE", "INSERT", record, log_err_and_throw_exception)
     result = utils.insert_new_record(cursor, db, table_name, [record], user["id"])    # execute the actual insert
+
+    new_id = result.get("last_row_id")
+    record["id"] = new_id 
+    trigger_manager.run_triggers(cursor, get_triggers_folder(), table_name, "AFTER", "INSERT", record, log_err_and_throw_exception)
+
     cursor.close()
     return result
 
@@ -361,17 +383,28 @@ async def update_record(request: Request, db = Depends(get_db)):
     (table_name, record_type_name) = split_table_name(table_name)                                                               # table_name == ObjectName_RecordTypeName
     primary_key_field = utils.get_primary_keys_from_multiple_objects(cursor, [table_name]).get(table_name)                      # get the name of the PK of the object
     
-    # execute the actual update
+    current_record = trigger_manager.get_record_for_processing(
+        cursor, 
+        table_name, 
+        record_type_name, 
+        primary_key_field=primary_key_field, 
+        record_id=record_id, 
+        record=field_structure
+    )
+    current_record = trigger_manager.process_system_formulas(cursor, table_name, current_record)
+    current_record = trigger_manager.run_triggers(cursor, get_triggers_folder(), table_name, "BEFORE", "UPDATE", current_record, log_err_and_throw_exception)
     result = utils.update_record_by_id(
         cursor, 
         db, 
         table_name, 
         record_type_name, 
-        field_structure, 
+        current_record, 
         primary_key_field, 
         record_id,
         user["id"]
     ) 
+    trigger_manager.run_triggers(cursor, get_triggers_folder(), table_name, "AFTER", "UPDATE", current_record, log_err_and_throw_exception)
+
     cursor.close()
     return result
 
@@ -404,7 +437,7 @@ async def get_field_creation_structure(db = Depends(get_db)):
     for row in fields:
         grouped_fields.setdefault(row["object_name"], set()).add(row["field_name"])
 
-        if row["field_type"] == utils.FieldTypes.NUMBER.value:
+        if row["field_type"] in (utils.FieldTypes.NUMBER.value, utils.FieldTypes.FORMULA.value):
             grouped_fields_rollup.setdefault(row["object_name"], set()).add(row["field_name"])
         grouped_rt.setdefault(row["object_name"], set()).add(row["record_type_name"])
 
