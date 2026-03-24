@@ -133,8 +133,6 @@ def cast_record_types(record, fields_definition):
     type_map = {f['field_name']: f['field_type'] for f in fields_definition}
 
     for key, value in record.items():
-        if not value: continue
-        
         f_type = type_map.get(key)
         if f_type == utils.FieldTypes.NUMBER.value:
             record[key] = Decimal(value or 0)            
