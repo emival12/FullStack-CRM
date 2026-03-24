@@ -117,10 +117,10 @@ WHERE object_name = 'product' AND record_type_name = 'master';
 PRODUCTION
 #########################################################
 
-## 1: SUL MIO PC -> Lanciare nella cartella Frontedn il comando (crea la vera build del sito)
+## 1: SUL MIO PC -> Lanciare nella cartella Frontend il comando (crea la vera build del sito)
 npm run build
 
-## 2: SUL MIO PC
+## 2: SUL MIO PC -> Lanciare nella cartella Backend
 Comando per creare un file exe: crea un icona in basso e lancia il server (!!! Bisogna solo controllare che il path sia corretto)
 pyinstaller --onefile --windowed --noconfirm --icon="../frontend/build/brand_favicon.ico" --add-data "../frontend/build;build" --add-data "../frontend/build/brand.png;." run_app.py
 
@@ -136,4 +136,12 @@ CAMBIARE IL NOME DEL DB
 ## 5 SUL PC CLIENTE -> mysql -u root -p markotex_db < core_metadata.sql
 
 ## 6: SUL PC CLIENTE -> Create a folder "Gestionale" and insert inside it the .exe and the config.ini (configure config.ini)
+
+
+
+
+
+
+
+
 

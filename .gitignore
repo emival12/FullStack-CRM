@@ -11,6 +11,8 @@ backend/triggers/*/*
 crm/config.ini
 crm/debug_log.txt
 crm/backups/*
+crm/imgs/*
+crm/translations/*
 
 *.log
 start_servers.exe
