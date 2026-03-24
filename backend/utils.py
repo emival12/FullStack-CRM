@@ -867,7 +867,6 @@ def build_query(cursor, table_name, record_type_name, fields_text, joins, group,
         {group}
         ORDER BY {table_name_alias}.{SystemFieldName.CREATE_DATE} DESC;
     '''
-
     params = [record_type_name]
     if extra_params:
         params.extend(extra_params)
@@ -1019,6 +1018,42 @@ def get_single_record(cursor, table_name, fields, filter_fields, params):
         raise_input_exception(500, "INPUT_RECORD_ID_NOT_FOUND")
     return record
 
+def get_fields_definition(cursor, list_params):
+    if len(list_params) == 0:
+        return {}
+
+    placeholders = ", ".join(["(%s, %s)"] * len(list_params))
+    
+    flat_params = []
+    for obj_name, record_type in list_params:
+        flat_params.extend([obj_name, record_type])
+
+    query = f'''
+    SELECT 
+        object_name, 
+        record_type_name, 
+        field_name, 
+        field_type, 
+        reference_object, 
+        reference_field, 
+        is_primary_key, 
+        lookup_filter,
+        formula_definition
+    FROM field_definition
+    WHERE 
+        (object_name, record_type_name) IN ({placeholders})
+        AND is_active = 1 
+        AND is_visible = 1;
+    '''
+    cursor.execute(query, tuple(flat_params))
+
+    result = {}
+    for row in cursor.fetchall():
+        key = get_table_key(row)
+        result.setdefault(key, []).append(row)
+
+    return result
+
 def get_related_list_value(cursor, table_name, record_id, record_type_name, related_lists, related_list_key_field_map, tables_dict):
     """
         Retrieve data and structure for all related lists of a specific table and record type
@@ -1042,6 +1077,7 @@ def get_related_list_value(cursor, table_name, record_id, record_type_name, rela
 
     # Retrieve all the fields for each (object_name, record_type_name) pairs of the child objects 
     params_tables = [(rl["child_object_name"], rl["child_record_type_name"]) for rl in related_lists]
+    dict_full_fields = get_fields_definition(cursor, params_tables)
     dict_fields = get_list_view_definition_fields(cursor, params_tables)
 
     # Precalculate a map of {object_name: primary_key_field_name}. In this way the query is done 1 time
@@ -1059,20 +1095,15 @@ def get_related_list_value(cursor, table_name, record_id, record_type_name, rela
         child_table_name = related_list["child_object_name"]
         child_record_type_name = related_list["child_record_type_name"]
 
-        fields = dict_fields.get(get_table_key(related_list, "child_object_name", "child_record_type_name"))
+        # Those joins and group are needed to handle the Joins
+        full_fields = dict_full_fields.get(get_table_key(related_list, "child_object_name", "child_record_type_name"))
+        (_, joins, group) = build_field_value_select_clause(cursor, full_fields, child_table_name)
 
         # Those joins and group are needed to handle the field to display
-        (fields_text, joins, group) = build_field_value_select_clause(cursor, fields, child_table_name)
+        fields = dict_fields.get(get_table_key(related_list, "child_object_name", "child_record_type_name"))
+        (fields_text, _, _) = build_field_value_select_clause(cursor, fields, child_table_name)
 
-        # This joins is used to filter on the correct value based on the record selected
         table_name_alias = get_alias(table_name)
-        table_id_name = map_object_primary_key_names.get(table_name)
-        child_table_name_alias = get_alias(child_table_name)
-        child_table_id_name = related_list_key_field_map.get(child_table_name)
-
-        join_current_table = f" LEFT JOIN {table_name} {table_name_alias} ON {table_name_alias}.{table_id_name} = {child_table_name_alias}.{child_table_id_name}"
-        joins.append(join_current_table)
-
         filters = [f"{table_name_alias}.{map_object_primary_key_names.get(table_name)} = %s",]
         params = [record_id]
         related_records = build_query(cursor, child_table_name, child_record_type_name, fields_text, joins, group, filters, params)
