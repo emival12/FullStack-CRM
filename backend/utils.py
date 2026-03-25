@@ -1162,8 +1162,14 @@ def insert_new_record(cursor, db, table_name, records, user_id):
         Raises:
             HTTPException: If a database error occurs during deletion
     """
-    record_keys = list(records[0].keys())
-    record_keys.append(SystemFieldName.LAST_MODIFIED_BY)
+    excluded_fields = [
+        SystemFieldName.LAST_MODIFIED_DATE, 
+        SystemFieldName.CREATE_DATE
+    ]
+
+    record_keys = [ k for k in records[0].keys() if k not in excluded_fields]
+    if SystemFieldName.LAST_MODIFIED_BY not in record_keys:
+        record_keys.append(SystemFieldName.LAST_MODIFIED_BY)
 
     field_list = ', '.join(record_keys)
     placeholders = ", ".join(["%s"] * len(record_keys))
@@ -1171,9 +1177,12 @@ def insert_new_record(cursor, db, table_name, records, user_id):
     params = []
     for r in records:
         record_values = []
-        for v in r.values():
-            record_values.append(None if v == "" or v == "NULL" else v)
-        record_values.append(user_id)
+        for k in record_keys:
+            if  k == SystemFieldName.LAST_MODIFIED_BY:
+                record_values.append(user_id)
+            else:
+                v = r.get(k)
+                record_values.append(None if v == "" or v == "NULL" else v)
         params.append(tuple(record_values))
 
     query = f'''
@@ -1202,13 +1211,27 @@ def update_record_by_id(cursor, db, table_name, record_type_name, field_structur
         Raises:
             HTTPException: If a database error occurs during update
     """
+    excluded_fields = [
+        SystemFieldName.LAST_MODIFIED_DATE, 
+        SystemFieldName.CREATE_DATE
+    ]
 
-    set_clause = ", ".join([f'{field_name} = %s' for field_name in field_structure.keys()])                     # create the clause (Es: Name = %s, Costo = %s, ...)
-    set_clause += f", {SystemFieldName.LAST_MODIFIED_BY} = {user_id}"
+    record_keys = [ k for k in field_structure.keys() if k not in excluded_fields]
+    if SystemFieldName.LAST_MODIFIED_BY not in record_keys:
+        record_keys.append(SystemFieldName.LAST_MODIFIED_BY)
 
-    values_params = [None if field_value == "" else field_value for field_value in field_structure.values()]    # prepare the list of values to be placed in the %s
-    params = values_params + [record_id] + ([record_type_name] if record_type_name else [])                     # add at the end of the params the WHERE filter
+    set_clause = ", ".join([f'{field_name} = %s' for field_name in record_keys])        # create the clause (Es: Name = %s, Costo = %s, ...)
 
+    values_params = []                                                                  # prepare the list of values to be placed in the %s
+    for k in record_keys:
+        v = field_structure.get(k)
+
+        if  k == SystemFieldName.LAST_MODIFIED_BY:
+            values_params.append(user_id)
+        else:
+            values_params.append(None if v == "" or v == "NULL" else v)
+    
+    params = values_params + [record_id] + ([record_type_name] if record_type_name else [])   
     query = f'''
     UPDATE {table_name}
     SET {set_clause}
