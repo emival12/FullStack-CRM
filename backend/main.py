@@ -270,7 +270,7 @@ def get_table_records(table_name: str, db = Depends(get_db)):
     }
 
 # Get all the fields values with their structure of a single record
-@data_router.get("/{table_name}/record/{record_id}")
+@data_router.get("/{table_name}/record")
 def get_record_info(table_name: str, record_id: str, db = Depends(get_db)):
     cursor = db.cursor(dictionary=True)
 

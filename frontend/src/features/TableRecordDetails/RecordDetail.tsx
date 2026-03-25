@@ -57,9 +57,9 @@ export default function RecordDetail() {
     setLoading(true);
     setIsEdit(false);
     axios
-      .get<DataRecordStructure>(
-        `${API_BASE_URL}/${tableKey}/record/${recordId}`,
-      )
+      .get<DataRecordStructure>(`${API_BASE_URL}/${tableKey}/record`, {
+        params: { record_id: recordId },
+      })
       .then((res) => {
         console.log("RecordDetail - List of Fields Received:", res.data);
         setFields(res.data);

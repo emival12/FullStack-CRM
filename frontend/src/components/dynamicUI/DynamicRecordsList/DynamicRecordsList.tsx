@@ -26,7 +26,7 @@ const RecordCell = ({
     return (
       <td
         className="cursor-pointer text-primary"
-        onClick={() => onNavigate(String(fieldValue))}
+        onClick={() => onNavigate(encodeURIComponent(String(fieldValue)))}
       >
         {fieldValue}
       </td>
