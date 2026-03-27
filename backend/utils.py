@@ -193,7 +193,7 @@ def get_list_view_definition_fields(cursor, list_params):
     return result
 
 RLD_VISIBLE_AND_EDITABLE_FILTER = "((fd.is_visible = 1 AND fd.is_editable = 1) OR fd.field_name = 'record_type_name')"
-RLD_SINGLE_FIELD_NAME_FILTER = f'fd.is_visible = 1 AND fd.field_name = %s'
+RLD_SINGLE_FIELD_NAME_FILTER = f'fd.field_name = %s'
 def get_record_layout_definition_fields(cursor, table_name, record_type_name, where_additional_condition=None, where_additional_params=[], is_active=1):
     """
         Return all active and visible fields defined in the record layout for a specific object

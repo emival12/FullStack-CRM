@@ -123,6 +123,7 @@ export const NEW_FORMULA_FIELD_STRUCTURE: MetadataFieldStructure = {
   is_visible: {
     ...IS_VISIBLE_BASE,
     is_editable: 1,
+    is_required: 0,
   },
   is_editable: {
     ...IS_EDITABLE_BASE,

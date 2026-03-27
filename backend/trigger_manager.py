@@ -136,8 +136,34 @@ def to_namespace(data):
         return data
 
 
+def get_all_fields(cursor, table_name, record_type_name):
+    query = f'''
+    SELECT 
+        object_name, 
+        record_type_name,  
+        field_name, 
+        field_type, 
+        length, 
+        numeric_precision, 
+        numeric_scale, 
+        reference_object, 
+        reference_field, 
+        is_editable, 
+        is_required, 
+        is_primary_key, 
+        lookup_filter,
+        formula_definition
+    FROM field_definition 
+    WHERE 
+        object_name = %s 
+        AND record_type_name = %s 
+        AND is_active = 1;
+    '''
+    cursor.execute(query, [table_name, record_type_name])
+    return cursor.fetchall()
+
 def get_record_for_processing(cursor, table_name, record_type_name, primary_key_field, record_id=None, record=None):
-    fields = utils.get_record_layout_definition_fields(cursor, table_name, record_type_name)
+    fields = get_all_fields(cursor, table_name, record_type_name)
     record = {k.lower(): v for k, v in record.items()} if record else {}
 
     map_field_by_type = utils.get_field_divided_by_type(fields)
@@ -205,6 +231,7 @@ def get_fields_from_formulas(map_formula_fields, transform_field_key, transform_
                 target_lookup.add(split[1])
             else:
                 base_field = mf
+
             f_key = transform_field_key(base_field)
             if f_key not in already_extracted_field:
                 f = transform_field_name(mf)
