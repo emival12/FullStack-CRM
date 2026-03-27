@@ -68,7 +68,6 @@ def process_system_formulas(cursor, object_name, record, complex_formula):
         if field_name in lookup_complex_formula:
             lookup_complex_formula[field_name] = f['reference_object']
 
-
     all_ref_objects = list(set(obj for obj in lookup_complex_formula.values() if obj))
     map_object_primary_key_names = utils.get_primary_keys_from_multiple_objects(cursor, all_ref_objects)
     for f in formula_fields:
@@ -80,20 +79,24 @@ def process_system_formulas(cursor, object_name, record, complex_formula):
             lookups_to_fetch = complex_formula.get(field_name)
             for base_field, field_set in lookups_to_fetch.items():
                 related_id = record[base_field]
-                ref_obj = lookup_complex_formula.get(base_field)
+                if is_blank(related_id):
+                    ref_obj = lookup_complex_formula.get(base_field)
 
-                related_record = utils.get_single_record(   
-                    cursor,
-                    ref_obj,
-                    [{"field_name": fn} for fn in field_set],
-                    [map_object_primary_key_names.get(ref_obj)],
-                    [related_id]
-                )
-                complex_data[base_field] = related_record
+                    related_record = utils.get_single_record(   
+                        cursor,
+                        ref_obj,
+                        [{"field_name": fn} for fn in field_set],
+                        [map_object_primary_key_names.get(ref_obj)],
+                        [related_id]
+                    )
+                    complex_data[base_field] = related_record
 
         record = calculate_formula_field(cursor, record, field_name, formula_definition, complex_data)
 
     return record
+
+def is_blank(value):
+    return value and value != 'NULL'
 
 def calculate_formula_field(cursor, record, field_name, formula_definition, complex_data):
     safe_methods = {
@@ -104,7 +107,8 @@ def calculate_formula_field(cursor, record, field_name, formula_definition, comp
         "min": min,
         "str": str,
         "int": int,
-        "decimal": Decimal
+        "decimal": Decimal,
+        "is_blank": is_blank,
     }
 
     try:
