@@ -365,6 +365,10 @@ async def update_record(request: Request, db = Depends(get_db)):
 
     new_id = result.get("last_row_id")
     record["id"] = new_id 
+    impacted_parents = trigger_manager.get_impacted_parents(cursor, table_name, new_id, record)
+    if impacted_parents:
+        trigger_manager.refresh_parents(cursor, db, impacted_parents, user["id"])
+
     trigger_manager.run_triggers(cursor, get_triggers_folder(), table_name, "AFTER", "INSERT", record, log_err_and_throw_exception)
 
     cursor.close()
@@ -386,6 +390,8 @@ async def update_record(request: Request, db = Depends(get_db)):
     (table_name, record_type_name) = split_table_name(table_name)                                                               # table_name == ObjectName_RecordTypeName
     primary_key_field = utils.get_primary_keys_from_multiple_objects(cursor, [table_name]).get(table_name)                      # get the name of the PK of the object
     
+    fields = utils.get_record_layout_definition_fields(cursor, table_name, record_type_name)
+    old_record = utils.get_single_record(cursor, table_name, fields, [primary_key_field], [record_id])
     current_record, complex_formula = trigger_manager.get_record_for_processing(
         cursor, 
         table_name, 
@@ -406,6 +412,11 @@ async def update_record(request: Request, db = Depends(get_db)):
         record_id,
         user["id"]
     ) 
+
+    impacted_parents = trigger_manager.get_impacted_parents(cursor, table_name, record_id, current_record, old_record)
+    if impacted_parents:
+        trigger_manager.refresh_parents(cursor, db, impacted_parents, user["id"])
+
     trigger_manager.run_triggers(cursor, get_triggers_folder(), table_name, "AFTER", "UPDATE", current_record, log_err_and_throw_exception)
 
     cursor.close()

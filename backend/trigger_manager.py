@@ -227,3 +227,48 @@ def cast_record_types(record, fields_definition):
     return record
 
 
+def get_impacted_parents(cursor, table_name, record_id, new_record, old_record=None):
+    query = '''
+        SELECT 
+            rd.master_object_name, 
+            rd.master_record_type_name, 
+            rd.detail_join_key,
+            fd.is_active
+        FROM rollup_definition rd
+        JOIN field_definition fd ON 
+            fd.field_name = rd.master_field_name AND 
+            fd.object_name = rd.master_object_name AND 
+            fd.record_type_name = rd.master_record_type_name
+        WHERE 
+            rd.detail_object_name = %s
+            AND fd.is_active = 1;
+    '''
+    cursor.execute(query, (table_name,))
+    definitions = cursor.fetchall()
+
+    impacted = set()
+    for agg in definitions:
+        parent_table = agg['master_object_name']
+        parent_record_type = agg['master_record_type_name']
+        join_key = agg['detail_join_key']
+        
+        new_val = str(new_record.get(join_key)) if new_record.get(join_key) else None
+        old_val = str(old_record.get(join_key)) if old_record and old_record.get(join_key) else None
+
+        if new_val:
+            impacted.add((parent_table, parent_record_type, new_val))
+            
+        if old_val and old_val != new_val:
+            impacted.add((parent_table, parent_record_type, old_val))
+                
+    return impacted
+
+def refresh_parents(cursor, db, impacted_parents, user_id):
+    all_ref_objects = list(set(p_table for p_table, p_rt, p_id in impacted_parents if p_table))
+    map_object_primary_key_names = utils.get_primary_keys_from_multiple_objects(cursor, all_ref_objects)
+    for p_table, p_rt, p_id in impacted_parents:
+        pk_field = map_object_primary_key_names.get(p_table)
+
+        p_record, p_complex = get_record_for_processing(cursor, p_table, p_rt, pk_field, p_id)
+        p_record = process_system_formulas(cursor, p_table, p_record, p_complex)
+        utils.update_record_by_id(cursor, db, p_table, p_rt, p_record, pk_field, p_id, user_id)
