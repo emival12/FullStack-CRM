@@ -349,14 +349,17 @@ async def update_record(request: Request, db = Depends(get_db)):
     (table_name, record_type_name) = split_table_name(table_name)               # table_name == ObjectName_RecordTypeName
 
     record["record_type_name"] = record_type_name
+    map_object_primary_key_names = utils.get_primary_keys_from_multiple_objects(cursor, [table_name])
+    primary_key_field = map_object_primary_key_names.get(table_name)
 
-    record = trigger_manager.get_record_for_processing(
+    record, complex_formula = trigger_manager.get_record_for_processing(
         cursor, 
         table_name, 
         record_type_name, 
+        primary_key_field,
         record=record
     )
-    record = trigger_manager.process_system_formulas(cursor, table_name, record)
+    record = trigger_manager.process_system_formulas(cursor, table_name, record, complex_formula)
     record = trigger_manager.run_triggers(cursor, get_triggers_folder(), table_name, "BEFORE", "INSERT", record, log_err_and_throw_exception)
     result = utils.insert_new_record(cursor, db, table_name, [record], user["id"])    # execute the actual insert
 
@@ -383,7 +386,7 @@ async def update_record(request: Request, db = Depends(get_db)):
     (table_name, record_type_name) = split_table_name(table_name)                                                               # table_name == ObjectName_RecordTypeName
     primary_key_field = utils.get_primary_keys_from_multiple_objects(cursor, [table_name]).get(table_name)                      # get the name of the PK of the object
     
-    current_record = trigger_manager.get_record_for_processing(
+    current_record, complex_formula = trigger_manager.get_record_for_processing(
         cursor, 
         table_name, 
         record_type_name, 
@@ -391,7 +394,7 @@ async def update_record(request: Request, db = Depends(get_db)):
         record_id=record_id, 
         record=field_structure
     )
-    current_record = trigger_manager.process_system_formulas(cursor, table_name, current_record)
+    current_record = trigger_manager.process_system_formulas(cursor, table_name, current_record, complex_formula)
     current_record = trigger_manager.run_triggers(cursor, get_triggers_folder(), table_name, "BEFORE", "UPDATE", current_record, log_err_and_throw_exception)
     result = utils.update_record_by_id(
         cursor, 

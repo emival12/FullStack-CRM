@@ -957,31 +957,8 @@ def get_field_structure_and_value_data(cursor, table_name, fields, mode, record_
             copy_row["options"] = options
         elif row["field_type"] in (FieldTypes.PICKLIST.value, FieldTypes.LOOKUP.value):
             copy_row["options"] = map_picklist_lookup_options.get(get_options_map_key(row))
-        
+
         if mode == FieldStructureMode.STRUCTURE_AND_DATA:
-            if row["field_type"] in (FieldTypes.ROLLUP.value):
-                rollup_definition = map_record_info_rollup_record.get(get_rollup_map_key(row))   
-                (fieldSyntax, join_clause) = build_field_join_clause_aggregated(
-                    table_name,                                             # 
-                    rollup_definition["master_primary_key"],                # table_field
-                    row["reference_object"],                                # join_table_name
-                    rollup_definition["detail_join_key"],                   # join_field
-                    rollup_definition["aggregation_function"],              # aggregation_function
-                    rollup_definition["detail_field_name"],                 # detail_field
-                    rollup_definition["master_field_name"]                  # master_field
-                )
-
-                table_name_alias = get_alias(table_name)
-                query = f'''
-                SELECT {fieldSyntax}
-                FROM {table_name} {table_name_alias}
-                {join_clause}
-                WHERE {table_name_alias}.{primary_key_field} = %s
-                '''
-                cursor.execute(query, (record_id,))
-                rollup_record = cursor.fetchone()
-                record[row["field_name"]] = rollup_record[rollup_definition["master_field_name"]]  # Save the calculated value into the respective field
-
             copy_row["value"] = record[row["field_name"]]
         field_structure[row["field_name"].capitalize()] = copy_row
         
