@@ -79,7 +79,7 @@ def process_system_formulas(cursor, object_name, record, complex_formula):
             lookups_to_fetch = complex_formula.get(field_name)
             for base_field, field_set in lookups_to_fetch.items():
                 related_id = record[base_field]
-                if is_blank(related_id):
+                if is_not_blank(related_id):
                     ref_obj = lookup_complex_formula.get(base_field)
 
                     related_record = utils.get_single_record(   
@@ -95,7 +95,7 @@ def process_system_formulas(cursor, object_name, record, complex_formula):
 
     return record
 
-def is_blank(value):
+def is_not_blank(value):
     return value and value != 'NULL'
 
 def calculate_formula_field(cursor, record, field_name, formula_definition, complex_data):
@@ -108,7 +108,7 @@ def calculate_formula_field(cursor, record, field_name, formula_definition, comp
         "str": str,
         "int": int,
         "decimal": Decimal,
-        "is_blank": is_blank,
+        "is_not_blank": is_not_blank,
     }
 
     try:
