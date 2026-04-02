@@ -22,3 +22,5 @@ frontend/src/config/backups/*
 *.MDB
 
 excelImport/*
+
+sqlDump/backup_dev.sql
