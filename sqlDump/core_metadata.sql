@@ -34,6 +34,7 @@ CREATE TABLE `aggregation_function` (
 
 LOCK TABLES `aggregation_function` WRITE;
 /*!40000 ALTER TABLE `aggregation_function` DISABLE KEYS */;
+INSERT INTO `aggregation_function` VALUES ('MAX'),('MIN'),('SUM');
 /*!40000 ALTER TABLE `aggregation_function` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -55,6 +56,7 @@ CREATE TABLE `field_definition` (
   `reference_object` varchar(100) DEFAULT NULL,
   `reference_field` varchar(255) DEFAULT NULL,
   `lookup_filter` varchar(1000) DEFAULT NULL,
+  `formula_definition` varchar(1000) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT '1',
   `is_visible` tinyint(1) DEFAULT '1',
   `is_editable` tinyint(1) DEFAULT '1',
@@ -72,7 +74,7 @@ CREATE TABLE `field_definition` (
 
 LOCK TABLES `field_definition` WRITE;
 /*!40000 ALTER TABLE `field_definition` DISABLE KEYS */;
-INSERT INTO `field_definition` VALUES ('user_definition','master','email','text',255,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('user_definition','master','id','auto_number',NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,1);
+INSERT INTO `field_definition` VALUES ('user_definition','master','email','text',255,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('user_definition','master','id','auto_number',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,1);
 /*!40000 ALTER TABLE `field_definition` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -231,8 +233,8 @@ CREATE TABLE `related_list_definition` (
   `filter_condition` varchar(1000) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`master_object_name`,`master_record_type_name`,`child_object_name`,`child_record_type_name`,`label`),
-  KEY `child_object_name` (`child_object_name`,`child_record_type_name`),
-  CONSTRAINT `related_list_definition_ibfk_1` FOREIGN KEY (`child_object_name`, `child_record_type_name`) REFERENCES `list_view_definition` (`object_name`, `record_type_name`) ON DELETE CASCADE
+  KEY `child_object_name` (`child_object_name`,`child_record_type_name`,`child_join_key`),
+  CONSTRAINT `related_list_definition_ibfk_1` FOREIGN KEY (`child_object_name`, `child_record_type_name`, `child_join_key`) REFERENCES `field_definition` (`object_name`, `record_type_name`, `field_name`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -276,6 +278,32 @@ CREATE TABLE `rollup_definition` (
 LOCK TABLES `rollup_definition` WRITE;
 /*!40000 ALTER TABLE `rollup_definition` DISABLE KEYS */;
 /*!40000 ALTER TABLE `rollup_definition` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `trigger_definition`
+--
+
+DROP TABLE IF EXISTS `trigger_definition`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `trigger_definition` (
+  `object_name` varchar(100) NOT NULL,
+  `trigger_timing` enum('BEFORE','AFTER') NOT NULL,
+  `trigger_event` enum('INSERT','UPDATE','DELETE') NOT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`object_name`,`trigger_event`,`trigger_timing`),
+  CONSTRAINT `trigger_definition_ibfk_1` FOREIGN KEY (`object_name`) REFERENCES `object_definition` (`object_name`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `trigger_definition`
+--
+
+LOCK TABLES `trigger_definition` WRITE;
+/*!40000 ALTER TABLE `trigger_definition` DISABLE KEYS */;
+/*!40000 ALTER TABLE `trigger_definition` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -342,4 +370,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-14 12:08:29
+-- Dump completed on 2026-05-01  9:45:06

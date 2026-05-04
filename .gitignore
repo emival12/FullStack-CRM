@@ -7,6 +7,7 @@ backend/__*/
 backend/build/
 backend/config.ini
 backend/triggers/*/*
+backend/*/__pycache__
 
 crm/config.ini
 crm/debug_log.txt
