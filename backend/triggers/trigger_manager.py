@@ -1,10 +1,10 @@
 import os
+import logging
 import importlib.util
+from core.exceptions import raise_server_exception, log_event
+from db.db_queries import get_trigger_definition
 
-from core.exceptions import raise_server_exception, log_error_message
-from db.dbQueries import (
-    get_trigger_definition
-)
+logger = logging.getLogger(__name__) 
 
 def run_triggers(cursor, triggers_dir: str, object_name: str, timing: str, event: str, record: dict) -> dict:
     """
@@ -31,7 +31,7 @@ def run_triggers(cursor, triggers_dir: str, object_name: str, timing: str, event
 
     for trig in active_triggers:
         if not os.path.exists(file_path):
-            log_error_message(f"run_triggers: trigger file not found: {file_name}")
+            log_event(logging.ERROR, logger, "Trigger file not found", file_path=file_path)
             continue
 
         try:
@@ -44,6 +44,6 @@ def run_triggers(cursor, triggers_dir: str, object_name: str, timing: str, event
                 record = result
 
         except Exception as e:
-            raise_server_exception(f"Fatal error in the trigger {file_name}: {e}")
+            raise_server_exception(logger, "Fatal error in Trigger execution", file_name=file_name)
 
     return record

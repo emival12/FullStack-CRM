@@ -1,14 +1,14 @@
 from __future__ import annotations
-import services.recordServices
+import logging
 from core.exceptions import raise_server_exception
 from core.models import SystemFieldName_FD, SystemFieldName_ROLLD
-from db.queryBuilder import QueryBuilder, QueryBuilderComparisonOperator
-from db.dbQueries import (
-    get_primary_keys_from_multiple_objects,
-    get_rollup_definitions_by_detail_object,
-    get_rollup_map_key
+from db.query_builder import QueryBuilder, QueryBuilderComparisonOperator
+from db.db_queries import (
+    make_rollup_key_from_row,
+    get_rollup_definitions_by_detail_object
 )
 
+logger = logging.getLogger(__name__) 
 
 def get_impacted_parents(cursor, table_name: str, new_record: dict, old_record: dict | None = None) -> set:
     """
@@ -51,9 +51,7 @@ def get_impacted_parents(cursor, table_name: str, new_record: dict, old_record: 
 def calculate_record_rollups(cursor, table_name: str, primary_key_field: str, record_id: str, rollup_fields: list[dict], rollup_map: dict) -> dict:
     """
         Calculates all rollup field values for an existing record.
-
         Executes one aggregation query per rollup field against child records.
-        Returns an empty dict if record_id is not provided (e.g. new INSERT before the record exists).
 
         Args:
             cursor (MySQLCursor): Database cursor used to execute the SQL query.
@@ -67,13 +65,10 @@ def calculate_record_rollups(cursor, table_name: str, primary_key_field: str, re
             dict: Mapping of rollup field names to their aggregated values.
     """
 
-    if not record_id or not rollup_fields:
-        return {}
-
     table_alias = QueryBuilder.alias(table_name)
     result = {}
     for row in rollup_fields:
-        rollup_definition = rollup_map.get(get_rollup_map_key(row))
+        rollup_definition = rollup_map.get(make_rollup_key_from_row(row))
         (select_field, joins) = QueryBuilder.build_join_clause_aggregated(
             table_name,
             rollup_definition[SystemFieldName_ROLLD.MASTER_PRIMARY_KEY],
@@ -95,32 +90,11 @@ def calculate_record_rollups(cursor, table_name: str, primary_key_field: str, re
             )
             cursor.execute(query, params)
         except Exception as e:
-            raise_server_exception(f"calculate_record_rollups: {str(e)}")
+            raise_server_exception(logger, "DB query failed", query=query)
 
         rollup_record = cursor.fetchone()
         if rollup_record:
             result[row[SystemFieldName_FD.FIELD_NAME]] = rollup_record[rollup_definition[SystemFieldName_ROLLD.MASTER_FIELD_NAME]]
 
     return result
-
-def refresh_parents(cursor, db, impacted_parents: set, user_id: str) -> None:
-    """
-        Recalculates rollup and formula fields for all impacted parent records and persists them.
-
-        Pre-fetches primary key names for all impacted objects in a single query, then for each
-        parent recalculates rollup aggregations, re-evaluates formula fields, and persists the result.
-
-        Args:
-            cursor (MySQLCursor): Database cursor used to execute the SQL query
-            db (MySQLConnection): Database connection object used to commit or rollback changes
-            impacted_parents (set): Set of tuples (parent_table, parent_record_type, parent_id)
-            user_id (str): Id of the user who triggered the cascade
-    """
-    
-    objects_list = list(set(p_table for p_table, _, _ in impacted_parents if p_table))
-    map_object_primary_key_names = get_primary_keys_from_multiple_objects(cursor, objects_list)
-
-    for p_table, p_rt, p_id in impacted_parents:
-        _ = services.recordServices.update_record(cursor, db, p_table, p_rt, p_id, {}, user_id, map_object_primary_key_names)
-
 

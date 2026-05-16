@@ -1,7 +1,6 @@
 from __future__ import annotations
+import logging
 from typing import Callable
-import bcrypt
-
 from core.exceptions import raise_input_exception, raise_server_exception
 from core.models import (
     StandardObjectField,
@@ -10,40 +9,58 @@ from core.models import (
     SystemFieldName_RTD, 
     SystemFieldName_ROLLD,
     SystemFieldName_UD,
+    SystemFieldName_RLD,
     FieldTypes, 
     RldFilterConditions, 
     FieldsByType
 )
-from db.queryBuilder import QueryBuilder, QueryBuilderComparisonOperator, QueryBuilderLogicalOperator, QueryBuilderJoinType
+from db.query_builder import QueryBuilder, QueryBuilderComparisonOperator, QueryBuilderLogicalOperator, QueryBuilderJoinType
 
-
+logger = logging.getLogger(__name__) 
 
 
 ########## START - Key Builders ##########
 # Pure string helpers that build dictionary keys and table aliases used throughout the module.
+SEPARATOR = "_"
 
-def get_alias(table_name):
-    return f'{table_name}__tab'
+def make_table_key(object_name: str, record_type_name: str) -> str:
+    return f'{object_name}{SEPARATOR}{record_type_name}'
 
-def get_basic_table_key(row, object_name=SystemFieldName_FD.OBJECT_NAME):
-    return f'{row[object_name]}'
+def make_options_key(object_name: str, record_type_name: str, field_name: str) -> str:
+    return f'{object_name}{SEPARATOR}{record_type_name}{SEPARATOR}{field_name}'
 
-def get_table_key(row, object_name=SystemFieldName_FD.OBJECT_NAME, record_type_name=SystemFieldName_FD.RECORD_TYPE_NAME):
-    return f'{row[object_name]}_{row[record_type_name]}'
+def make_rollup_key(object_name: str, record_type_name: str, field_name: str, reference_object: str) -> str:
+    return f'{object_name}{SEPARATOR}{record_type_name}{SEPARATOR}{field_name}{SEPARATOR}{reference_object}'
 
-def get_table_key_from_strings(object_name, record_type_name):
-    return f'{object_name}_{record_type_name}'
+def make_table_key_from_row(
+    row: dict,
+    object_col: str = SystemFieldName_FD.OBJECT_NAME,
+    record_type_col: str = SystemFieldName_FD.RECORD_TYPE_NAME,
+) -> str:
+    return make_table_key(row[object_col], row[record_type_col])
 
-def get_rollup_map_key(row):
-    object_field_name = "master_object_name" if "master_object_name" in row else "object_name"
-    record_type_field_name = "master_record_type_name" if "master_record_type_name" in row else "record_type_name"
-    field_name = "master_field_name" if "master_field_name" in row else "field_name"
-    reference_object_field_name = "detail_object_name" if "detail_object_name" in row else "reference_object"
+def make_basic_table_key(row: dict, object_col: str = SystemFieldName_FD.OBJECT_NAME) -> str:
+    return row[object_col]
 
-    return f'{row[object_field_name]}_{row[record_type_field_name]}_{row[field_name]}_{row[reference_object_field_name]}'
+def make_options_key_from_row(row: dict) -> str:
+    return make_options_key(
+        row[SystemFieldName_FD.OBJECT_NAME], 
+        row[SystemFieldName_FD.RECORD_TYPE_NAME], 
+        row[SystemFieldName_FD.FIELD_NAME]
+    )
 
-def get_options_map_key(row):
-    return f'{row[SystemFieldName_FD.OBJECT_NAME]}_{row[SystemFieldName_FD.RECORD_TYPE_NAME]}_{row[SystemFieldName_FD.FIELD_NAME]}'
+def make_rollup_key_from_row(row: dict) -> str:
+    object_col = SystemFieldName_RLD.MASTER_OBJECT_NAME             if SystemFieldName_RLD.MASTER_OBJECT_NAME in row        else SystemFieldName_FD.OBJECT_NAME
+    record_type_col = SystemFieldName_RLD.MASTER_RECORD_TYPE_NAME   if SystemFieldName_RLD.MASTER_RECORD_TYPE_NAME in row   else SystemFieldName_FD.RECORD_TYPE_NAME
+    field_col = SystemFieldName_RLD.MASTER_FIELD_NAME               if SystemFieldName_RLD.MASTER_FIELD_NAME in row         else SystemFieldName_FD.FIELD_NAME
+    reference_object_col = SystemFieldName_RLD.DETAIL_OBJECT_NAME   if SystemFieldName_RLD.DETAIL_OBJECT_NAME in row        else SystemFieldName_FD.REFERENCE_OBJECT
+
+    return make_rollup_key(
+        row[object_col], 
+        row[record_type_col], 
+        row[field_col],
+        row[reference_object_col]
+    )
 
 ########## END - Key Builders ##########
 
@@ -52,15 +69,20 @@ def get_options_map_key(row):
 
 ########## START    - Core SystemObjects queries ##########
 # Direct queries on metadata tables (field_definition, object_definition, etc.). No business logic — raw structural reads from the DB.
+def check_allowed_object(cursor, object_name: str) -> None:
+    _check_allowed(cursor, object_name, make_basic_table_key)
 
-def check_allowed_tables(cursor, table_name: str, key_function: Callable[[dict], str] = get_table_key) -> None:
+def check_allowed_table(cursor, table_name: str) -> None:
+    _check_allowed(cursor, table_name, make_table_key_from_row)
+
+def _check_allowed(cursor, table_name: str, key_function: Callable[[dict], str]) -> None:
     """
         Check if the given table name is allowed in the database.
 
         Args:
             cursor (MySQLCursor): Database cursor used to execute SQL queries.
             table_name (str): Name of a database table.
-            key_function (Callable[[dict], str]): Function used to compute the lookup key from a row. Defaults to get_table_key.
+            key_function (Callable[[dict], str]): Function used to compute the lookup key from a row
 
         Returns:
             None
@@ -95,7 +117,7 @@ def check_allowed_tables(cursor, table_name: str, key_function: Callable[[dict],
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"check_allowed_tables: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
     allowed_tables = { key_function(row) for row in cursor.fetchall() }
     if table_name not in allowed_tables:
@@ -143,7 +165,7 @@ def get_object_definition_records(cursor, object_names: list[str] | None = None)
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"get_object_definition_records: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
     tables = cursor.fetchall()
     for table in tables:
@@ -206,12 +228,12 @@ def get_object_definition_records_join_rt(cursor, object_names: list[str] | None
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"get_object_definition_records_join_rt: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
 
     tables = cursor.fetchall()
     for table in tables:
-        table["key"] = get_table_key(table)
+        table["key"] = make_table_key_from_row(table)
         table["label"] = table[SystemFieldName_OD.OBJECT_LABEL].capitalize() if table[SystemFieldName_OD.IS_SINGLE_RECORD_TYPE] else table[SystemFieldName_RTD.RECORD_TYPE_NAME].capitalize()
 
     return tables
@@ -276,11 +298,11 @@ def get_list_view_definition_fields(cursor, list_params: list[tuple[str, str]]) 
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"get_list_view_definition_fields: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
     result = {}
     for row in cursor.fetchall():
-        key = get_table_key(row)
+        key = make_table_key_from_row(row)
         result.setdefault(key, []).append(row)
 
     return result
@@ -370,7 +392,7 @@ def get_record_layout_definition_fields(
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"get_record_layout_definition_fields: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
     return cursor.fetchall()
 
@@ -430,11 +452,11 @@ def get_fields_definition(cursor, list_params: list[tuple[str, str]], is_visible
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"get_fields_definition: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
     result = {}
     for row in cursor.fetchall():
-        key = get_table_key(row)
+        key = make_table_key_from_row(row)
         result.setdefault(key, []).append(row)
 
     return result
@@ -482,7 +504,7 @@ def get_fields_definition_by_object_names(cursor, object_names: list[str], is_ac
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"get_fields_definition_grouped_by_objects: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
     return cursor.fetchall()
 
@@ -522,7 +544,7 @@ def get_primary_keys_from_multiple_objects(cursor, object_names: list[str]) -> d
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"get_primary_keys_from_multiple_objects: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
     return { row[SystemFieldName_FD.OBJECT_NAME]: row[SystemFieldName_FD.FIELD_NAME] for row in cursor.fetchall() }
 
@@ -573,7 +595,7 @@ def get_related_list_definition_fields(cursor, table_name: str, record_type_name
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"get_related_list_definition_fields: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
     return cursor.fetchall()
 
@@ -612,7 +634,7 @@ def get_trigger_definition(cursor, object_name: str, timing: str, event: str) ->
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"get_trigger_definition: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
     return cursor.fetchall()
 
@@ -657,7 +679,7 @@ def get_rollup_definitions_by_detail_object(cursor, table_name: str) -> list[dic
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"get_rollup_definitions_by_detail_object: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
     return cursor.fetchall()
 
@@ -717,11 +739,11 @@ def get_radio_options(cursor, fields: list[dict]) -> dict[str, list[dict]]:
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"get_radio_options: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
     result = {}
     for row in cursor.fetchall():
-        key = get_options_map_key(row)
+        key = make_options_key_from_row(row)
         result.setdefault(key, []).append(row)
 
     return result
@@ -781,9 +803,9 @@ def get_rollup_definition(cursor, fields: list[dict]) -> dict[str, dict]:
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"get_rollup_definition: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
-    return { get_rollup_map_key(row): row for row in cursor.fetchall() }
+    return { make_rollup_key_from_row(row): row for row in cursor.fetchall() }
 
 def get_rollup_definition_by_master_field(cursor, master_field_name: str):
     table_name = "rollup_definition"
@@ -810,7 +832,7 @@ def get_rollup_definition_by_master_field(cursor, master_field_name: str):
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"get_rollup_definition_by_master_field: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
     return cursor.fetchall()
 
@@ -831,7 +853,7 @@ def get_picklist_lookup_options(cursor, fields: list[dict], map_object_primary_k
     """
     result = {}
     for row in fields:
-        key = get_options_map_key(row)
+        key = make_options_key_from_row(row)
 
         table_name = row[SystemFieldName_FD.REFERENCE_OBJECT]
         table_alias = QueryBuilder.alias(table_name)
@@ -848,7 +870,7 @@ def get_picklist_lookup_options(cursor, fields: list[dict], map_object_primary_k
             query, params = (qb.get_query())
             cursor.execute(query, params)
         except Exception as e:
-            raise_server_exception(f"get_picklist_lookup_options: {str(e)}")
+            raise_server_exception(logger, "DB query failed", query=query)
 
         result[key] = cursor.fetchall()
 
@@ -860,31 +882,7 @@ def get_picklist_lookup_options(cursor, fields: list[dict], map_object_primary_k
 
 
 ########## START - Auth ##########
-# Authentication queries: login flow and user record retrieval.
-
-def login_user(cursor, email: str, password: str) -> dict:
-    """
-        Authenticate a user by email and password.
-        Raises 401 for both wrong password and unknown email to prevent user enumeration.
-
-        Args:
-            cursor (MySQLCursor): Database cursor used to execute SQL queries.
-            email (str): The user's email address.
-            password (str): The plaintext password to verify.
-
-        Returns:
-            dict: The authenticated user record (without the password field).
-
-        Raises:
-            HTTPException 401: If credentials are invalid.
-    """
-    user = get_user_definition_record(cursor, email)
-    if user:
-        if bcrypt.checkpw(password.encode("utf-8"), user[SystemFieldName_UD.PASSWORD].encode("utf-8")):
-            user.pop(SystemFieldName_UD.PASSWORD)
-            return user
-
-    raise_input_exception(401, "INVALID_CREDENTIALS")
+# Authentication queries: user record retrieval.
 
 def get_user_definition_record(cursor, email: str) -> dict | None:
     """
@@ -927,7 +925,7 @@ def get_user_definition_record(cursor, email: str) -> dict | None:
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"get_user_definition_record: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
     return cursor.fetchone()
 
@@ -970,7 +968,7 @@ def get_single_record(cursor, table_name: str, fields: list[dict], raw_filters: 
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"get_single_record: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
     record = cursor.fetchone()
     if not record:
@@ -979,7 +977,8 @@ def get_single_record(cursor, table_name: str, fields: list[dict], raw_filters: 
     return record
 
 def get_records_from_table(cursor, table_name: str, record_type_name: str, fields: list[dict]) -> list[dict]:
-    """Fetch all records from a table, building the SELECT clause from field metadata.
+    """
+        Fetch all records from a table, building the SELECT clause from field metadata.
 
         Args:
             cursor (MySQLCursor): Database cursor used to execute SQL queries
@@ -1011,7 +1010,7 @@ def get_records_from_table(cursor, table_name: str, record_type_name: str, field
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"get_records_from_table: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
     return cursor.fetchall()
 
@@ -1043,7 +1042,7 @@ def get_primary_key_from_fields(fields: list[dict]) -> str:
 
     pk = next((row[SystemFieldName_FD.FIELD_NAME] for row in fields if row[SystemFieldName_FD.IS_PRIMARY_KEY]), None)
     if not pk:
-        raise_server_exception("get_primary_key_from_fields: no primary key found in fields")
+        raise_server_exception(logger, "No primary_key found")
 
     return pk
 
@@ -1178,7 +1177,7 @@ def calculate_query_clause(cursor, table_name: str, fields: list[dict], map_obje
             joins.append(join_clause)
         elif field_type == FieldTypes.ROLLUP.value:
             # Join the detail table and apply the aggregation function (SUM, COUNT, etc.) to compute the rollup value.
-            rollup_definition = map_record_info_rollup_record.get(get_rollup_map_key(row))
+            rollup_definition = map_record_info_rollup_record.get(make_rollup_key_from_row(row))
             (select_clause, join_clause) = QueryBuilder.build_join_clause_aggregated(
                 table_name,
                 rollup_definition[SystemFieldName_ROLLD.MASTER_PRIMARY_KEY],
@@ -1202,7 +1201,8 @@ def calculate_query_clause(cursor, table_name: str, fields: list[dict], map_obje
     return (select_fields, joins, group_clause)
 
 def build_group_by_clause(select_clause: list[str], exclude_from_group_clause: list[str]) -> list[str]:
-    """Build the GROUP BY field list by excluding aggregated fields from the SELECT clause.
+    """
+        Build the GROUP BY field list by excluding aggregated fields from the SELECT clause.
 
         Args:
             select_clause (list[str]): Full list of SELECT field expressions
@@ -1240,7 +1240,7 @@ def get_next_sort_order(cursor, sys_object_name: str, raw_filters: list[str], ra
         record = cursor.fetchone()
         return int(record["sort_order"])+1 if record else 1
     except Exception as e:
-        raise_server_exception(f"get_next_sort_order: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
     
 
@@ -1263,10 +1263,10 @@ def get_lookup_field_definition(cursor, table_name: str, raw_filters: list[str],
         )
         cursor.execute(query, params)
     except Exception as e:
-        raise_server_exception(f"get_lookup_field_definition: {str(e)}")
+        raise_server_exception(logger, "DB query failed", query=query)
 
     detail_join_key = cursor.fetchall()
     if len(detail_join_key) <= 0:
-        raise_server_exception("get_lookup_field_definition: Missing lookup field")
+        raise_server_exception(logger, "Lookup field not found", object_name=table_name)
 
     return detail_join_key[0]["field_name"]

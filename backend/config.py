@@ -3,9 +3,11 @@ import os
 import sys
 import configparser
 import mysql.connector
+import logging
 from fastapi import Depends
 from core.exceptions import raise_server_exception
 
+logger = logging.getLogger(__name__) 
 
 def get_correct_path(file_name: str, is_external: bool = False, dev_folder_path: str | None = None) -> str:
     if getattr(sys, 'frozen', False):
@@ -29,7 +31,8 @@ def get_config() -> configparser.ConfigParser:
     if not os.path.exists(CONFIG_PATH):
         with open(CONFIG_PATH, 'w') as f:
             f.write("[database]\nuser=root\npassword=\ndatabase=\n")
-        raise_server_exception(f'Configuration file NOT FOUND in: {CONFIG_PATH}. Default file created')
+        raise_server_exception(logger, "Default config file created", path=CONFIG_PATH)
+
 
     config = configparser.ConfigParser()
     config.read(CONFIG_PATH)
@@ -39,7 +42,10 @@ def get_current_config() -> configparser.ConfigParser:
     return get_config()
 
 def get_config_db_name(config: configparser.ConfigParser) -> str:
-    return config["database"]["database"]
+    try:
+        return config["database"]["database"]
+    except KeyError:
+        raise_server_exception(logger, "Missing database name in config")
 
 ########## END - Config file ##########
 
@@ -55,7 +61,6 @@ def get_triggers_folder() -> str:
 
 ########## END - Trigger folder ##########
 
-
 # Connect to MySQL database
 def get_db(config: configparser.ConfigParser = Depends(get_current_config)):
     conn = None
@@ -67,8 +72,27 @@ def get_db(config: configparser.ConfigParser = Depends(get_current_config)):
             database=config['database']['database']  # MySQL DB name
         )
         yield conn
-    except mysql.connector.Error as err:
-        raise_server_exception(f'Error on the database: {err}')
+    except (mysql.connector.Error, KeyError) as err:
+        raise_server_exception(logger, "Database connection failed")
     finally:
         if conn and conn.is_connected():
             conn.close()
+
+# Open the cursor and based on which method perform also the commit
+def get_cursor(db=Depends(get_db)):
+      cursor = db.cursor(dictionary=True)
+      try:
+          yield cursor
+          db.commit()
+      except Exception:
+          db.rollback()
+          raise
+      finally:
+          cursor.close()
+
+def get_cursor_readonly(db=Depends(get_db)):
+      cursor = db.cursor(dictionary=True)
+      try:
+          yield cursor
+      finally:
+          cursor.close()

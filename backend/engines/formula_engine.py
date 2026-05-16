@@ -1,17 +1,18 @@
 from __future__ import annotations
 import re
+import logging
 from types import SimpleNamespace
 from decimal import Decimal
 from dateutil import parser
-
 from core.models import FieldTypes, SystemFieldName_FD
-from core.exceptions import log_error_message, raise_server_exception, raise_input_exception
-from db.dbQueries import (
+from core.exceptions import raise_server_exception, raise_input_exception, log_event
+from db.db_queries import (
     get_field_divided_by_type,
     get_primary_keys_from_multiple_objects,
     get_single_record,
 )
 
+logger = logging.getLogger(__name__) 
 
 # Suffix used in formula syntax to reference lookup fields ex: "cliente__obj.nome", "__obj" marks a cross-object field reference
 _LOOKUP_SUFFIX = "__obj"
@@ -101,7 +102,7 @@ def cast_record_types(record: dict, fields_definition: list[dict]) -> dict:
                 try:
                     record[key] = Decimal(value)
                 except Exception:
-                    raise_server_exception(f"cast_record_types: cannot cast field '{key}' value '{value}' to Decimal")
+                    raise_server_exception(logger, "Cast failed", key=key, value=value, type=f_type)
 
         elif f_type in (FieldTypes.DATE.value, FieldTypes.DATE_TIME.value):
             # Skip non-strings and blank/NULL values (optional date field)
@@ -109,7 +110,7 @@ def cast_record_types(record: dict, fields_definition: list[dict]) -> dict:
                 try:
                     record[key] = parser.parse(value)
                 except Exception:
-                    raise_server_exception(f"cast_record_types: cannot parse date field '{key}' value '{value}'")
+                    raise_server_exception(logger, "Cast failed", key=key, value=value, type=f_type)
 
     return record
 
@@ -161,7 +162,7 @@ def evaluate_formula(record: dict, field_name: str, formula_definition: str, com
         calculated_value = eval(clean_formula, {"__builtins__": None}, context)
         record[field_name] = calculated_value
     except Exception as e:
-        log_error_message(f"evaluate_formula: error on field '{field_name}' with formula '{clean_formula}' -> {type(e).__name__}: {e}")
+        log_event(logging.ERROR, logger, "Fatal error on formula calculation", exc_info=True, field_name=field_name, formula_definition=formula_definition)
         raise_input_exception(422, "BROKEN_FORMULA", {"field_name": field_name})
 
     return record
@@ -207,6 +208,7 @@ def _sort_formula_fields_topologically(formula_fields: list[dict]) -> list[dict]
                 queue.append(dependent)
 
     if len(sorted_names) != len(formula_name_set):
+        log_event(logging.WARNING, logger, "Formulas has circular dependencies")
         return formula_fields  # circular dependency — fall back to original order
 
     return [field_map[name] for name in sorted_names]
@@ -275,11 +277,11 @@ def evaluate_all_formulas(cursor, fields: dict[str, list[dict]], record: dict, c
                 if is_not_blank(related_id):
                     ref_obj = lookup_complex_formula.get(base_field)
                     if not ref_obj:
-                        raise_server_exception(f"evaluate_all_formulas: no reference_object resolved for lookup field '{base_field}'")
+                        raise_server_exception(logger, "No reference_object resolved", field_name=base_field)
 
                     pk_field = map_object_primary_key_names.get(ref_obj)
                     if not pk_field:
-                        raise_server_exception(f"evaluate_all_formulas: no primary key found for reference object '{ref_obj}'")
+                        raise_server_exception(logger, "No primary_key resolved", object_name=ref_obj)
 
                     # Fetch all subfields any formula needs for this lookup in one query
                     cache_key = (ref_obj, str(related_id))

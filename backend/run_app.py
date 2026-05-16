@@ -1,29 +1,23 @@
 import os
 import sys
+# write some logs in case the app crash before the logging method is started
+crash_log_path = os.path.join(os.path.dirname(sys.executable), "crash_log.txt")
+try:
+    sys.stdout = open(crash_log_path, "a", buffering=1)
+    sys.stderr = sys.stdout
+except Exception:
+    pass
+
 import uvicorn
 import threading
 import webbrowser
-import logging
 import pystray
 from PIL import Image
 from pystray import MenuItem as item
 
-
-# Save the debugLog in the same folder of the exe 
-log_file_path = os.path.join(os.path.dirname(sys.executable), "debug_log.txt")
-
-# Logging configuration
-logging.basicConfig(
-    filename=log_file_path,
-    level=logging.DEBUG,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    filemode='a' # 'w' overwrite, 'a' append
-)
-
 def start_server():
     from main import app 
-    logging.info("Initialize the server Uvicorn...")
-    uvicorn.run(app, host="127.0.0.1", port=8000, log_level="debug", log_config=None)
+    uvicorn.run(app, host="127.0.0.1", port=8000, log_config=None)
 
 # 2. Open the browser with the url of the app
 def open_browser(icon, item):
@@ -35,11 +29,6 @@ def quit_app(icon, item):
     os._exit(0) # Kills the Process by Id
 
 if __name__ == "__main__":
-    # Redirect stdout e stderr on the file log
-    log_file = open(log_file_path, "a", buffering=1)
-    sys.stdout = log_file
-    sys.stderr = log_file
-
     # Start the server
     server_thread = threading.Thread(target=start_server)
     server_thread.daemon = True # If the main is killed, kill also this thread

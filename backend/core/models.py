@@ -77,7 +77,7 @@ class SystemFieldName_FD:
     RECORD_TYPE_NAME    = "record_type_name"
     FIELD_NAME          = "field_name"
     FIELD_TYPE          = "field_type"
-    LENGHT              = "length"
+    LENGTH              = "length"
     NUMERIC_PRECISION   = "numeric_precision"
     NUMERIC_SCALE       = "numeric_scale"
     REFERENCE_OBJECT    = "reference_object"
@@ -108,6 +108,7 @@ class SystemFieldName_RTD:
     This class is not meant to be instantiated.
     """
     RECORD_TYPE_NAME        = "record_type_name"
+    IS_ACTIVE               = "is_active"
 
 class SystemFieldName_ROLLD:
     """
@@ -147,6 +148,7 @@ class SystemFieldName_UD:
     Use these when accessing row dictionaries returned by system table queries.
     This class is not meant to be instantiated.
     """
+    ID          = "id"
     EMAIL       = "email"
     PASSWORD    = "password"
     IS_ACTIVE   = "is_active"

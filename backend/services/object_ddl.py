@@ -1,31 +1,28 @@
 from __future__ import annotations
 import re
+import logging
 from fastapi import HTTPException
-from core.models import SystemObjects, SystemFieldName_OD, SystemFieldName_FD, SystemFieldName_ROLLD, FieldTypes, StandardObjectField, MASTER_RECORD_TYPE
-from core.exceptions import raise_input_exception, raise_server_exception, log_error_message
-from db.dbQueries import (
+from core.models import SystemObjects, SystemFieldName_OD, SystemFieldName_FD, SystemFieldName_ROLLD, SystemFieldName_RTD, FieldTypes, StandardObjectField, MASTER_RECORD_TYPE
+from core.exceptions import raise_input_exception, raise_server_exception, log_event
+from db.db_queries import (
+    make_table_key,
+    make_options_key_from_row,
     get_primary_keys_from_multiple_objects,
     get_object_definition_records,
     get_object_definition_records_join_rt,
     get_radio_options,
-    get_options_map_key,
     get_primary_key_from_fields,
     get_single_record,
     get_next_sort_order,
     get_record_layout_definition_fields,
-    get_table_key_from_strings,
     get_fields_definition,
     get_rollup_definition_by_master_field
 )
 
-from services.recordCRUD import (
-    execute_query
-)
-from db.queryBuilder import (
-    QueryBuilderLogicalOperator,
-    build_delete_query
-)
+from services.record_crud import get_caller_name, execute_query
+from db.query_builder import QueryBuilderLogicalOperator, build_delete_query
 
+logger = logging.getLogger(__name__) 
 
 ########## START - Base DML System objects ##########
 def insert_object_definition_record(cursor, params: list[tuple]) -> None:
@@ -33,14 +30,14 @@ def insert_object_definition_record(cursor, params: list[tuple]) -> None:
     INSERT INTO object_definition(object_label, object_name, category, sort_order, is_system_object, is_single_record_type)
     VALUES (%s, %s, %s, %s, %s, %s);
     """
-    cursor.executemany(command, params)
+    execute_query(cursor, get_caller_name(), command, params)
 
 def insert_record_type_definition(cursor, params: list[tuple]) -> None:
     command = """
     INSERT INTO record_type_definition(object_name, record_type_name, is_active)
     VALUES (%s, %s, %s);
     """
-    cursor.executemany(command, params)
+    execute_query(cursor, get_caller_name(), command, params)
 
 def insert_field_definition(cursor, params: list[tuple]) -> None:
     command = """
@@ -65,21 +62,21 @@ def insert_field_definition(cursor, params: list[tuple]) -> None:
     VALUES
     (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
     """
-    cursor.executemany(command, params)
+    execute_query(cursor, get_caller_name(), command, params)
 
 def insert_list_view_definition(cursor, params: list[tuple]) -> None:
     command = """
     INSERT INTO list_view_definition(object_name, record_type_name, field_name, sort_order)
     VALUES (%s, %s, %s, %s);
     """
-    cursor.executemany(command, params)
+    execute_query(cursor, get_caller_name(), command, params)
 
 def insert_record_layout_definition(cursor, params: list[tuple]) -> None:
     command = """
     INSERT INTO record_layout_definition(object_name, record_type_name, field_name, sort_order)
     VALUES (%s, %s, %s, %s);
     """
-    cursor.executemany(command, params)
+    execute_query(cursor, get_caller_name(), command, params)
 
 def insert_rollup_definition(cursor, params: list[tuple]) -> None:
     command = """
@@ -96,7 +93,7 @@ def insert_rollup_definition(cursor, params: list[tuple]) -> None:
     )
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
     """
-    cursor.executemany(command, params)
+    execute_query(cursor, get_caller_name(), command, params)
 
 def insert_related_list_definition(cursor, params: list[tuple]) -> None:
     command = """
@@ -114,21 +111,21 @@ def insert_related_list_definition(cursor, params: list[tuple]) -> None:
     )
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
     """
-    cursor.executemany(command, params)
+    execute_query(cursor, get_caller_name(), command, params)
 
 def insert_radio_checkbox_options(cursor, params: list[tuple]) -> None:
     command = """
     INSERT INTO radio_checkbox_options(object_name, record_type_name, field_name, sort_order, option_key, option_label, is_active)
     VALUES (%s, %s, %s, %s, %s, %s, %s);
     """
-    cursor.executemany(command, params)
+    execute_query(cursor, get_caller_name(), command, params)
 
 ########## END - Base DML System objects ##########
 
 
 
 ########## START - Field Length Calculations ##########
-_SQL_LENGTH_RESOLVERS: dict[str, str] = {
+_SQL_LENGTH_RESOLVERS: dict[str, Callable] = {
     FieldTypes.TEXT.value:      lambda length, **_:                         f'VARCHAR ({length})',
     FieldTypes.RADIO.value:     lambda length, **_:                         f'VARCHAR ({length})',
     FieldTypes.CHECKBOX.value:  lambda length, **_:                         f'VARCHAR ({length})',
@@ -146,7 +143,7 @@ _SQL_LENGTH_RESOLVERS: dict[str, str] = {
 def convert_field_type_into_SQL_type(field_type: str, length: str, reference_field_type: str | None = None) -> str:
     resolver = _SQL_LENGTH_RESOLVERS.get(field_type)
     if resolver is None:
-        raise_server_exception(f"convert_field_type_into_SQL_type: unsupported field_type '{field_type}'")
+        raise_server_exception(logger, "Resolver not identified", field_type=field_type)
 
     return resolver(field_type=field_type, length=length, reference_field_type=reference_field_type)
 
@@ -173,13 +170,13 @@ def _resolve_lookup_length(cursor, reference_object: str) -> tuple[str | None, s
         0,
         0,
         primary_key_reference_object
-    ).get(get_table_key_from_strings(reference_object, "master"))
+    ).get(make_table_key(reference_object, "master"))
     if not field_def:
-        raise_server_exception(f'_resolve_lookup_length: Field \'{primary_key_reference_object}\' not found')
+        raise_server_exception(logger, "Field not found", object_name=reference_object, field_name=primary_key_reference_object)
 
     related_field = field_def[0]
     reference_field_type = related_field[SystemFieldName_FD.FIELD_TYPE]
-    reference_length = related_field[SystemFieldName_FD.LENGHT]
+    reference_length = related_field[SystemFieldName_FD.LENGTH]
     reference_precision = related_field[SystemFieldName_FD.NUMERIC_PRECISION]
     reference_scale = related_field[SystemFieldName_FD.NUMERIC_SCALE]
     reference_ref_obj = related_field[SystemFieldName_FD.REFERENCE_OBJECT]
@@ -212,7 +209,7 @@ def get_length_based_on_field_type(
 
     resolver = _FIELD_LENGTH_RESOLVERS.get(field_type)
     if resolver is None:
-        raise_server_exception(f"get_length_based_on_field_type: unsupported field_type '{field_type}'")
+        raise_server_exception(logger, "Resolver not identified", field_type=field_type)
 
     return resolver(cursor=cursor, length=field_length, precision=numeric_precision, scale=numeric_scale, reference_object=reference_object)
 
@@ -236,7 +233,7 @@ def verify_keywords(value_to_check: str, check_type = _AUTHORIZED_STRING) -> str
     """Validate a SQL identifier against a strict whitelist before interpolation."""
 
     if not check_type.match(value_to_check) or value_to_check in _RESERVED_WORDS:
-        raise_server_exception(f"DML injection identified: {value_to_check}")
+        raise_server_exception(logger, "DML injection identified", value=value_to_check)
 
     return value_to_check
 
@@ -246,7 +243,7 @@ def verify_lookup_filter(value_to_check: str | None) -> str | None:
         return value_to_check
 
     if _LOOKUP_FILTER_BLACKLIST.search(value_to_check):
-        raise_server_exception(f"DML injection identified into lookup_filter: {value_to_check}")
+        raise_server_exception(logger, "DML injection identified", value=value_to_check)
 
     return value_to_check
 
@@ -254,8 +251,7 @@ def delete_table(cursor, table_name: str) -> None:
     table_name = verify_keywords(table_name)
 
     command = f'DROP TABLE IF EXISTS {table_name}'
-    cursor.execute(command)
-    log_error_message(f"LOGGING: Success delete table {table_name}")
+    execute_query(cursor, get_caller_name(), command)
 
 def create_table(cursor, object_name: str, pk_field_name: str, pk_field_type: str, pk_field_length: str) -> None:
     field_type = convert_field_type_into_SQL_type(pk_field_type, pk_field_length)
@@ -272,8 +268,7 @@ def create_table(cursor, object_name: str, pk_field_name: str, pk_field_type: st
         {StandardObjectField.LAST_MODIFIED_BY} VARCHAR(255) NOT NULL
     );
     '''
-    cursor.execute(command)
-    log_error_message(f"LOGGING: Success creation table {object_name}")
+    execute_query(cursor, get_caller_name(), command)
 
 def add_column(cursor, object_name: str, column_name: str, field_type: str, field_length: str, reference_field_type: str, reference_object: str) -> None:
     object_name = verify_keywords(object_name)
@@ -297,8 +292,7 @@ def add_column(cursor, object_name: str, column_name: str, field_type: str, fiel
     ALTER TABLE {object_name}
     ADD {column_name} {sql_field_type} {constraint}
     '''
-    cursor.execute(command)
-    log_error_message(f"LOGGING: Success creation field {column_name}")
+    execute_query(cursor, get_caller_name(), command)
 
 def delete_column(cursor, table_name: str, column_name: str, field_type: str):
     table_name = verify_keywords(table_name)
@@ -310,8 +304,7 @@ def delete_column(cursor, table_name: str, column_name: str, field_type: str):
     {constraint}
     DROP COLUMN {column_name};
     '''
-    cursor.execute(command)
-    log_error_message(f"LOGGING: Success delete field {column_name} of table {table_name}")
+    execute_query(cursor, get_caller_name(), command)
 ########## END - Base DDL Operations ##########
 
 
@@ -521,9 +514,8 @@ def _insert_object_system_metadata(cursor, sys_metadata_params: dict) -> None:
     insert_field_definition(cursor, sys_metadata_params.get("field_definition"))
     insert_list_view_definition(cursor, sys_metadata_params.get("list_view_definition"))
     insert_record_layout_definition(cursor, sys_metadata_params.get("layout_definition"))
-    log_error_message(f"LOGGING: Success creation all system metadata for object creation")
 
-def create_new_object(cursor, db, object_data: dict) -> dict:
+def create_new_object(cursor, object_data: dict) -> dict:
     """
         Create a new CRM object: DDL table creation + all system metadata records.
 
@@ -535,7 +527,6 @@ def create_new_object(cursor, db, object_data: dict) -> dict:
 
         Args:
             cursor: Database cursor used to execute SQL statements.
-            db: Database connection used to commit or rollback the transaction.
             object_data: Form payload containing object_label, object_name, category,
                         sort_order, id_field_name, and id_field_type.
 
@@ -573,14 +564,10 @@ def create_new_object(cursor, db, object_data: dict) -> dict:
         pk_field_length, 
         is_primary_key_text
     )
-    try:
-        _insert_object_system_metadata(cursor, sys_metadata_params)
-        create_table(cursor, object_name, pk_field_name, pk_field_type, pk_field_length)
-        db.commit()
-        return {"result": 1}
-    except Exception as e:
-        db.rollback()
-        raise_server_exception(f"create_new_object: {str(e)}")
+
+    _insert_object_system_metadata(cursor, sys_metadata_params)
+    create_table(cursor, object_name, pk_field_name, pk_field_type, pk_field_length)
+    return {"result": 1}
 
 ########## END - New Object Creation ##########
 
@@ -607,21 +594,19 @@ def _delete_object_system_metadata(cursor, table_name: str) -> None:
     od_where_filter = [f"{SystemFieldName_OD.OBJECT_NAME} = %s"]
     od_params = [table_name]
     query = build_delete_query(SystemObjects.OBJECT_DEFINITION, od_where_filter)
-    execute_query(cursor, f'_delete_object_system_metadata: {SystemObjects.OBJECT_DEFINITION}', query, [tuple(od_params)])
+    execute_query(cursor, f'{get_caller_name()}: {SystemObjects.OBJECT_DEFINITION}', query, [tuple(od_params)])
 
     fd_where_filter = [*od_where_filter, f"{SystemFieldName_FD.REFERENCE_OBJECT} = %s"]
     fd_params = [*od_params, table_name]
     query = build_delete_query(SystemObjects.FIELD_DEFINITION, fd_where_filter, QueryBuilderLogicalOperator.OR)
-    execute_query(cursor, f'_delete_object_system_metadata: {SystemObjects.FIELD_DEFINITION}', query, [tuple(fd_params)])
-    log_error_message(f"LOGGING: Success delete all system metadata linked to {table_name}")
+    execute_query(cursor, f'{get_caller_name()}: {SystemObjects.FIELD_DEFINITION}', query, [tuple(fd_params)])
 
-def delete_object_ddl(cursor, db, table_name: str) -> dict:
+def delete_object_ddl(cursor, table_name: str) -> dict:
     """
         Drop the physical table and remove all associated system metadata.
 
         Args:
             cursor (MySQLCursor): Database cursor used to execute the SQL query.
-            db (MySQLConnection): Database connection object used to commit or rollback changes.
             table_name (str): Name of the CRM object to delete.
 
         Returns:
@@ -631,30 +616,19 @@ def delete_object_ddl(cursor, db, table_name: str) -> dict:
             HTTPException: If a database error occurs.
     """
 
-    try:
-        _delete_object_system_metadata(cursor, table_name)
-        delete_table(cursor, table_name)
-        db.commit()
-        return {"result": 1}
-    except Exception as e:
-        db.rollback()
-        raise_server_exception(f"delete_object_ddl: {str(e)}")
+    _delete_object_system_metadata(cursor, table_name)
+    delete_table(cursor, table_name)
+    return {"result": 1}
 
-def delete_field_ddl(cursor, db, table_name, field_name, current_field_type):
-    try:
-        delete_column(cursor, table_name, field_name, current_field_type)
+def delete_field_ddl(cursor, table_name, field_name, current_field_type):
+    delete_column(cursor, table_name, field_name, current_field_type)
 
-        where_filter = [f"{SystemFieldName_FD.OBJECT_NAME} = %s", f"{SystemFieldName_FD.FIELD_NAME} = %s"]
-        params = [table_name, field_name]
-        query = build_delete_query(SystemObjects.FIELD_DEFINITION, where_filter)
-        execute_query(cursor, f'delete_field_ddl: {SystemObjects.FIELD_DEFINITION}', query, [tuple(params)])
-        log_error_message(f"LOGGING: Success delete field_definition system metadata linked to field {field_name}")
+    where_filter = [f"{SystemFieldName_FD.OBJECT_NAME} = %s", f"{SystemFieldName_FD.FIELD_NAME} = %s"]
+    params = [table_name, field_name]
+    query = build_delete_query(SystemObjects.FIELD_DEFINITION, where_filter)
+    execute_query(cursor, f'{get_caller_name()}: {SystemObjects.FIELD_DEFINITION}', query, [tuple(params)])
+    return {"result": 1}
 
-        db.commit()
-        return {"result": 1}
-    except Exception as e:
-        db.rollback()
-        raise_server_exception(f"delete_field_ddl: {str(e)}")
 
 ########## END - Delete ##########
 
@@ -737,67 +711,62 @@ def _build_field_system_metadata_params(
     # Row for related_list_definition — object_name is the child object (lookup points from child to master)
     related_list_def_params = []
     if field_type == FieldTypes.LOOKUP.value:
-        try:
-            # Fetch child object PK and label, and the next sort order for the related list
-            child_object_pk_field = get_primary_keys_from_multiple_objects(cursor, [object_name]).get(object_name)
-            child_object_label = get_object_definition_records(cursor, [object_name])[0]["label"]
-            next_order_rl = get_next_sort_order(
-                cursor, 
-                "related_list_definition", 
-                [f"(master_object_name, master_record_type_name, child_object_name) IN %s"], 
-                [(reference_object, record_type, object_name)]
-            )
+        # Fetch child object PK and label, and the next sort order for the related list
+        child_object_pk_field = get_primary_keys_from_multiple_objects(cursor, [object_name]).get(object_name)
+        child_object_label = get_object_definition_records(cursor, [object_name])[0]["label"]
+        next_order_rl = get_next_sort_order(
+            cursor, 
+            "related_list_definition", 
+            [f"(child_object_name, child_record_type_name) = (%s, %s)"], 
+            [object_name, record_type]
+        )
 
+        reference_obj_rt = get_object_definition_records_join_rt(cursor, [reference_object], 0)
+        for rt in reference_obj_rt:
             related_list_def_params.append((
-                reference_object,           # master_object_name
-                'master',                   # master_record_type_name
-                child_object_pk_field,      # child_primary_key (sul db si chiama master_primary_key, è un errore)
-                object_name,                # child_object_name
-                record_type,                # child_record_type_name
-                field_name,                 # detail_join_key
-                child_object_label,         # label
-                next_order_rl,              # sort_order
-                None,                       # filter_condition
-                1                           # is_active
+                reference_object,                               # master_object_name
+                rt[SystemFieldName_RTD.RECORD_TYPE_NAME],       # master_record_type_name
+                child_object_pk_field,                          # child_primary_key (sul db si chiama master_primary_key, è un errore)
+                object_name,                                    # child_object_name
+                record_type,                                    # child_record_type_name
+                field_name,                                     # detail_join_key
+                child_object_label,                             # label
+                next_order_rl,                                  # sort_order
+                None,                                           # filter_condition
+                1                                               # is_active
             ))
-        except Exception as e:
-            log_error_message(f"_build_field_system_metadata_params - lookup: {str(e)}")
-            raise
+
 
 
     # Row for rollup_definition — object_name is the master object (rollup aggregates values from childs)
     rollup_def_params = []
     if field_type == FieldTypes.ROLLUP.value: 
-        try:
-            # Fetch the lookup field on the detail object (reference_object) that points to object_name
-            detail_lookup_field_name = get_lookup_field_definition(                                                                                                                                                         
-                cursor,                                                                                                                                                                                            
-                "field_definition",                               
-                [
-                    "object_name = %s",
-                    "field_type = %s",
-                    "reference_object = %s",
-                    "is_active = 1"
-                ],
-                [reference_object, FieldTypes.LOOKUP.value, object_name]
-            )
+        # Fetch the lookup field on the detail object (reference_object) that points to object_name
+        detail_lookup_field_name = get_lookup_field_definition(                                                                                                                                                         
+            cursor,                                                                                                                                                                                            
+            "field_definition",                               
+            [
+                "object_name = %s",
+                "field_type = %s",
+                "reference_object = %s",
+                "is_active = 1"
+            ],
+            [reference_object, FieldTypes.LOOKUP.value, object_name]
+        )
 
-            # TODO Bug: il record type del child non viene salvato, in casi estremamente rari e specifici potrebbe portare errori
-            master_object_pk_field = get_primary_keys_from_multiple_objects(cursor, [object_name]).get(object_name)
-            rollup_def_params.append((
-                object_name,                        # master_object_name
-                record_type,                        # master_record_type_name
-                master_object_pk_field,             # master_primary_key
-                field_name,                         # master_field_name
-                reference_object,                   # detail_object_name
-                detail_lookup_field_name,           # detail_join_key
-                reference_field,                    # detail_field_name
-                aggregation_function,               # aggregation_function
-                lookup_filter                       # filter_condition
-            ))
-        except Exception as e:
-            log_error_message(f"_build_field_system_metadata_params - rollup: {str(e)}")
-            raise
+        # TODO Bug: il record type del child non viene salvato, in casi estremamente rari e specifici potrebbe portare errori
+        master_object_pk_field = get_primary_keys_from_multiple_objects(cursor, [object_name]).get(object_name)
+        rollup_def_params.append((
+            object_name,                        # master_object_name
+            record_type,                        # master_record_type_name
+            master_object_pk_field,             # master_primary_key
+            field_name,                         # master_field_name
+            reference_object,                   # detail_object_name
+            detail_lookup_field_name,           # detail_join_key
+            reference_field,                    # detail_field_name
+            aggregation_function,               # aggregation_function
+            lookup_filter                       # filter_condition
+        ))
 
 
     ausiliar_sys_object_params = {
@@ -827,15 +796,12 @@ def _insert_field_system_metadata(cursor, sys_metadata_params: dict) -> None:
         elif field_type == FieldTypes.ROLLUP.value:
             insert_rollup_definition(cursor, params.get("rollup_def_params"))
 
-    log_error_message(f"LOGGING: Success creation all system metadata for field creation")
-
-def create_field_ddl(cursor, db, object_name: str, field_data: dict):
+def create_field_ddl(cursor, object_name: str, field_data: dict):
     """
         Create a new field for a specific table and generate all required SystemObject records.
 
         Args:
             cursor (MySQLCursor): Database cursor used to execute SQL statements.
-            db (MySQLConnection): Database connection used to commit or rollback transactions.
             object_name (str): Name of the table where the field will be created.
             field_data (dict): Dictionary containing all required information to create the field.
 
@@ -857,7 +823,7 @@ def create_field_ddl(cursor, db, object_name: str, field_data: dict):
     is_editable = field_data[SystemFieldName_FD.IS_EDITABLE]
     is_visible = field_data[SystemFieldName_FD.IS_VISIBLE]
     is_required = field_data[SystemFieldName_FD.IS_REQUIRED]
-    field_length = field_data.get(SystemFieldName_FD.LENGHT, None)
+    field_length = field_data.get(SystemFieldName_FD.LENGTH, None)
     numeric_precision = field_data.get(SystemFieldName_FD.NUMERIC_PRECISION, None)
     numeric_scale = field_data.get(SystemFieldName_FD.NUMERIC_SCALE, None)
     reference_object = field_data.get(SystemFieldName_FD.REFERENCE_OBJECT, None)
@@ -869,63 +835,61 @@ def create_field_ddl(cursor, db, object_name: str, field_data: dict):
     aggregation_function = field_data.get(aggregation_funct, None) 
     options_values = field_data.get(option_values, "").split("\n")
 
-    try:
-        logical_length, sql_length, reference_field_type = get_length_based_on_field_type(
-            cursor,
-            field_type,
-            field_length,
-            numeric_precision,
-            numeric_scale,
-            reference_object
-        )
 
-        tables_rt = get_object_definition_records_join_rt(cursor, [object_name], 0)
-        next_order = get_next_sort_order(cursor, "record_layout_definition", ["object_name = %s"], [object_name])
-        for rt in tables_rt:
-            record_type = rt["record_type_name"]
-            is_rt_active = rt["is_active"]
+    logical_length, sql_length, reference_field_type = get_length_based_on_field_type(
+        cursor,
+        field_type,
+        field_length,
+        numeric_precision,
+        numeric_scale,
+        reference_object
+    )
 
-            sys_metadata_params = _build_field_system_metadata_params(
-                cursor,
-                object_name,
-                record_type,
-                field_name,
-                field_type,
-                logical_length,
-                numeric_precision,
-                numeric_scale,
-                reference_object,
-                reference_field,
-                is_active if is_rt_active else is_rt_active,
-                is_visible,
-                is_editable,
-                is_required,
-                0,
-                lookup_filter,
-                formula_definition,
-                next_order,
-                reference_object_record_type,
-                aggregation_function,
-                options_values
-            )
-            _insert_field_system_metadata(cursor, sys_metadata_params)
+    tables_rt = get_object_definition_records_join_rt(cursor, [object_name], 0)
+    next_order = get_next_sort_order(cursor, "record_layout_definition", ["object_name = %s"], [object_name])
+    for rt in tables_rt:
+        record_type = rt[SystemFieldName_RTD.RECORD_TYPE_NAME]
+        is_rt_active = rt[SystemFieldName_RTD.IS_ACTIVE]
 
-
-        # Create the actual column in the SQL table
-        add_column(
+        sys_metadata_params = _build_field_system_metadata_params(
             cursor,
             object_name,
+            record_type,
             field_name,
             field_type,
-            sql_length,
-            reference_field_type,
-            reference_object
+            logical_length,
+            numeric_precision,
+            numeric_scale,
+            reference_object,
+            reference_field,
+            is_active if is_rt_active else is_rt_active,
+            is_visible,
+            is_editable,
+            is_required,
+            0,
+            lookup_filter,
+            formula_definition,
+            next_order,
+            reference_object_record_type,
+            aggregation_function,
+            options_values
         )
-        db.commit()
-        return {"result": 1}
-    except Exception as e:
-        db.rollback()
-        raise_server_exception(f"create_field_ddl: {str(e)}")
+        _insert_field_system_metadata(cursor, sys_metadata_params)
+
+
+    # Create the actual column in the SQL table
+    add_column(
+        cursor,
+        object_name,
+        field_name,
+        field_type,
+        sql_length,
+        reference_field_type,
+        reference_object
+    )
+
+    return {"result": 1}
+
 
 ########## END - New Field Creation ##########
 
@@ -998,7 +962,7 @@ def get_setup_field_structure(
     elif current_field_type == FieldTypes.RADIO.value:
         map_checkbox_radio_options = get_radio_options(cursor, [field_attributes])
 
-        list_values = map_checkbox_radio_options.get(get_options_map_key(field_attributes))
+        list_values = map_checkbox_radio_options.get(make_options_key_from_row(field_attributes))
         values = "\n".join(elem["option_key"] for elem in list_values)
         record[FIELD_NAME_OPTIONS_VALUES] = values
 

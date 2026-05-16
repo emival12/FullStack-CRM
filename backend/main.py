@@ -1,12 +1,14 @@
+from core.log_manager import setup_logging
+setup_logging() # Inizialize the logging of the app
+
+
 import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-
 from routers import auth, assets, records, setup, import_
 from config import get_correct_path, get_current_config
-from core.exceptions import log_error_message
 import backup_manager
 
 

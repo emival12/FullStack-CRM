@@ -6,22 +6,24 @@ from datetime import datetime
 import io
 import re
 import pandas as pd
-from core.exceptions import (
-    raise_input_exception,
-    raise_server_exception
-)
-from core.models import MASTER_RECORD_TYPE, SystemFieldName_OD, SystemFieldName_FD, FieldTypes, StandardObjectField
-from db.dbQueries import (
+import logging
+from core.exceptions import raise_input_exception, raise_server_exception, log_event
+from core.models import MASTER_RECORD_TYPE, SystemFieldName_OD, SystemFieldName_RTD, SystemFieldName_FD, FieldTypes, StandardObjectField
+from db.db_queries import (
+    check_allowed_object,
+    make_options_key,
+    make_basic_table_key,
     get_object_definition_records,
+    get_object_definition_records_join_rt,
     get_primary_keys_from_multiple_objects,
     get_field_divided_by_type,
     get_radio_options,
     get_picklist_lookup_options,
     get_fields_definition,
 )
-from db.queryBuilder import (
-    build_insert_query
-)
+from db.query_builder import build_insert_query
+
+logger = logging.getLogger(__name__) 
 
 class OperationType(Enum):
     INSERT  = "insert"
@@ -41,22 +43,18 @@ def get_list_of_importable_objects(cursor):
 
 
 ########## HELP Method
-def _raise_input_exception(error_code, error_data):
+def _raise_input_exception(error_code, error_data = None):
     raise_input_exception(400, error_code, error_data)
-
-def get_options_map_key(object_name, record_type_name, col):
-    return f'{object_name}_{record_type_name}_{col}'
 
 ##########
 
 
-def elaborate_import_file(db, cursor, operation_type: str, object_name: str, user_id: str, file_decoded: str) -> None:
+def elaborate_import_file(cursor, operation_type: str, object_name: str, user_id: str, file_decoded: str) -> None:
     """
         Process an imported CSV file for a specified operation type (insert/update)
         Parses the CSV, validates data, and routes to appropriate handlers based on operation type
         
         Args:
-            db (MySQLConnection): Database connection for committing transactions
             cursor (MySQLCursor): Cursor used to execute SQL queries
             operation_type (str): Type of operation
             object_name (str): Name of the target object
@@ -64,20 +62,24 @@ def elaborate_import_file(db, cursor, operation_type: str, object_name: str, use
             file_decoded (str): CSV file content decoded as a string
     """
 
-    df = pd.read_csv(io.StringIO(file_decoded), delimiter=";", keep_default_na=False, na_values=[''], dtype=str)
+    check_allowed_object(cursor, object_name)
+
+    try:
+        df = pd.read_csv(io.StringIO(file_decoded), delimiter=";", keep_default_na=False, na_values=[''], dtype=str)
+    except Exception as err:
+        _raise_input_exception("IMPORT_FILE_PARSE_ERROR", {"error": str(err)})
 
     if operation_type == OperationType.INSERT.value:
-        insert_records(db, cursor, object_name, user_id, df)
+        insert_records(cursor, object_name, user_id, df)
     elif operation_type == OperationType.UPDATE.value:
         raise HTTPException(status_code=404, detail=f'Operation Type not yet supported') #TODO
 
-def insert_records(db, cursor, object_name: str, user_id: str, df: pd.DataFrame) -> None:
+def insert_records(cursor, object_name: str, user_id: str, df: pd.DataFrame) -> None:
     """
         Insert records into the database based on the provided DataFrame after validation.
         Validates columns and rows, and performs batch insert.
         
         Args:
-            db (MySQLConnection): Database connection for commit/rollback
             cursor (MySQLCursor): Cursor to execute SQL statements
             object_name (str): Target table name
             user_id (str): Id of the user who is performing the action
@@ -86,96 +88,91 @@ def insert_records(db, cursor, object_name: str, user_id: str, df: pd.DataFrame)
         Raises:
             HTTPException: If validation or database errors occur
     """
+    
+    df.columns = df.columns.str.lower()
+    df_active_cols = [col for col in df.columns if not col.startswith("skip_") and col != StandardObjectField.LAST_MODIFIED_BY]
 
-    # Take the column on the table on the DB
-    fields, is_auto_number, is_single_record_type = get_active_field_list(cursor, object_name, df)
+    # Resolve the record type from the CSV and validate it against the object's record types
+    record_type_name, is_single_record_type = verify_record_type(cursor, object_name, df)
 
-    # Checks if the excel file have the right fields 
-    checks_input_columns(fields, df)
+    # Load the field definitions that the imported rows must conform to
+    fields = get_fields_to_check(cursor, object_name, record_type_name, is_single_record_type)
 
+    # Validate that the CSV columns match the expected fields
+    checks_input_columns(fields, df_active_cols)
 
-    df_cols = [col for col in df.columns if not col.lower().startswith("skip_") and col.lower() != StandardObjectField.LAST_MODIFIED_BY.lower()]
-    df_cols.append(StandardObjectField.LAST_MODIFIED_BY.lower())
+    # Build the parameter tuples for the batch insert (last_modified_by is appended per row)
+    insert_cols = df_active_cols + [StandardObjectField.LAST_MODIFIED_BY]
+    params = process_input_rows(cursor, fields, object_name, record_type_name, user_id, df, insert_cols)
 
-    params = process_input_rows(cursor, fields, is_single_record_type, object_name, user_id, df, df_cols)
-
-    # Insert the records
+    # Execute the batch insert. Triggers are intentionally bypassed for mass imports.
     try:
-        query = build_insert_query(object_name, df_cols)
+        query = build_insert_query(object_name, insert_cols)
         cursor.executemany(query, params)
-        db.commit() 
-    except Exception as e:
-        db.rollback()
-        raise_server_exception(f"insert_records: {str(e)}")
+        log_event(logging.INFO, logger, "Massive insert completed", object_name=object_name, record_type_name=record_type_name, user_id=user_id, record_count=len(params))
+    except Exception:
+        raise_server_exception(logger, "Massive insert failed", query=query)
 
-def get_active_field_list(cursor, object_name: str, df: pd.DataFrame) -> tuple[list[dict], int, int]:
-    """
-        Retrieve the active field definitions and metadata for a given object.
-        Excludes auto-number primary keys and record_type_name if the object is single record type.
 
-        Args:
-            cursor (MySQLCursor): Database cursor to execute queries.
-            object_name (str): Name of the object/table.
-            df (pd.DataFrame): DataFrame of the imported file, used to detect the record type.
+def verify_record_type(cursor, object_name: str, df: pd.DataFrame) -> tuple[str, int]:
+    tables = get_object_definition_records_join_rt(cursor, [object_name])
 
-        Returns:
-            tuple: A tuple containing:
-                - list[dict]: Active field definitions to insert.
-                - int: 1 if the object has an auto_number primary key, 0 otherwise.
-                - int: 1 if the object is single record type, 0 otherwise.
-    """
-    # Retrieve the object definition
-    object_def = get_object_definition_records(cursor, [object_name])[0]
+    is_single_record_type = tables[0][SystemFieldName_OD.IS_SINGLE_RECORD_TYPE]
+    acceptable_record_types = {t[SystemFieldName_RTD.RECORD_TYPE_NAME] for t in tables}
+    record_type_name = None
 
-    # Check the recordType, if is not single but in the same file there are multiple recordType throw an error
-    is_single_record_type = object_def[SystemFieldName_OD.IS_SINGLE_RECORD_TYPE]
     if is_single_record_type:
         record_type_name = MASTER_RECORD_TYPE
     else:
-        record_type_name = None
+        if StandardObjectField.RECORD_TYPE_NAME not in df.columns:
+            _raise_input_exception("IMPORT_FILE_MISSING_RECORD_TYPE_COLUMN")
+
         for idx, row in enumerate(df.itertuples()):
-            curr_record_type_name = getattr(row, "record_type_name")
+            curr_record_type_name = getattr(row, StandardObjectField.RECORD_TYPE_NAME)
+            if pd.isna(curr_record_type_name) or str(curr_record_type_name).strip() == "":
+                _raise_input_exception("IMPORT_FILE_MISSING_RECORD_TYPE_VALUE", {"row": idx + 1})
+                
+            curr_record_type_name = curr_record_type_name.lower()
             if not record_type_name:
                 record_type_name = curr_record_type_name
             
             if record_type_name != curr_record_type_name:
-                _raise_input_exception(
-                    "IMPORT_FILE_WITH_MULTIPLE_RECORD_TYPE", 
-                    {
-                        "record_type_name": [curr_record_type_name, record_type_name],
-                    }
-                )
+                _raise_input_exception("IMPORT_FILE_WITH_MULTIPLE_RECORD_TYPE", { "record_type_name": [curr_record_type_name, record_type_name] })
+    
+    if record_type_name not in acceptable_record_types:
+        _raise_input_exception("IMPORT_FILE_WITH_WRONG_RECORD_TYPE", { "record_type_name": record_type_name })
+    
+    return record_type_name, is_single_record_type
 
-    # Retrieve all the active fields
+def get_fields_to_check(cursor, object_name: str, record_type_name: str, is_single_record_type: int) -> list[dict]:
     fields = get_fields_definition(cursor, [(object_name, record_type_name)], is_visible=0)
 
-    # Calculate the actual fields to check (exclude the autonumber_pk and record_type, if is single)
-    is_auto_number = 0
+    # Auto-number PKs are assigned by the DB; record_type_name is implicit for single-RT objects.
     fields_to_insert = []
     for f in fields:
         if f[SystemFieldName_FD.IS_PRIMARY_KEY] and f[SystemFieldName_FD.FIELD_TYPE] == FieldTypes.AUTO_NUMBER.value:
-            is_auto_number = 1
             continue
         elif f[SystemFieldName_FD.FIELD_NAME] == StandardObjectField.RECORD_TYPE_NAME and is_single_record_type:
             continue
         fields_to_insert.append(f)
 
-    return fields_to_insert, is_auto_number, is_single_record_type
+    return fields_to_insert
 
-def checks_input_columns(fields: list[dict], df: pd.DataFrame) -> None:
+def checks_input_columns(fields: list[dict], df_active_cols: list[str]) -> None:
     """
-        Validate that the DataFrame columns match the required and allowed fields in the database.
+        Validate that the CSV columns match the required and allowed fields in the database.
         Checks for missing required fields and unknown fields.
 
         Args:
             fields (list[dict]): List of field definition dictionaries from the database.
-            df (pd.DataFrame): DataFrame containing imported data.
+            df_active_cols (list[str]): Active CSV columns to validate (already lowercased,
+                excluding skip_ columns and last_modified_by).
 
         Raises:
             HTTPException: If required columns are missing or unknown columns are present.
     """
 
-    # Create the list of required fields and the total fields for the object
+    # Partition the field definitions into "all" and "required" sets
     all_fields = []
     required_fields = []
     for f in fields:
@@ -186,21 +183,21 @@ def checks_input_columns(fields: list[dict], df: pd.DataFrame) -> None:
         all_fields.append(field_name)
 
 
-    sorted_all_fields = set(all_fields)
-    sorted_required_fields = set(required_fields)
-    sorted_cols = set(col.lower() for col in df.columns if not col.lower().startswith("skip_"))
+    set_all_fields = set(all_fields)
+    set_required_fields = set(required_fields)
+    active_cols = set(df_active_cols)
 
-    # Check if all the required field are been inserted
-    missing_required_fields = sorted_required_fields.difference(sorted_cols)
+    # Reject if any required field is missing from the CSV
+    missing_required_fields = set_required_fields.difference(active_cols)
     if len(missing_required_fields) > 0:
         _raise_input_exception("IMPORT_FILE_MISSING_REQUIRED_FIELDS", {"columns": list(missing_required_fields)})
 
-    # Check if all the field inserted exist
-    inexisting_field = sorted_cols.difference(sorted_all_fields)
+    # Reject if the CSV contains columns that are not defined on the object
+    inexisting_field = active_cols.difference(set_all_fields)
     if len(inexisting_field) > 0:
         _raise_input_exception("IMPORT_FILE_UNKNOWN_FIELDS", {"columns": list(inexisting_field)})
 
-def process_input_rows(cursor, fields: list[dict], is_single_record_type: int, object_name: str, user_id: str, df: pd.DataFrame, df_cols: list[str]) -> list[tuple]:
+def process_input_rows(cursor, fields: list[dict], object_name: str, record_type_name: str, user_id: str, df: pd.DataFrame, df_cols: list[str]) -> list[tuple]:
     """
         Validate each row in the DataFrame according to field definitions.
         Performs type checks, length checks, lookup validation, and prepares parameters for batch insert.
@@ -208,11 +205,12 @@ def process_input_rows(cursor, fields: list[dict], is_single_record_type: int, o
         Args:
             cursor (MySQLCursor): Database cursor.
             fields (list[dict]): List of active field definitions.
-            is_single_record_type (int): 1 if the object is single record type, 0 otherwise.
             object_name (str): Name of the target object/table.
-            user_id (str): Id of the user performing the import, appended as last_modified_by.
+            record_type_name (str): Record type of the import, used to look up picklist/radio options.
+            user_id (str): Id of the user performing the import, appended as last_modified_by on each row.
             df (pd.DataFrame): DataFrame with input records.
-            df_cols (list[str]): Columns of the input DataFrame to process.
+            df_cols (list[str]): Columns to include in each insert row, in order
+                (includes last_modified_by as the last column).
 
         Returns:
             list[tuple]: Parameters for batch insert into the database.
@@ -247,12 +245,9 @@ def process_input_rows(cursor, fields: list[dict], is_single_record_type: int, o
 
     params = []
     for idx, row in enumerate(df.itertuples()):
-        record_type_name = MASTER_RECORD_TYPE if is_single_record_type else getattr(row, "record_type_name")
-
         new_record = []
         for col in df_cols:
-            col_lower = col.lower()
-            if StandardObjectField.LAST_MODIFIED_BY.lower() == col_lower:
+            if StandardObjectField.LAST_MODIFIED_BY == col:
                 continue # added at the end
             else:
                 # Get the value of the cell
@@ -265,11 +260,11 @@ def process_input_rows(cursor, fields: list[dict], is_single_record_type: int, o
                     value = str(raw_value).strip()
 
             # Get the definition of the field on the DB
-            field_definition = fields_dict[col_lower]
+            field_definition = fields_dict[col]
             field_type = field_definition[SystemFieldName_FD.FIELD_TYPE]
 
             if field_type == FieldTypes.TEXT.value:
-                field_length = field_definition[SystemFieldName_FD.LENGHT]
+                field_length = field_definition[SystemFieldName_FD.LENGTH]
                 if len(value) > field_length:
                     _raise_input_exception(
                         "IMPORT_FIELD_LENGTH_EXCEEDED", 
@@ -356,7 +351,7 @@ def process_input_rows(cursor, fields: list[dict], is_single_record_type: int, o
                 )      
             elif field_type == FieldTypes.RADIO.value:
                 value = value.lower()
-                if value not in map_checkbox_radio_index[get_options_map_key(object_name, record_type_name, col_lower)]:
+                if value not in map_checkbox_radio_index[make_options_key(object_name, record_type_name, col)]:
                     _raise_input_exception(
                     "INPUT_FIELD_INVALID_RADIO", 
                     {
@@ -396,7 +391,7 @@ def process_input_rows(cursor, fields: list[dict], is_single_record_type: int, o
                             }
                         )
             elif field_type in (FieldTypes.PICKLIST.value, FieldTypes.LOOKUP.value):
-                if value not in map_picklist_lookup_index[get_options_map_key(object_name, record_type_name, col_lower)]:
+                if value not in map_picklist_lookup_index[make_options_key(object_name, record_type_name, col)]:
                     _raise_input_exception(
                     "INPUT_FIELD_INVALID_LOOKUP_PICKLIST", 
                     {
@@ -408,7 +403,6 @@ def process_input_rows(cursor, fields: list[dict], is_single_record_type: int, o
             
             new_record.append(value)
         
-
         if any(new_record):
             new_record.append(str(user_id)) # Insert last modifyByUser
             params.append(tuple(new_record))

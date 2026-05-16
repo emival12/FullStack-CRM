@@ -80,7 +80,8 @@ class QueryBuilder:
 
     @staticmethod
     def build_join_clause(table_name: str, table_field: str, join_table_name: str, join_field: str, join_reference_field: str) -> tuple[str, tuple]:
-        """Build a LEFT JOIN clause and its SELECT field for a lookup/reference join.
+        """
+            Build a LEFT JOIN clause and its SELECT field for a lookup/reference join.
 
             Args:
                 table_name (str): Name of the main table

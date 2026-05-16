@@ -1,28 +1,32 @@
 from __future__ import annotations
+import sys
+import logging
 from core.exceptions import raise_server_exception
 from core.models import StandardObjectField, SystemFieldName_FD, SystemFieldName_RLD, FieldTypes, FieldStructureMode, SystemObjects
-from db.queryBuilder import (
+from db.query_builder import (
     QueryBuilder,
     QueryBuilderComparisonOperator,
     build_insert_query,
     build_update_query,
     build_delete_query
 )
-from db.dbQueries import (
+from db.db_queries import (
+    make_table_key_from_row,
+    make_options_key_from_row,
     get_field_divided_by_type,
     get_primary_keys_from_multiple_objects,
     get_picklist_lookup_options,
     get_radio_options,
     get_primary_key_from_fields,
     get_single_record,
-    get_options_map_key,
     get_object_definition_records_join_rt,
     get_fields_definition,
     get_list_view_definition_fields,
-    get_table_key,
     get_fields_with_label,
     calculate_query_clause
 )
+
+logger = logging.getLogger(__name__) 
 
 ########## START - Read record structure ##########
 def get_field_structure(
@@ -72,7 +76,7 @@ def get_field_structure(
 
     if mode == FieldStructureMode.STRUCTURE_AND_DATA:
         if not record_id:
-            raise_server_exception(f"get_field_structure: record_id is not valorized")
+            raise_server_exception(logger, "No record Id")
 
         # Retrieve the record on the DB
         primary_key_field = get_primary_key_from_fields(fields)
@@ -113,11 +117,11 @@ def get_field_structure(
                 }
             ]
 
-            options.extend(map_radio_options.get(get_options_map_key(row), []))
+            options.extend(map_radio_options.get(make_options_key_from_row(row), []))
             copy_row["options"] = options
         elif field_type in (FieldTypes.PICKLIST.value, FieldTypes.LOOKUP.value):
             # Add the options to allow the user to select a value
-            copy_row["options"] = map_picklist_lookup_options.get(get_options_map_key(row), [])
+            copy_row["options"] = map_picklist_lookup_options.get(make_options_key_from_row(row), [])
 
         if mode == FieldStructureMode.STRUCTURE_AND_DATA:
             # Attach the current DB value so the frontend can pre-fill the field when editing an existing record
@@ -162,7 +166,7 @@ def get_related_list_records(cursor, table_name: str, record_id: str, related_li
     # Calculate the list of all the needed objects and precalculate a map of {object_name: primary_key_field_name}
     list_object = [table_name]
     for rl in related_lists:
-        fields = dict_all_fields.get(get_table_key(rl, SystemFieldName_RLD.CHILD_OBJECT_NAME, SystemFieldName_RLD.CHILD_RECORD_TYPE_NAME), [])
+        fields = dict_all_fields.get(make_table_key_from_row(rl, SystemFieldName_RLD.CHILD_OBJECT_NAME, SystemFieldName_RLD.CHILD_RECORD_TYPE_NAME), [])
         for row in fields:
             if row[SystemFieldName_FD.FIELD_TYPE] in (FieldTypes.PICKLIST.value, FieldTypes.LOOKUP.value):
                 list_object.append(row[SystemFieldName_FD.REFERENCE_OBJECT])
@@ -175,7 +179,7 @@ def get_related_list_records(cursor, table_name: str, record_id: str, related_li
     for related_list in related_lists:
         child_table_name = related_list[SystemFieldName_RLD.CHILD_OBJECT_NAME]
         child_record_type_name = related_list[SystemFieldName_RLD.CHILD_RECORD_TYPE_NAME]
-        table_key = get_table_key(related_list, SystemFieldName_RLD.CHILD_OBJECT_NAME, SystemFieldName_RLD.CHILD_RECORD_TYPE_NAME)
+        table_key = make_table_key_from_row(related_list, SystemFieldName_RLD.CHILD_OBJECT_NAME, SystemFieldName_RLD.CHILD_RECORD_TYPE_NAME)
 
         # Calculate the join and group clause based on all the fields of the object
         all_fields = dict_all_fields.get(table_key, [])
@@ -207,7 +211,7 @@ def get_related_list_records(cursor, table_name: str, record_id: str, related_li
             )
             cursor.execute(query, params)
         except Exception as e:
-            raise_server_exception(f"get_related_list_records: {str(e)}")
+            raise_server_exception(logger, "DB query failed", query=query)
 
         related_records = cursor.fetchall()
         rel_lists.append({
@@ -225,31 +229,44 @@ def get_related_list_records(cursor, table_name: str, record_id: str, related_li
 
 
 ########## START - Transaction ##########
-def execute_query(cursor, caller: str, query: str, params: list[tuple]) -> dict:
+def get_caller_name() -> str:
+    """Return the qualified name (module.function) of the function that called this."""
+    frame = sys._getframe(1)
+    return f"{frame.f_globals['__name__']}.{frame.f_code.co_name}"
+
+def execute_query(cursor, caller: str, query: str, params: list[tuple] | None = None) -> dict:
     """
-        Execute a SQL query safely with commit/rollback and uniform error handling.
-        Uses executemany for batch operations (len(params) > 1), execute otherwise.
+        Execute a SQL query with uniform error handling.
+
+        Dispatch by params shape:
+            - None or empty: cursor.execute(query)        — parameter-less DDL.
+            - single tuple:  cursor.execute(query, p[0])  — single-row DML.
+            - multiple:      cursor.executemany(query, p) — batch DML.
 
         Args:
-            cursor (MySQLCursor): Database cursor used to execute the SQL query
-            db (MySQLConnection): Database connection object used to commit or rollback changes
-            caller (str): Name of the calling function, included in the error log for traceability
-            query (str): SQL query string to execute
-            params (list[tuple]): List of parameter tuples. Pass a single-element list for single-row operations, a multi-element list for batch operations.
+            cursor (MySQLCursor): Database cursor used to execute the SQL query.
+            caller (str): Qualified name of the calling function (e.g. "module.func"), included in the error log for traceability.
+            query (str): SQL query string to execute.
+            params (list[tuple] | None): Parameter tuples to bind. Omit (or pass an empty list/None) for queries without placeholders.
 
         Returns:
-            dict: Dictionary containing the number of rows affected
+            dict: Dictionary with key 'result' containing the number of rows affected.
+
+        Raises:
+            HTTPException 500: If a database error occurs during execution.
     """
     
     try:
-        if len(params) > 1:
+        if not params:
+            cursor.execute(query)
+        elif len(params) > 1:
             cursor.executemany(query, params)
         else:
             cursor.execute(query, params[0])
             
         return {"result": cursor.rowcount}
     except Exception as e:
-        raise_server_exception(f"[{caller}]: {e}")
+        raise_server_exception(logger, "DB query failed", query=query, caller=caller)
 
 ########## END - Transaction ##########
 
@@ -393,31 +410,4 @@ def delete_record_by_id(cursor, table_name: str, record_type_name: str | None, p
     return execute_query(cursor, "delete_record_by_id", query, [tuple(params)])
 
 ########## END - Delete ##########
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# DO NO CONSIDER THIS ONE
-def delete_record(cursor, table_name, fields_to_filter, params, operator=" AND "):
-    if not fields_to_filter:
-        raise ValueError("Missing field filters")
-
-    placeholders = operator.join(f'{f} = %s' for f in fields_to_filter)
-
-    command = f'''
-    DELETE FROM {table_name}
-    WHERE {placeholders}
-    '''
-    cursor.execute(command, params)
-
 

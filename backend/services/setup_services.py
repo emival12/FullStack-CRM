@@ -1,9 +1,10 @@
+import logging
 from core.models import SystemObjects, SystemFieldName_OD, SystemFieldName_FD, FieldTypes
-from core.exceptions import raise_server_exception
-from db.dbQueries import (
-    check_allowed_tables,
-    get_basic_table_key,
-    get_table_key_from_strings,
+from core.exceptions import raise_server_exception, log_event
+from db.db_queries import (
+    check_allowed_object,
+    make_table_key,
+    make_basic_table_key,
     get_object_definition_records,
     get_fields_definition_by_object_names,
     get_fields_with_label,
@@ -11,37 +12,39 @@ from db.dbQueries import (
     get_primary_keys_from_multiple_objects,
     get_primary_key_from_fields
 )
-from services.objectDDL import (
+from services.object_ddl import (
     create_new_object,
     delete_object_ddl,
     delete_field_ddl,
     create_field_ddl,
     get_setup_field_structure
 )
-from services.recordCRUD import (
+from services.record_crud import (
     update_record_by_id
 )
 
-def create_object(cursor, db, object_data):
-    return create_new_object(cursor, db, object_data)
+logger = logging.getLogger(__name__) 
 
-def update_object(cursor, db, table_name: str, field_structure: dict) -> dict:
-    check_allowed_tables(cursor, table_name, get_basic_table_key)
+def create_object(cursor, object_data):
+    result = create_new_object(cursor, object_data)
+    log_event(logging.INFO, logger, "Object created", object_name=object_data[SystemFieldName_OD.OBJECT_NAME].lower())
+    return result
 
-    try:
-        result = update_record_by_id(cursor, "object_definition", None, field_structure, "object_name", table_name)
-        db.commit()
-        return result
-    except Exception as e:
-        db.rollback()
-        raise_server_exception(f"update_object: {str(e)}")
+def update_object(cursor, table_name: str, field_structure: dict) -> dict:
+    check_allowed_object(cursor, table_name)
 
-def delete_object(cursor, db, table_name: str):
-    check_allowed_tables(cursor, table_name, get_basic_table_key)
-    return delete_object_ddl(cursor, db, table_name)
+    result = update_record_by_id(cursor, "object_definition", None, field_structure, "object_name", table_name)
+    log_event(logging.INFO, logger, "Object updated", object_name=table_name)
+    return result
 
-def delete_field(cursor, db, table_name: str, field_name: str) -> dict:
-    check_allowed_tables(cursor, table_name, get_basic_table_key)
+def delete_object(cursor, table_name: str):
+    check_allowed_object(cursor, table_name)
+    result = delete_object_ddl(cursor, table_name)
+    log_event(logging.WARNING, logger, "Object deleted", object_name=table_name)
+    return result
+
+def delete_field(cursor, table_name: str, field_name: str) -> dict:
+    check_allowed_object(cursor, table_name)
 
     field_def= get_fields_definition(
         cursor,
@@ -49,12 +52,14 @@ def delete_field(cursor, db, table_name: str, field_name: str) -> dict:
         0,
         0,
         field_name
-    ).get(get_table_key_from_strings(table_name, "master"))
+    ).get(make_table_key(table_name, "master"))
     if not field_def or not len(field_def):
-        raise_server_exception(f'delete_field: Field \'{field_name}\' not found')
+        raise_server_exception(logger, "Field not found", field_name=field_name)
 
     current_field_type = field_def[0]["field_type"]
-    return delete_field_ddl(cursor, db, table_name, field_name, current_field_type)
+    result = delete_field_ddl(cursor, table_name, field_name, current_field_type)
+    log_event(logging.WARNING, logger, "Field deleted", object_name=table_name, field_name=field_name)
+    return result
 
 def get_field_creation_structure(cursor) -> dict:
     """
@@ -103,7 +108,7 @@ def get_field_creation_structure(cursor) -> dict:
     }
 
 def get_object_definition(cursor, table_name: str) -> dict:
-    check_allowed_tables(cursor, table_name, get_basic_table_key)
+    check_allowed_object(cursor, table_name)
     tables = get_object_definition_records(cursor, [table_name])
 
     return tables[0] if tables else {}
@@ -127,7 +132,7 @@ def get_object_fields_record(cursor, table_name: str) -> dict:
                 - primary_key_name: name of the primary key field
                 - records: all field_definition records for the object (including inactive)
     """
-    check_allowed_tables(cursor, table_name, get_basic_table_key)
+    check_allowed_object(cursor, table_name)
     records = get_fields_definition_by_object_names(cursor, [table_name], is_active=0)
 
     return {
@@ -136,11 +141,13 @@ def get_object_fields_record(cursor, table_name: str) -> dict:
         "records": records
     }
 
-def create_field(cursor, db, table_name: str, field_data: dict):
-    return create_field_ddl(cursor, db, table_name, field_data)
+def create_field(cursor, table_name: str, field_data: dict):
+    result = create_field_ddl(cursor, table_name, field_data)
+    log_event(logging.INFO, logger, "Field created", object_name=table_name, field_name=field_data[SystemFieldName_FD.FIELD_NAME].replace(" ", "_").lower())
+    return result
 
 def get_field_info(cursor, table_name: str, field_name: str, list_fields_by_type: dict) -> dict:
-    check_allowed_tables(cursor, table_name, get_basic_table_key)
+    check_allowed_object(cursor, table_name)
 
     field_attributes = get_fields_definition(
         cursor,
@@ -148,9 +155,9 @@ def get_field_info(cursor, table_name: str, field_name: str, list_fields_by_type
         0,
         0,
         field_name
-    ).get(get_table_key_from_strings(table_name, "master"))
+    ).get(make_table_key(table_name, "master"))
     if not field_attributes or not len(field_attributes):
-        raise_server_exception(f'get_field_info: Field \'{field_name}\' not found')
+        raise_server_exception(logger, "Field not found", field_name=field_name)
 
     current_field_type = field_attributes[0][SystemFieldName_FD.FIELD_TYPE]
     fields = list(list_fields_by_type[current_field_type].values())

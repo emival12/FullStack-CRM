@@ -2,10 +2,11 @@ import os
 import json
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
+import logging
 from config import get_correct_path
-from core.exceptions import raise_input_exception, raise_server_exception, log_error_message
+from core.exceptions import raise_input_exception, raise_server_exception, log_event
 
-
+logger = logging.getLogger(__name__) 
 router = APIRouter(prefix="/api", tags=["assets"])
 
 @router.get("/translations/{browser_language}")
@@ -20,14 +21,14 @@ async def endpoint_get_translation_file(browser_language: str):
     if not os.path.exists(file_path):
         with open(file_path, 'w') as f:
             json.dump({}, f)
-        log_error_message(f'Translation file NOT FOUND in: {file_path}. Default file created')
+        log_event(logging.WARNING, logger, "Default translation file created", file_path=file_path)
 
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
         return data
     except Exception as err:
-        raise_server_exception(f'Error on the translation file: {err}')
+        raise_server_exception(logger, "Failed to read translation file", file_path=file_path)
 
 
 @router.get("/images/{image_name}")
