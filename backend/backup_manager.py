@@ -1,4 +1,5 @@
 import os
+import tempfile
 import datetime
 import subprocess
 import logging
@@ -9,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 def check_and_run_smart_backup(config):
     try:
-        BACKUP_DIR = get_correct_path("backups", is_external=True, dev_folder_path="frontend\src\config")
+        BACKUP_DIR = get_correct_path("backups", is_external=True, dev_folder_path="frontend/src/config")
 
         # If doens't exist the folder, create it and make a backup
         if not os.path.exists(BACKUP_DIR):
@@ -42,16 +43,28 @@ def execute_db_backup(config, backup_dir):
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = os.path.join(backup_dir, f"backup_{db_name}_{timestamp}.sql")
 
+    # Use a temp credentials file so the password never appears in argv/env
+    fd, cnf_path = tempfile.mkstemp(suffix=".cnf")
     try:
+        with os.fdopen(fd, "w") as cnf:
+            cnf.write(f"[client]\nuser={user}\npassword={password}\n")
+
         with open(filename, 'w') as output_file:
             subprocess.run(
-                ["mysqldump", f"-u{user}", f"-p{password}", "--add-drop-table", "--databases", db_name],
+                ["mysqldump", f"--defaults-extra-file={cnf_path}", "--add-drop-table", "--databases", db_name],
                 stdout=output_file,
-                check=True
+                check=True,
             )
+
         log_event(logging.INFO, logger, "Backup created", filename=filename)
     except subprocess.CalledProcessError:
         log_event(logging.ERROR, logger, "Backup failed", exc_info=True)
+    finally:
+        # Delete the file
+        os.unlink(cnf_path)
+
+        
+
 
 
 

@@ -11,6 +11,7 @@ from core.exceptions import raise_input_exception, raise_server_exception, log_e
 from core.models import MASTER_RECORD_TYPE, SystemFieldName_OD, SystemFieldName_RTD, SystemFieldName_FD, FieldTypes, StandardObjectField
 from db.db_queries import (
     check_allowed_object,
+    get_user_definition_record,
     make_options_key,
     make_basic_table_key,
     get_object_definition_records,
@@ -51,18 +52,24 @@ def _raise_input_exception(error_code, error_data = None):
 
 def elaborate_import_file(cursor, operation_type: str, object_name: str, user_id: str, file_decoded: str) -> None:
     """
-        Process an imported CSV file for a specified operation type (insert/update)
-        Parses the CSV, validates data, and routes to appropriate handlers based on operation type
-        
+        Process an imported CSV file for a specified operation type (insert/update).
+        Validates that the object is importable and that the user_id corresponds to an
+        active user, then parses the CSV and routes to the appropriate handler.
+
         Args:
             cursor (MySQLCursor): Cursor used to execute SQL queries
             operation_type (str): Type of operation
             object_name (str): Name of the target object
-            user_id (str): Id of the user who is performing the action
+            user_id (str): Id of the user who is performing the action; must match an active
+                user record. Failure raises a generic 500 (defensive: the value is set by the
+                frontend and never exposed to the end user, so an invalid id implies bypass).
             file_decoded (str): CSV file content decoded as a string
     """
 
     check_allowed_object(cursor, object_name)
+    user = get_user_definition_record(cursor, user_id=user_id)
+    if not user:
+        raise_server_exception(logger, "Invalid user id", user_id=user_id)
 
     try:
         df = pd.read_csv(io.StringIO(file_decoded), delimiter=";", keep_default_na=False, na_values=[''], dtype=str)
@@ -340,18 +347,10 @@ def process_input_rows(cursor, fields: list[dict], object_name: str, record_type
                             "max_length": max_integer_digits,
                             "actual_length": digits_count
                         }
-                    )
-            elif field_type == FieldTypes.ROLLUP.value:
-                _raise_input_exception(
-                    "IMPORT_FIELD_ROLLUP_UNAUTHORIZED", 
-                    {
-                        "row": idx+1,
-                        "column": col,
-                    }
-                )      
+                    ) 
             elif field_type == FieldTypes.RADIO.value:
                 value = value.lower()
-                if value not in map_checkbox_radio_index[make_options_key(object_name, record_type_name, col)]:
+                if value not in map_checkbox_radio_index.get(make_options_key(object_name, record_type_name, col), set()):
                     _raise_input_exception(
                     "INPUT_FIELD_INVALID_RADIO", 
                     {
@@ -391,7 +390,7 @@ def process_input_rows(cursor, fields: list[dict], object_name: str, record_type
                             }
                         )
             elif field_type in (FieldTypes.PICKLIST.value, FieldTypes.LOOKUP.value):
-                if value not in map_picklist_lookup_index[make_options_key(object_name, record_type_name, col)]:
+                if value not in map_picklist_lookup_index.get(make_options_key(object_name, record_type_name, col), set()):
                     _raise_input_exception(
                     "INPUT_FIELD_INVALID_LOOKUP_PICKLIST", 
                     {

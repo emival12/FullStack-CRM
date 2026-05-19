@@ -16,7 +16,7 @@ class ContextFormatter(logging.Formatter):
         return log_message
 
 def setup_logging():
-    LOG_DIR = get_correct_path("logs", is_external=True, dev_folder_path="frontend\src\config")
+    LOG_DIR = get_correct_path("logs", is_external=True, dev_folder_path="frontend/src/config")
     log_file_path = os.path.join(LOG_DIR, f"debug_log.log")
 
     if not os.path.exists(LOG_DIR):

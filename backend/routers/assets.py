@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api", tags=["assets"])
 
 @router.get("/translations/{browser_language}")
 async def endpoint_get_translation_file(browser_language: str):
-    TRANSLATION_DIR = get_correct_path("translations", is_external=True, dev_folder_path="frontend\src\config")
+    TRANSLATION_DIR = get_correct_path("translations", is_external=True, dev_folder_path="frontend/src/config")
     lang_code = browser_language.split("-")[0].lower()
     file_path = os.path.join(TRANSLATION_DIR, f"{lang_code}.json")
 
@@ -33,7 +33,7 @@ async def endpoint_get_translation_file(browser_language: str):
 
 @router.get("/images/{image_name}")
 async def endpoint_get_image_file(image_name: str):
-    IMG_DIR = get_correct_path("imgs", is_external=True, dev_folder_path="frontend\src\config")
+    IMG_DIR = get_correct_path("imgs", is_external=True, dev_folder_path="frontend/src/config")
     file_path = os.path.join(IMG_DIR, image_name)
 
     if not os.path.exists(IMG_DIR):

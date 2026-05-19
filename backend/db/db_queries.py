@@ -884,20 +884,30 @@ def get_picklist_lookup_options(cursor, fields: list[dict], map_object_primary_k
 ########## START - Auth ##########
 # Authentication queries: user record retrieval.
 
-def get_user_definition_record(cursor, email: str) -> dict | None:
+def get_user_definition_record(cursor, email: str | None = None, user_id: str | None = None) -> dict | None:
     """
-        Retrieve an active user record joined with its profile, filtered by email.
+        Retrieve an active user record joined with its profile, looked up by email or id.
+        Exactly one of `email` or `user_id` must be provided; passing both is allowed and
+        applies an AND filter (consistency check). The query always filters is_active = 1,
+        so a disabled user returns None even if the identifier matches.
 
         Args:
             cursor (MySQLCursor): Database cursor used to execute SQL queries.
-            email (str): The user's email address.
+            email (str | None): The user's email address. Defaults to None.
+            user_id (str | None): The user's primary key id. Defaults to None.
 
         Returns:
-            dict | None: The user row including profile_name, or None if not found.
+            dict | None: The user row including profile_name, or None if not found
+                or the user is inactive.
 
         Raises:
-            HTTPException 500: On any database error.
+            HTTPException 500: If both `email` and `user_id` are None/empty, or on any
+                database error.
     """
+    if not email and not user_id:
+        raise_server_exception(logger, "Missing both email and id")
+
+
     ud_table_name = "user_definition"
     ud_table_alias = QueryBuilder.alias(ud_table_name)
 
@@ -918,7 +928,8 @@ def get_user_definition_record(cursor, email: str) -> dict | None:
             QueryBuilder(ud_table_name, select_fields)
             .add_join(QueryBuilderJoinType.INNER, upd_table_name, join_conditions)
             .begin_filter()
-                .add(f"{ud_table_alias}.email", QueryBuilderComparisonOperator.EQUAL, email)
+                .add_if(email, f"{ud_table_alias}.email", QueryBuilderComparisonOperator.EQUAL, email)
+                .add_if(user_id, f"{ud_table_alias}.id", QueryBuilderComparisonOperator.EQUAL, user_id)
                 .add(f"{ud_table_alias}.is_active", QueryBuilderComparisonOperator.EQUAL, 1)
             .end_filter()
             .get_query()

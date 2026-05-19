@@ -2,6 +2,7 @@ from __future__ import annotations
 import re
 import logging
 from types import SimpleNamespace
+from simpleeval import SimpleEval
 from decimal import Decimal
 from dateutil import parser
 from core.models import FieldTypes, SystemFieldName_FD
@@ -124,8 +125,12 @@ def evaluate_formula(record: dict, field_name: str, formula_definition: str, com
     """
         Evaluates a single formula field and writes the result into the record.
 
-        Uses a restricted eval context to prevent arbitrary code execution.
-        On any evaluation error, logs the technical detail and raises a 422 with error code BROKEN_FORMULA so the UI can surface which formula is broken.
+        Uses simpleeval (AST-whitelist evaluator) to prevent arbitrary code execution: the formula
+        is parsed into an AST and only whitelisted node types, functions, and attribute names are
+        allowed. Attribute access on underscore-prefixed names is rejected, blocking the classic
+        `().__class__.__bases__[0].__subclasses__()` escape.
+        On any evaluation error, logs the technical detail and raises a 422 with error code
+        BROKEN_FORMULA so the UI can surface which formula is broken.
 
         Args:
             record (dict): The current record being processed
@@ -148,6 +153,8 @@ def evaluate_formula(record: dict, field_name: str, formula_definition: str, com
         "is_not_blank": is_not_blank,
     }
 
+    # Strip __obj suffix so the formula expression matches the namespace attribute names
+    clean_formula = _LOOKUP_SUFFIX_RE.sub("", formula_definition)
     try:
         data_for_eval = {}
         for k, v in record.items():
@@ -155,14 +162,10 @@ def evaluate_formula(record: dict, field_name: str, formula_definition: str, com
             data_for_eval[k.lower()] = value
 
         ns = to_namespace(data_for_eval)
-        context = {"field": ns, **safe_methods}
-
-        # Strip __obj suffix so the formula expression matches the namespace attribute names
-        clean_formula = _LOOKUP_SUFFIX_RE.sub("", formula_definition)
-        calculated_value = eval(clean_formula, {"__builtins__": None}, context)
-        record[field_name] = calculated_value
-    except Exception as e:
-        log_event(logging.ERROR, logger, "Fatal error on formula calculation", exc_info=True, field_name=field_name, formula_definition=formula_definition)
+        evaluator = SimpleEval(functions=safe_methods, names={"field": ns})
+        record[field_name] = evaluator.eval(clean_formula)
+    except Exception:
+        log_event(logging.ERROR, logger, "Fatal error on formula calculation", exc_info=True, field_name=field_name, formula_definition=formula_definition, clean_formula=clean_formula)
         raise_input_exception(422, "BROKEN_FORMULA", {"field_name": field_name})
 
     return record

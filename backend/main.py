@@ -3,15 +3,17 @@ setup_logging() # Inizialize the logging of the app
 
 
 import os
-from fastapi import FastAPI, Request
+import logging
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from core.exceptions import log_event
 from routers import auth, assets, records, setup, import_
 from config import get_correct_path, get_current_config
 import backup_manager
 
-
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 # Enable CORS to allow React to access APIs
@@ -35,12 +37,22 @@ app.include_router(records.router)
 # PRODUCTION
 ###############################################
 BUILD_DIR = get_correct_path("build", dev_folder_path="frontend")
+BUILD_DIR_REAL = os.path.realpath(BUILD_DIR)
 
 app.mount("/static", StaticFiles(directory=os.path.join(BUILD_DIR, "static")), name="static")
 
 @app.get("/{catchall:path}")
 async def serve_react_app(request: Request, catchall: str):
-    file_path = os.path.join(BUILD_DIR, catchall)
+    # Handle typo in the paths
+    if catchall.startswith("api/"): 
+        raise HTTPException(404, "Path not found")
+
+    file_path = os.path.realpath(os.path.join(BUILD_DIR, catchall))
+
+    # Prevents request to other internal paths 
+    if file_path != BUILD_DIR_REAL and not file_path.startswith(BUILD_DIR_REAL + os.sep):
+        log_event(logging.WARNING, logger, "Blocked access to reserved file", file_path=file_path, requested_path=catchall, client_ip=request.client.host)
+        return FileResponse(os.path.join(BUILD_DIR, "index.html"))
 
     if os.path.isfile(file_path):
         return FileResponse(file_path)

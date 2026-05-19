@@ -22,7 +22,7 @@ def get_correct_path(file_name: str, is_external: bool = False, dev_folder_path:
         if dev_folder_path:
             base_path = os.path.join(os.path.dirname(base_path), dev_folder_path)
 
-    return os.path.join(base_path, file_name)
+    return os.path.normpath(os.path.join(base_path, file_name))
 
 ########## START - Config file ##########
 def get_config() -> configparser.ConfigParser:

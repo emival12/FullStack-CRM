@@ -33,6 +33,7 @@ from triggers import trigger_manager
 from engines import formula_engine, rollup_engine
   
 logger = logging.getLogger(__name__) 
+MAX_RECURSION_DEPTH = 25
 
 # TODO pensare di unsare un carattere speciale diverso
 def split_table_name(table_name: str) -> tuple[str, str]:
@@ -168,7 +169,16 @@ def insert_record(cursor, table_name: str, record_type_name: str, record: dict, 
     log_event(logging.INFO, logger, "Record inserted", object_name=table_name, record_type_name=record_type_name, user_id=user_id)
     return result
 
-def update_record(cursor, table_name: str, record_type_name: str, record_id: str, new_record: dict, user_id: str, map_object_primary_key_names: dict = None) -> dict:
+def update_record(
+    cursor, 
+    table_name: str, 
+    record_type_name: str, 
+    record_id: str, 
+    new_record: dict, 
+    user_id: str, 
+    map_object_primary_key_names: dict = None,
+    curr_depth: int = 0
+) -> dict:
     """
         Update an existing record, recalculating rollups and formulas, running triggers, then refreshing parent rollups.
 
@@ -181,10 +191,16 @@ def update_record(cursor, table_name: str, record_type_name: str, record_id: str
             user_id (str): Id of the user performing the update.
             map_object_primary_key_names (dict | None): Optional pre-fetched map of table name → primary key field name.
                 If None, it is fetched from the database.
+            curr_depth (int): Internal rollup cascade depth counter. Routers and top-level callers must leave it at 0;
+                it is incremented by refresh_parents when propagating to parent records, and used to enforce
+                MAX_RECURSION_DEPTH against cyclic rollup configurations.
 
         Returns:
             dict: Dictionary containing the number of records updated.
     """
+
+    if curr_depth >= MAX_RECURSION_DEPTH:
+        raise_server_exception(logger, "Max recursion depth reached", object_name=table_name, record_type_name=record_type_name, record_id=record_id)
 
     if not map_object_primary_key_names:
         map_object_primary_key_names = get_primary_keys_from_multiple_objects(cursor, [table_name])
@@ -235,7 +251,7 @@ def update_record(cursor, table_name: str, record_type_name: str, record_id: str
     # Propagate changes upward: refresh any parent rollup fields that depend on this record
     impacted_parents = rollup_engine.get_impacted_parents(cursor, table_name, record, old_record)
     if impacted_parents:
-        refresh_parents(cursor, impacted_parents, user_id)
+        refresh_parents(cursor, impacted_parents, user_id, curr_depth)
 
     # Run AFTER UPDATE triggers. AFTER Triggers can only modify other records or make new DML operations
     trigger_manager.run_triggers(cursor, get_triggers_folder(), table_name, "AFTER", "UPDATE", record)
@@ -243,7 +259,7 @@ def update_record(cursor, table_name: str, record_type_name: str, record_id: str
     log_event(logging.INFO, logger, "Record updated", object_name=table_name, record_type_name=record_type_name, record_id=record_id, user_id=user_id)
     return result
 
-def refresh_parents(cursor, impacted_parents: set, user_id: str) -> None:
+def refresh_parents(cursor, impacted_parents: set, user_id: str, curr_depth: int = 0) -> None:
     """
         Recalculates rollup and formula fields for all impacted parent records and persists them.
 
@@ -255,13 +271,15 @@ def refresh_parents(cursor, impacted_parents: set, user_id: str) -> None:
             cursor (MySQLCursor): Database cursor used to execute the SQL query
             impacted_parents (set): Set of tuples (parent_table, parent_record_type, parent_id)
             user_id (str): Id of the user who triggered the cascade
+            curr_depth (int): Current rollup cascade depth. Incremented by 1 when delegating to update_record,
+                so the guard in update_record can enforce MAX_RECURSION_DEPTH against cyclic configurations.
     """
 
     objects_list = list(set(p_table for p_table, _, _ in impacted_parents if p_table))
     map_object_primary_key_names = get_primary_keys_from_multiple_objects(cursor, objects_list)
 
     for p_table, p_rt, p_id in impacted_parents:
-        _ = update_record(cursor, p_table, p_rt, p_id, {}, user_id, map_object_primary_key_names)
+        _ = update_record(cursor, p_table, p_rt, p_id, {}, user_id, map_object_primary_key_names, curr_depth+1)
 
 def delete_record(cursor, table_name: str, record_type_name: str, record_id: str) -> dict:
     primary_key_field = get_primary_keys_from_multiple_objects(cursor, [table_name]).get(table_name)
