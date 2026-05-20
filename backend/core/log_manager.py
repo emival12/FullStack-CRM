@@ -30,7 +30,7 @@ def setup_logging():
         return
         
     logger.setLevel(logging.INFO)
-    for noisy in ("mysql.connector", "uvicorn.access"):
+    for noisy in ("mysql.connector", ):
         logging.getLogger(noisy).setLevel(logging.WARNING)
 
     if getattr(sys, 'frozen', False):
