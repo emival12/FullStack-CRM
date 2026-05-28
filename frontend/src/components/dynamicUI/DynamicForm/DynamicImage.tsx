@@ -11,7 +11,7 @@ import { FieldType } from "commot.types";
 import type { DynamicImageProps } from "./DynamicForm.types";
 
 import { useLabels } from "context/Label/Label";
-import { API_BASE_URL } from "config/K";
+import { DIRECT_ENDPOINTS } from "api/endpoints";
 
 /**
  * Shows an image with his name
@@ -37,7 +37,7 @@ export default function DynamicImage({
 
     return (
       <Image
-        src={`${API_BASE_URL}/images/${info?.value}`}
+        src={DIRECT_ENDPOINTS.assets.image(info?.value)}
         fluid
         rounded
         onError={() => setImgError(true)}

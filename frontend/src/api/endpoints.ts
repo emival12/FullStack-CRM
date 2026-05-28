@@ -1,3 +1,9 @@
+export const DIRECT_ENDPOINTS = {
+  assets: {
+    image: (img: string) => `/api/images/${img}`,
+  },
+} as const;
+
 export const ENDPOINTS = {
   config: {
     translations: (lang: string) => `/translations/${lang}`,

@@ -6,16 +6,10 @@ import {
   PASSWORD_LOGIN_BASE,
 } from "./K_FieldBaseStructure";
 
-export const API_BASE_URL = "http://127.0.0.1:8000/api";
 export const PATH_LOGIN = "/login";
 export const PATH_DATABASE = "/database";
 export const PATH_IMPORT = "/import";
 export const PATH_SETUP = "/setup";
-
-export const PATH_DELETE = "/delete";
-export const PATH_UPDATE = "/update";
-export const PATH_INSERT = "/insert";
-export const PATH_UPLOAD = "/upload";
 
 export const ERROR_MISSING_TABLE = "INPUT_TABLE_NAME_NOT_FOUND";
 export const ERROR_MISSING_RECORD = "INPUT_RECORD_ID_NOT_FOUND";
