@@ -7,7 +7,7 @@ export interface LabelContextType {
   getLabel: GetLabelFunc;
 }
 
-export interface LabelManagerProps {
+export interface LabelProviderProps {
   children: React.ReactNode;
 }
 

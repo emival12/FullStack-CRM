@@ -1,6 +1,6 @@
 export interface ScreenAdaptiveSidebarProps {
   /** Component showed inside the sidebar */
-  sidebarComponent: React.ReactElement;
+  sidebarComponent: React.ReactElement | null;
 
   /** Label used in the mobile button visualization */
   labelPhoneButton: string;

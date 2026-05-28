@@ -1,7 +1,7 @@
 from __future__ import annotations
 import logging
 from typing import Callable
-from core.exceptions import raise_input_exception, raise_server_exception
+from core.exceptions import raise_input_exception, raise_server_exception, ExceptionKind
 from core.models import (
     StandardObjectField,
     SystemFieldName_FD, 
@@ -121,7 +121,7 @@ def _check_allowed(cursor, table_name: str, key_function: Callable[[dict], str])
 
     allowed_tables = { key_function(row) for row in cursor.fetchall() }
     if table_name not in allowed_tables:
-        raise_input_exception(404, "INPUT_TABLE_NAME_NOT_FOUND")
+        raise_input_exception(404, "INPUT_TABLE_NAME_NOT_FOUND", kind=ExceptionKind.BUSINESS_SHARED)
 
 def get_object_definition_records(cursor, object_names: list[str] | None = None) -> list[dict]:
     """
@@ -983,7 +983,7 @@ def get_single_record(cursor, table_name: str, fields: list[dict], raw_filters: 
 
     record = cursor.fetchone()
     if not record:
-        raise_input_exception(404, "INPUT_RECORD_ID_NOT_FOUND")
+        raise_input_exception(404, "INPUT_RECORD_ID_NOT_FOUND", kind=ExceptionKind.BUSINESS_SHARED)
     
     return record
 

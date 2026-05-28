@@ -15,9 +15,7 @@ export default function MissingPage({
   return (
     <div className="h-100 d-flex align-items-center justify-content-center mt-3">
       {showImg && <i className="bi bi-x-octagon fs-2 pe-2 text-danger"></i>}
-      <span className="fw-bold">
-        {missingText || getLabel("MISSING.MISSING_DEFAULT_LABEL")}
-      </span>
+      <span className="fw-bold">{missingText || getLabel("MISSING.PAGE")}</span>
     </div>
   );
 }

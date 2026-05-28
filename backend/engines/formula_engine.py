@@ -6,7 +6,7 @@ from simpleeval import SimpleEval
 from decimal import Decimal
 from dateutil import parser
 from core.models import FieldTypes, SystemFieldName_FD
-from core.exceptions import raise_server_exception, raise_input_exception, log_event
+from core.exceptions import raise_server_exception, raise_input_exception, log_event, ExceptionKind
 from db.db_queries import (
     get_field_divided_by_type,
     get_primary_keys_from_multiple_objects,
@@ -166,7 +166,7 @@ def evaluate_formula(record: dict, field_name: str, formula_definition: str, com
         record[field_name] = evaluator.eval(clean_formula)
     except Exception:
         log_event(logging.ERROR, logger, "Fatal error on formula calculation", exc_info=True, field_name=field_name, formula_definition=formula_definition, clean_formula=clean_formula)
-        raise_input_exception(422, "BROKEN_FORMULA", {"field_name": field_name})
+        raise_input_exception(422, "BROKEN_FORMULA", {"field_name": field_name}, kind=ExceptionKind.BUSINESS_SHARED)
 
     return record
 

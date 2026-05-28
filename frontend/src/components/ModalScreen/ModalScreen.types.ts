@@ -13,4 +13,7 @@ export interface ModalScreenProps {
 
   /** Text showed as body inside the modal */
   bodyText: string;
+
+  /** Boolean used to block the UI */
+  loading: boolean;
 }

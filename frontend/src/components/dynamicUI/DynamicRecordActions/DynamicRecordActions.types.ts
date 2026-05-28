@@ -1,10 +1,6 @@
 import type { UseFormReset, FieldValues } from "react-hook-form";
-import type { ToastConfig } from "commot.types";
 
 export interface DynamicRecordActionsProps {
-  /** Set method of the flag Loading */
-  setLoading: (loading: boolean) => void;
-
   /** Label used for the first button near the delete (generally is New or Edit) */
   editLabel: string;
 
@@ -17,8 +13,8 @@ export interface DynamicRecordActionsProps {
   /** Function used to refresh the form (standard of react-hook-form) */
   reset: UseFormReset<FieldValues>;
 
-  /** Object with all the information to show the toast in case of error */
-  setToastConfig: (toastConfig: ToastConfig) => void;
+  /** Prefix used to retrieve error messages for business feature errors */
+  errorPrefix: string;
 
   /** Flag to decide if the deleted button is needed */
   hasDeleteButton: boolean;

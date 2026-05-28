@@ -1,13 +1,21 @@
-import axios from "axios";
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import type {
   AuthContextType,
   AuthProviderProps,
   UserData,
   LoginFunc,
+  LoginBody,
 } from "./Auth.types";
-
-import { API_BASE_URL } from "config/K";
+import { useApiMutation } from "hooks/useApiMutation";
+import { ENDPOINTS } from "api/endpoints";
+import client from "api/client";
 
 //Creation of context (place where i can save things and avoid the props)
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -17,68 +25,60 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth deve essere usato all'interno di un AuthProvider");
+    throw new Error("useAuth must be used within AuthProvider");
   }
 
   return context;
 };
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  const [loading, setLoading] = useState(true);
+export default function AuthProvider({ children }: AuthProviderProps) {
+  const { mutate } = useApiMutation<LoginBody, UserData>(
+    ENDPOINTS.auth.login,
+    "post",
+  );
+
   const [user, setUser] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // localStorage is a internal dictionary of the browser
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("userToken");
     setUser(null);
-  };
+  }, []);
 
-  const login: LoginFunc = async (email, password) => {
-    const apiData = {
-      email: email,
-      password: password,
-    };
+  const login: LoginFunc = useCallback(
+    async (email, password) => {
+      const payload: LoginBody = { email, password };
+      const userData = await mutate(payload);
 
-    return axios
-      .post<UserData>(`${API_BASE_URL}/login`, apiData)
-      .then((res) => {
-        console.log("AuthProvider - login result:", res.data);
-
-        setUser(res.data);
-        localStorage.setItem("userToken", JSON.stringify(res.data));
-        return res;
-      })
-      .catch((err) => {
-        console.error("AuthProvider - login Error:", err);
-        throw err;
-      });
-  };
+      setUser(userData);
+      localStorage.setItem("userToken", JSON.stringify(userData));
+      return userData;
+    },
+    [mutate],
+  );
 
   //On start check if a user is already logged
   useEffect(() => {
     const savedUser = localStorage.getItem("userToken");
     if (savedUser) {
-      axios
-        .post(`${API_BASE_URL}/check_connection`, savedUser)
-        .then((res) => {
-          console.log("AuthProvider - check connection result:", res.data);
+      client
+        .post(ENDPOINTS.auth.checkConnection, savedUser)
+        .then(() => {
           setUser(JSON.parse(savedUser) as UserData);
         })
-        .catch((err) => {
-          console.log("AuthProvider - check connection error:", err);
-          logout();
-        })
+        .catch(() => logout())
         .finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [logout]);
 
   // All the things passed in the values are available to all the components who read the context
   // children: are all the components inside the AuthProvider (in our case the entire App)
-  return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({ user, login, logout, loading }),
+    [user, login, logout, loading],
   );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

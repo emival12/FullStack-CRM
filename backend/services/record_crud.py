@@ -1,7 +1,8 @@
 from __future__ import annotations
 import sys
 import logging
-from core.exceptions import raise_server_exception
+from mysql.connector import errorcode, IntegrityError
+from core.exceptions import raise_server_exception, raise_input_exception, ExceptionKind
 from core.models import StandardObjectField, SystemFieldName_FD, SystemFieldName_RLD, FieldTypes, FieldStructureMode, SystemObjects
 from db.query_builder import (
     QueryBuilder,
@@ -265,6 +266,11 @@ def execute_query(cursor, caller: str, query: str, params: list[tuple] | None = 
             cursor.execute(query, params[0])
             
         return {"result": cursor.rowcount}
+    except IntegrityError as err:
+        if err.errno == errorcode.ER_DUP_ENTRY:
+            raise_input_exception(409, "DUPLICATE_PK", kind=ExceptionKind.BUSINESS_SHARED)
+        else:
+            raise_server_exception(logger, "DB query failed", query=query, caller=caller)
     except Exception as e:
         raise_server_exception(logger, "DB query failed", query=query, caller=caller)
 

@@ -1,12 +1,13 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import type {
   SidebarStructure,
   TablesSidebarProps,
 } from "./TableSidebar.types";
 
-import { API_BASE_URL } from "config/K";
 import { useLabels } from "context/Label/Label";
+import { useFeedback } from "hooks/useFeedback";
+import { useApiQuery } from "hooks/useApiQuery";
+import { ENDPOINTS } from "api/endpoints";
 import ScreenAdaptiveSidebar from "components/ScreenAdaptiveSidebar/ScreenAdaptiveSidebar";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 import TablesSidebarAccordion from "./TablesSidebarAccordion";
@@ -16,40 +17,39 @@ import TablesSidebarAccordion from "./TablesSidebarAccordion";
  */
 export default function TablesSidebar({
   tableKey,
-}: TablesSidebarProps): React.ReactElement {
+}: TablesSidebarProps): React.ReactElement | null {
   const { getLabel } = useLabels();
-
-  const [loading, setLoading] = useState(true);
-  const [tablesData, setTablesData] = useState<SidebarStructure>({});
+  const { showErrorToast } = useFeedback();
+  const {
+    data: tablesData,
+    loading,
+    error,
+  } = useApiQuery<SidebarStructure>(ENDPOINTS.sidebar.tables);
 
   //Mobile variables
   const [showSidebar, setShowSidebar] = useState(false);
   const toggleSidebar = () => setShowSidebar(!showSidebar);
 
   useEffect(() => {
-    setLoading(true);
-    axios
-      .get<SidebarStructure>(`${API_BASE_URL}/tables`)
-      .then((res) => {
-        console.log("TablesSidebar - List of Tables Received:", res.data);
-        setTablesData(res.data);
-      })
-      .catch((err) => console.error("Error:", err))
-      .finally(() => setLoading(false));
-  }, []);
+    if (error) showErrorToast(error, "TABLE_SIDEBAR");
+  }, [error, showErrorToast]);
 
-  if (loading) return <LoadingScreen />;
+  const renderSidebarContent = () => {
+    if (loading) return <LoadingScreen compact={true} />;
+    if (!tablesData) return null;
+    return (
+      <TablesSidebarAccordion
+        tablesData={tablesData}
+        tableKey={tableKey}
+        toggleSidebar={toggleSidebar}
+      />
+    );
+  };
 
   return (
     <ScreenAdaptiveSidebar
-      sidebarComponent={
-        <TablesSidebarAccordion
-          tablesData={tablesData}
-          tableKey={tableKey}
-          toggleSidebar={toggleSidebar}
-        />
-      }
-      labelPhoneButton={getLabel("MOBILE.TABLES_LABEL")}
+      sidebarComponent={renderSidebarContent()}
+      labelPhoneButton={getLabel("MOBILE.TABLES")}
       toggleSidebar={toggleSidebar}
       showSidebar={showSidebar}
     />

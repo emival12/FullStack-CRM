@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from enum import Enum, auto
+from enum import Enum, auto, StrEnum
 
 MASTER_RECORD_TYPE = "master"
 
@@ -38,7 +38,7 @@ class RldFilterConditions(Enum):
     VISIBLE_AND_EDITABLE     = auto()
 
 
-class SystemObjects(str, Enum):
+class SystemObjects(StrEnum):
     """
         String constants for built-in system object names.
         These objects are platform-managed and have restricted CRUD behaviour.

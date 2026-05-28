@@ -25,6 +25,10 @@ from services.record_crud import (
 
 logger = logging.getLogger(__name__) 
 
+def check_table_existance(cursor, table_name: str):
+    check_allowed_object(cursor, table_name)  
+    return {"result": 1}
+
 def create_object(cursor, object_data):
     result = create_new_object(cursor, object_data)
     log_event(logging.INFO, logger, "Object created", object_name=object_data[SystemFieldName_OD.OBJECT_NAME].lower())

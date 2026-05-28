@@ -6,8 +6,9 @@ import App from "./App";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./index.css";
 
-import { AuthProvider } from "./context/Auth/Auth";
-import LabelManager from "./context/Label/Label";
+import ToastProvider from "context/Toast/Toast";
+import AuthProvider from "context/Auth/Auth";
+import LabelProvider from "context/Label/Label";
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {
@@ -16,11 +17,13 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <LabelManager>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </LabelManager>
+    <ToastProvider>
+      <LabelProvider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </LabelProvider>
+    </ToastProvider>
   </React.StrictMode>,
 );
 

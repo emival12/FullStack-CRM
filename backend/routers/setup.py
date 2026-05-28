@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Depends, Request
+from core.responses import EnvelopeResponse
+
 from config import get_cursor_readonly, get_cursor
 from services.setup_services import (
+    check_table_existance,
     get_field_creation_structure,
     get_object_definition,
     get_object_fields_record,
@@ -12,15 +15,19 @@ from services.setup_services import (
     get_field_info
 )
 
-router = APIRouter(prefix="/api/setup", tags=["setup"])
+router = APIRouter(prefix="/api/setup", tags=["setup"], default_response_class=EnvelopeResponse)
 
+@router.get("/check-table-existance")
+def endpoint_check_table_existance(table_name: str, cursor=Depends(get_cursor_readonly)):
+    result = check_table_existance(cursor, table_name)  # raise 500, 404-INPUT_TABLE_NAME_NOT_FOUND
+    return result 
 
 @router.post("/new-object")
 async def endopoint_create_object(request: Request, cursor=Depends(get_cursor)):
     data = await request.json()
     object_data = data.get("data")
 
-    result = create_object(cursor, object_data) # raise Nothing
+    result = create_object(cursor, object_data) # raise 500, 409-DUPLICATE_PK
     return result
 
 @router.post("/home/update")
@@ -29,7 +36,7 @@ async def endpoint_update_object(request: Request, cursor=Depends(get_cursor)):
     table_name = data.get("table")
     field_structure = data.get("field")
 
-    result = update_object(cursor, table_name, field_structure)  # raise Nothing
+    result = update_object(cursor, table_name, field_structure)  # raise 500
     return result
 
 @router.post("/home/delete")

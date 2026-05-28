@@ -12,6 +12,7 @@ from core.models import MASTER_RECORD_TYPE, SystemFieldName_OD, SystemFieldName_
 from db.db_queries import (
     check_allowed_object,
     get_user_definition_record,
+    make_table_key,
     make_options_key,
     make_basic_table_key,
     get_object_definition_records,
@@ -152,7 +153,7 @@ def verify_record_type(cursor, object_name: str, df: pd.DataFrame) -> tuple[str,
     return record_type_name, is_single_record_type
 
 def get_fields_to_check(cursor, object_name: str, record_type_name: str, is_single_record_type: int) -> list[dict]:
-    fields = get_fields_definition(cursor, [(object_name, record_type_name)], is_visible=0)
+    fields = get_fields_definition(cursor, [(object_name, record_type_name)], is_visible=0).get(make_table_key(object_name, record_type_name))
 
     # Auto-number PKs are assigned by the DB; record_type_name is implicit for single-RT objects.
     fields_to_insert = []
@@ -345,7 +346,7 @@ def process_input_rows(cursor, fields: list[dict], object_name: str, record_type
                             "row": idx+1,
                             "column": col,
                             "max_length": max_integer_digits,
-                            "actual_length": digits_count
+                            "actual_length": integer_digits
                         }
                     ) 
             elif field_type == FieldTypes.RADIO.value:

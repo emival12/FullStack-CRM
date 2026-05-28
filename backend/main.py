@@ -16,16 +16,6 @@ import backup_manager
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
-# Enable CORS to allow React to access APIs
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8000", "http://127.0.0.1:8000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
 app.include_router(auth.router)
 app.include_router(assets.router)
 app.include_router(import_.router)

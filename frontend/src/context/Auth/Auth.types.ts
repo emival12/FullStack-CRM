@@ -1,5 +1,3 @@
-import type { AxiosResponse } from "axios";
-
 export interface UserData {
   id: number;
   email: string;
@@ -7,10 +5,12 @@ export interface UserData {
   db_name: string;
 }
 
-export type LoginFunc = (
-  email: string,
-  password: string,
-) => Promise<AxiosResponse<UserData>>;
+export type LoginBody = {
+  email: string;
+  password: string;
+};
+
+export type LoginFunc = (email: string, password: string) => Promise<UserData>;
 
 export interface AuthContextType {
   user: UserData | null;

@@ -1,22 +1,27 @@
-import axios from "axios";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useOutletContext } from "react-router-dom";
 import {
+  CRUDResult,
   MetadataFieldStructure,
   SetupOutletContext,
-  ToastConfig,
 } from "commot.types";
 import { SetupSectionBaseProps } from "../SetupSections.types";
 import { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
-import { API_BASE_URL, PATH_DELETE, PATH_SETUP, PATH_UPDATE } from "config/K";
-import { HOME_OBJECT_FIELD_STRUCTURE } from "features/Setup/K_SetupFormsStructure";
 import { useLabels } from "context/Label/Label";
-import ToastMsg from "components/ToastMsg/ToastMsg";
+import { useFeedback } from "hooks/useFeedback";
+import { useApiQuery } from "hooks/useApiQuery";
+import { useApiMutation } from "hooks/useApiMutation";
+import { ENDPOINTS } from "api/endpoints";
+import { ApiError } from "api/types";
+import { HOME_OBJECT_FIELD_STRUCTURE } from "features/Setup/K_SetupFormsStructure";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
 import DynamicRecordActions from "components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
+import { PATH_SETUP } from "config/K";
+
+const PREFIX = "SETUP_HOME";
 
 /**
  * Page used for the section Home of an object in the setup
@@ -24,63 +29,51 @@ import DynamicRecordActions from "components/dynamicUI/DynamicRecordActions/Dyna
 export default function SetupSectionHome({
   tableKey,
   sectionKey,
-}: SetupSectionBaseProps): React.ReactElement {
-  const { getLabel } = useLabels();
+}: SetupSectionBaseProps): React.ReactElement | null {
   const { refreshSidebar, setRefreshSidebar } =
     useOutletContext<SetupOutletContext>();
+  const { getLabel } = useLabels();
+  const { showErrorToast } = useFeedback();
+  const {
+    data: fields,
+    loading: loadingForm,
+    error,
+    refetch,
+  } = useApiQuery<MetadataFieldStructure>(
+    ENDPOINTS.setup.object.definition(tableKey ?? ""),
+    { enabled: Boolean(tableKey) },
+  );
+  const { mutate, loading: loadingSubmit } = useApiMutation<
+    Record<string, any>,
+    CRUDResult
+  >(ENDPOINTS.setup.object.update, "post");
 
-  const [loading, setLoading] = useState(true);
-  const [isEdit, setIsEdit] = useState(false);
-  const [validated, setValidated] = useState(false);
-  const [fields, setFields] = useState<MetadataFieldStructure>({});
-
-  const [toastConfig, setToastConfig] = useState<ToastConfig>({
-    show: false,
-    title: "",
-    body: "",
-  });
-
+  const formValues = fields
+    ? Object.fromEntries(
+        Object.entries(HOME_OBJECT_FIELD_STRUCTURE).map(([key, info]) => [
+          key,
+          fields[key.toLowerCase()],
+        ]),
+      )
+    : undefined;
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm();
+  } = useForm({ values: formValues });
 
-  const fetchData = useCallback(() => {
-    if (!tableKey || !sectionKey) return; // Blocks execution if the selected tabel is not correct
-
-    setLoading(true);
-    setIsEdit(false);
-    setValidated(false);
-    axios
-      .get<MetadataFieldStructure>(`${API_BASE_URL}${PATH_SETUP}/${tableKey}`)
-      .then((res) => {
-        console.log(
-          "SetupSectionHome - List of Object Fields Received:",
-          res.data,
-        );
-        setFields(res.data);
-
-        //Insert the values retrieved into the form and redraw it
-        const formValues = Object.fromEntries(
-          Object.entries(HOME_OBJECT_FIELD_STRUCTURE).map(([key, info]) => [
-            key,
-            res.data[key.toLowerCase()],
-          ]),
-        );
-        reset(formValues);
-      })
-      .catch((err) => console.error("SetupSectionHome - Error:", err))
-      .finally(() => setLoading(false));
-  }, [tableKey, sectionKey, reset]);
+  const [isEdit, setIsEdit] = useState(false);
+  const loading = loadingForm || loadingSubmit;
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (error) showErrorToast(error, PREFIX);
+  }, [error, showErrorToast]);
 
   //Method fired when the button Save is pressed
-  const onSubmit = (data: Record<string, any>) => {
+  const onSubmit = async (data: Record<string, any>) => {
+    if (!fields || !tableKey || !sectionKey) return;
+
     let modified_data: Record<string, any> = {};
     for (const key in data) {
       if (fields[key.toLowerCase()] !== data[key]) {
@@ -89,58 +82,35 @@ export default function SetupSectionHome({
     }
 
     if (Object.keys(modified_data).length > 0) {
-      setLoading(true);
-
-      const apiData = {
+      const payload = {
         table: tableKey,
         field: modified_data,
       };
 
-      axios
-        .post(`${API_BASE_URL}${PATH_SETUP}/${tableKey}${PATH_UPDATE}`, apiData)
-        .then((res) => {
-          console.log("SetupSectionHome - Updated sections results:", res.data);
-          if (res.data.result === 0) {
-            setToastConfig({
-              show: true,
-              title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-              body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
-            });
-          } else {
-            fetchData();
-            setIsEdit(false);
-            setValidated(false);
-          }
-        })
-        .catch((err) => {
-          console.error("Error:", err);
-          setToastConfig({
-            show: true,
-            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-            body:
-              err?.response?.data?.detail ||
-              getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
-          });
-        })
-        .finally(() => setLoading(false));
-
-      setValidated(true);
+      try {
+        await mutate(payload);
+        setIsEdit(false);
+        refetch();
+      } catch (err) {
+        showErrorToast(err as ApiError, PREFIX);
+      }
     }
   };
 
   if (loading) return <LoadingScreen />;
 
+  if (!fields) return null;
+
   return (
     <>
       <DynamicRecordActions
-        setLoading={setLoading}
-        editLabel={getLabel("BUTTONS.EDIT_LABEL")}
+        editLabel={getLabel("BUTTONS.EDIT")}
         isEdit={isEdit}
         setIsEdit={setIsEdit}
         reset={reset}
-        setToastConfig={setToastConfig}
+        errorPrefix={PREFIX}
         hasDeleteButton={true}
-        pathAPI={`${API_BASE_URL}${PATH_SETUP}/${sectionKey}${PATH_DELETE}`}
+        pathAPI={ENDPOINTS.setup.object.delete}
         payloadAPI={{
           table: tableKey,
         }}
@@ -151,17 +121,11 @@ export default function SetupSectionHome({
       />
       <DynamicForm
         fields={HOME_OBJECT_FIELD_STRUCTURE as DataFieldStructure}
-        validated={validated}
+        validated={false}
         onSubmit={handleSubmit(onSubmit)}
         errors={errors}
         register={register}
         isEdit={isEdit}
-      />
-      <ToastMsg
-        showToast={toastConfig.show}
-        setShowToast={(val) => setToastConfig({ ...toastConfig, show: val })}
-        title={toastConfig.title}
-        body={toastConfig.body}
       />
     </>
   );

@@ -1,11 +1,13 @@
-import axios from "axios";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Button } from "react-bootstrap";
 import type { DatabaseOutletContext, RecordListStructure } from "commot.types";
 
-import { API_BASE_URL, ERROR_MISSING_TABLE } from "config/K";
 import { useLabels } from "context/Label/Label";
+import { useFeedback } from "hooks/useFeedback";
+import { useApiQuery } from "hooks/useApiQuery";
+import { ENDPOINTS } from "api/endpoints";
+import { ERROR_MISSING_TABLE } from "config/K";
 import MissingPage from "components/MissingPage/MissingPage";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 import DynamicRecordsList from "components/dynamicUI/DynamicRecordsList/DynamicRecordsList";
@@ -24,51 +26,31 @@ const getDisplayTitle = (key: string) => {
   return title.charAt(0)?.toUpperCase() + title.slice(1);
 };
 
-export default function RecordsListView(): React.ReactElement {
+export default function RecordsListView(): React.ReactElement | null {
   const { tableKey } = useOutletContext<DatabaseOutletContext>();
   const { getLabel } = useLabels();
+  const { showErrorToast } = useFeedback();
+  const {
+    data: records,
+    loading,
+    error,
+    refetch,
+  } = useApiQuery<RecordListStructure>(ENDPOINTS.records.recordsList(tableKey));
 
-  const [loading, setLoading] = useState(true);
   const [showNewModal, setShowNewModal] = useState(false);
-  const [controlledError, setControlledError] = useState(false);
-  const [records, setRecords] = useState<RecordListStructure>({
-    fields: [],
-    primary_key_name: "",
-    records: [],
-  });
-
-  const fetchData = useCallback(() => {
-    if (!tableKey) return; // Blocks execution if the selected table is missing
-
-    setLoading(true);
-    setControlledError(false);
-    axios
-      .get<RecordListStructure>(`${API_BASE_URL}/${tableKey}`)
-      .then((res) => {
-        console.log("RecordsListView - List of Records Received:", res.data);
-        setRecords(res.data);
-      })
-      .catch((err) => {
-        console.error("RecordsListView - Error:", err);
-        const errorCode = err.response.data.detail.error_code;
-        if (errorCode === ERROR_MISSING_TABLE) {
-          setControlledError(true);
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [tableKey]);
+  const isMissingTable = error?.errorCode === ERROR_MISSING_TABLE;
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (error && !isMissingTable) showErrorToast(error, "RECORD_LIST");
+  }, [error, isMissingTable, showErrorToast]);
 
   if (loading) return <LoadingScreen />;
 
-  if (controlledError) {
-    return (
-      <MissingPage missingText={getLabel("MISSING.MISSING_TABLE_LABEL")} />
-    );
+  if (isMissingTable) {
+    return <MissingPage missingText={getLabel("MISSING.TABLE")} />;
   }
+
+  if (!records) return null;
 
   return (
     <div>
@@ -80,7 +62,7 @@ export default function RecordsListView(): React.ReactElement {
             setShowNewModal(true);
           }}
         >
-          {getLabel("BUTTONS.NEW_LABEL")}
+          {getLabel("BUTTONS.NEW")}
         </Button>
       </div>
       <DynamicRecordsList data={records} redirectKey={tableKey} />
@@ -88,7 +70,7 @@ export default function RecordsListView(): React.ReactElement {
         tableKey={tableKey}
         showNewModal={showNewModal}
         setShowNewModal={setShowNewModal}
-        refreshData={fetchData}
+        refreshData={refetch}
       />
     </div>
   );

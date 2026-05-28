@@ -1,16 +1,36 @@
+import { useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import { SetupOutletContext, Sections } from "commot.types";
 
+import { useLabels } from "context/Label/Label";
+import { useFeedback } from "hooks/useFeedback";
+import { useApiQuery } from "hooks/useApiQuery";
+import { ENDPOINTS } from "api/endpoints";
+import { ERROR_MISSING_TABLE } from "config/K";
 import SetupSectionHome from "./SetupSectionHome/SetupSectionHome";
 import SetupSectionFieldsListView from "./SetupSectionFieldsListView/SetupSectionFieldsListView";
 import SetupSectionFieldsEdit from "./SetupSectionFieldsEdit/SetupSectionFieldsEdit";
+import MissingPage from "components/MissingPage/MissingPage";
+import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 
-export default function SetupSectionObject(): React.ReactElement {
+export default function SetupSection(): React.ReactElement | null {
   const { tableKey, sectionKey, recordId } =
     useOutletContext<SetupOutletContext>();
+  const { getLabel } = useLabels();
+  const { showErrorToast } = useFeedback();
+  const { loading, error } = useApiQuery<unknown>(
+    ENDPOINTS.setup.object.exists(tableKey ?? ""),
+    { enabled: Boolean(tableKey) },
+  );
+
+  const isMissingTable = error?.errorCode === ERROR_MISSING_TABLE;
+
+  useEffect(() => {
+    if (error && !isMissingTable) showErrorToast(error, "SETUP_SECTIONS");
+  }, [error, isMissingTable, showErrorToast]);
 
   const pickScreen = () => {
-    if (!tableKey || !sectionKey) return <></>;
+    if (!tableKey || !sectionKey) return null;
 
     const screens = {
       [Sections.HOME]: (
@@ -40,8 +60,18 @@ export default function SetupSectionObject(): React.ReactElement {
       }
     }
 
-    return screens[sectionKey] ?? <p>Sezione non trovata</p>;
+    return (
+      screens[sectionKey] ?? (
+        <MissingPage missingText={getLabel("MISSING.SECTION")} />
+      )
+    );
   };
+
+  if (loading) return <LoadingScreen />;
+
+  if (isMissingTable) {
+    return <MissingPage missingText={getLabel("MISSING.TABLE")} />;
+  }
 
   return pickScreen();
 }

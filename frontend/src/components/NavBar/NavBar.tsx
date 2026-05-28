@@ -26,10 +26,10 @@ export default function NavBar(): React.ReactElement {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             <Nav.Link as={Link} to={PATH_DATABASE}>
-              {getLabel("NAVBAR.DATABASE_LABEL")}
+              {getLabel("NAVBAR.DATABASE")}
             </Nav.Link>
             <Nav.Link as={Link} to={PATH_IMPORT}>
-              {getLabel("NAVBAR.IMPORT_LABEL")}
+              {getLabel("NAVBAR.IMPORT")}
             </Nav.Link>
           </Nav>
           <Nav>

@@ -1,16 +1,21 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Modal } from "react-bootstrap";
-import type { ToastConfig } from "commot.types";
+import type { CRUDResult } from "commot.types";
 import type { NewRecordProps } from "./TableRecors.types";
 import type { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
-import { API_BASE_URL, PATH_INSERT } from "config/K";
-import { useAuth } from "context/Auth/Auth";
 import { useLabels } from "context/Label/Label";
-import ToastMsg from "components/ToastMsg/ToastMsg";
+import { useFeedback } from "hooks/useFeedback";
+import { useApiQuery } from "hooks/useApiQuery";
+import { useAuth } from "context/Auth/Auth";
+import { ENDPOINTS } from "api/endpoints";
+import { ApiError } from "api/types";
 import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
+import LoadingScreen from "components/LoadingScreen/LoadingScreen";
+import { useApiMutation } from "hooks/useApiMutation";
+
+const PREFIX = "NEW_RECORD";
 
 /**
  * Shows a modal with all the field of the object in order to create a new record
@@ -23,16 +28,18 @@ export default function NewRecord({
 }: NewRecordProps): React.ReactElement {
   const { getLabel } = useLabels();
   const { user } = useAuth();
-
-  const [fields, setFields] = useState<DataFieldStructure>({});
-  const [validated, setValidated] = useState(false);
-
-  const [toastConfig, setToastConfig] = useState<ToastConfig>({
-    show: false,
-    title: "",
-    body: "",
+  const { showErrorToast } = useFeedback();
+  const {
+    data: fields,
+    loading: loadingForm,
+    error: errorForm,
+  } = useApiQuery<DataFieldStructure>(ENDPOINTS.records.newRecord(tableKey), {
+    enabled: showNewModal,
   });
-
+  const { mutate, loading: loadingSubmit } = useApiMutation<
+    Record<string, any>,
+    CRUDResult
+  >(ENDPOINTS.crud.insert, "post");
   const {
     register,
     handleSubmit,
@@ -40,57 +47,44 @@ export default function NewRecord({
     reset,
   } = useForm();
 
-  useEffect(() => {
-    if (!tableKey) return; // Blocks execution if the selected tabel is not correct
+  const loading = loadingForm || loadingSubmit;
 
-    axios
-      .get<DataFieldStructure>(`${API_BASE_URL}/${tableKey}/new-record`)
-      .then((res) => {
-        console.log("NewRecord - Structure Record Received:", res.data);
-        setFields(res.data);
-      })
-      .catch((err) => console.error("NewRecord - Error:", err))
-      .finally(() => {});
-  }, [tableKey]);
+  useEffect(() => {
+    if (errorForm) showErrorToast(errorForm, PREFIX);
+  }, [errorForm, showErrorToast]);
 
   //Method fired when the button Save is pressed
-  const onSubmit = (data: Record<string, any>) => {
-    axios
-      .post(`${API_BASE_URL}${PATH_INSERT}`, {
-        table: tableKey,
-        record: data,
-        user: user,
-      })
-      .then((res) => {
-        console.log(
-          "NewRecord - Sumbit - Uploaded new record results:",
-          res.data,
-        );
-        if (res.data.result === 0) {
-          setToastConfig({
-            show: true,
-            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-            body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
-          });
-        } else {
-          setValidated(false);
-          setShowNewModal(false);
-          refreshData();
-          reset();
-        }
-      })
-      .catch((err) => {
-        console.error("NewRecord - Sumbit - Error:", err);
-        setToastConfig({
-          show: true,
-          title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-          body:
-            err?.response?.data?.detail ||
-            getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
-        });
-      });
+  const onSubmit = async (data: Record<string, any>) => {
+    const payload = {
+      table: tableKey,
+      record: data,
+      user: user,
+    };
 
-    setValidated(true);
+    try {
+      await mutate(payload);
+      setShowNewModal(false);
+      refreshData();
+      reset();
+    } catch (err) {
+      showErrorToast(err as ApiError, PREFIX);
+    }
+  };
+
+  const renderBody = () => {
+    if (loading) return <LoadingScreen />;
+    if (!fields) return getLabel("MODAL.INSERT.LOAD_ERROR");
+    return (
+      <DynamicForm
+        fields={fields}
+        validated={false}
+        onSubmit={handleSubmit(onSubmit)}
+        tableKey={tableKey}
+        errors={errors}
+        register={register}
+        isNewForm={true}
+      />
+    );
   };
 
   return (
@@ -98,40 +92,29 @@ export default function NewRecord({
       <Modal
         show={showNewModal}
         onHide={() => {
-          setShowNewModal(false);
-          reset();
+          if (!loadingSubmit) {
+            setShowNewModal(false);
+            reset();
+          }
         }}
       >
         <Modal.Header closeButton>
-          <Modal.Title>
-            {getLabel("MODAL.INSERT.NEW_RECORD_TITLE_LABEL")}
-          </Modal.Title>
+          <Modal.Title>{getLabel("MODAL.INSERT.RECORD_TITLE")}</Modal.Title>
         </Modal.Header>
 
-        <Modal.Body>
-          <DynamicForm
-            fields={fields}
-            validated={validated}
-            onSubmit={handleSubmit(onSubmit)}
-            tableKey={tableKey}
-            errors={errors}
-            register={register}
-            isNewForm={true}
-          />
-        </Modal.Body>
+        <Modal.Body>{renderBody()}</Modal.Body>
 
         <Modal.Footer>
-          <Button variant="primary" type="submit" form="recordDetailForm">
-            {getLabel("BUTTONS.SAVE_LABEL")}
+          <Button
+            disabled={!fields}
+            variant="primary"
+            type="submit"
+            form="recordDetailForm"
+          >
+            {getLabel("BUTTONS.SAVE")}
           </Button>
         </Modal.Footer>
       </Modal>
-      <ToastMsg
-        showToast={toastConfig.show}
-        setShowToast={(val) => setToastConfig({ ...toastConfig, show: val })}
-        title={toastConfig.title}
-        body={toastConfig.body}
-      />
     </>
   );
 }

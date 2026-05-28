@@ -148,10 +148,7 @@ export default function DynamicRecordsList({
         setCurrentPage={setCurrentPage}
       />
       {recordsToShow?.records.length === 0 && (
-        <MissingPage
-          missingText={getLabel("MISSING.MISSING_RECORD_LABEL")}
-          showImg={false}
-        />
+        <MissingPage missingText={getLabel("MISSING.RECORD")} showImg={false} />
       )}
     </>
   );

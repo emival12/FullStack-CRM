@@ -4,10 +4,11 @@ from fastapi import APIRouter
 from fastapi.responses import FileResponse
 import logging
 from config import get_correct_path
+from core.responses import EnvelopeResponse
 from core.exceptions import raise_input_exception, raise_server_exception, log_event
 
 logger = logging.getLogger(__name__) 
-router = APIRouter(prefix="/api", tags=["assets"])
+router = APIRouter(prefix="/api", tags=["assets"], default_response_class=EnvelopeResponse)
 
 @router.get("/translations/{browser_language}")
 async def endpoint_get_translation_file(browser_language: str):

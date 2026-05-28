@@ -1,25 +1,89 @@
 {
+  "COMMON": {
+    "NETWORK_ERROR": "Si è verificato un errore imprevisto. Contatta un admin",
+    "UNKNOWN_ERROR": "Si è verificato un errore imprevisto. Contatta un admin",
+    "RUNTIME_ERROR": "Si è verificato un errore imprevisto. Contatta un admin",
+    "ADMIN_ERROR": "Si è verificato un errore imprevisto. Contatta un admin",
+    "INPUT_TABLE_NAME_NOT_FOUND": "La tabella indicata non esiste",
+    "INPUT_RECORD_ID_NOT_FOUND": "Il record indicato non esiste",
+    "BROKEN_FORMULA": "Si è verificato un errore nel calcolo della formula \"{{field_name}}\". Contatta un admin",
+    "DUPLICATE_PK": "Esiste già un record con questa chiave"
+  },
+  "TOAST": {
+    "ERROR_TITLE": "Errore",
+    "SUCCESS_TITLE": "Successo",
+    "SUCCESS_BODY": "Operazione conclusa correttamente"
+  },
+  "BUTTONS": {
+    "NEW": "Nuovo",
+    "EDIT": "Modifica",
+    "SAVE": "Salva",
+    "DELETE": "Elimina",
+    "CONFIRM": "Conferma",
+    "CANCEL": "Annulla",
+    "NEXT": "Avanti",
+    "PREVIOUS": "Indietro"
+  },
+  "MISSING": {
+    "PAGE": "Pagina non trovata",
+    "TABLE": "Tabella non trovata",
+    "RECORD": "Nessun record trovato",
+    "SECTION": "Sezione non trovata"
+  },
+  "NAVBAR": {
+    "DATABASE": "Database",
+    "IMPORT": "Import"
+  },
+  "MOBILE": {
+    "TABLES": "Tabelle"
+  },
   "LOGIN": {
     "INVALID_CREDENTIALS": "Email o password errate. Controlla i dati inseriti e riprova"
   },
-  "NAVBAR": {
-    "DATABASE_LABEL": "Database",
-    "IMPORT_LABEL": "Import"
+  "TABS": {
+    "RECORD_DETAIL": {
+      "DETAIL": "Dettaglio",
+      "RELATED": "Correlati"
+    }
   },
-  "BUTTONS": {
-    "NEW_LABEL": "Nuovo",
-    "EDIT_LABEL": "Modifica",
-    "SAVE_LABEL": "Salva",
-    "DELETE_LABEL": "Elimina",
-    "CONFIRM_LABEL": "Conferma",
-    "CANCEL_LABEL": "Annulla",
-    "NEXT_LABEL": "Avanti",
-    "PREVIOUS_LABEL": "Indietro"
+  "MODAL": {
+    "DELETE": {
+      "TITLE_MODAL_DELETE": "Conferma Cancellazione",
+      "BODY_MODAL_DELETE": "Sei sicuro di voler cancellare il record?"
+    },
+    "INSERT": {
+      "RECORD_TITLE": "Nuovo record",
+      "LOAD_ERROR": "Errore nel caricamento dei campi",
+      "FIELD_TITLE": "Nuovo campo"
+    }
   },
-  "DETAIL_TABS": {
-    "DETAIL_TAB_LABEL": "Dettaglio",
-    "RELATED_TAB_LABEL": "Correlati"
+  "MASSIVE_IMPORT": {
+    "UPLOAD_FILE": "Carica File",
+    "ERRORS": {
+      "IMPORT_FILE_ENCODING_INVALID": "Impossibile leggere il file.\nAssicurati che il file sia salvato in formato CSV con codifica UTF-8 e che non contenga caratteri speciali non riconosciuti",
+      "IMPORT_FILE_PARSE_ERROR": "Impossibile interpretare il file.\nAssicurati che sia un CSV valido con separatore \";\" e che tutte le righe abbiano lo stesso numero di colonne",
+      "IMPORT_FILE_MISSING_RECORD_TYPE_COLUMN": "La colonna \"record_type_name\" è obbligatoria per questa tabella",
+      "IMPORT_FILE_MISSING_RECORD_TYPE_VALUE": "La riga {{row}} nella colonna \"record_type_name\" ha un valore nullo",
+      "IMPORT_FILE_WITH_MULTIPLE_RECORD_TYPE": "Record type trovati: [ {{record_type_name}} ]\nE' possibile caricare solo 1 record type alla volta",
+      "IMPORT_FILE_WITH_WRONG_RECORD_TYPE": "Il Record type {{record_type_name}} non esiste",
+      "IMPORT_FILE_MISSING_REQUIRED_FIELDS": "Le colonne: [ {{columns}} ] sono obbligatorie",
+      "IMPORT_FILE_UNKNOWN_FIELDS": "Le colonne: [ {{columns}} ] non esistono sull'oggetto indicato",
+      "IMPORT_FIELD_LENGTH_EXCEEDED": "La riga {{row}} nella colonna \"{{column}}\" ha un valore troppo lungo.\nLunghezza massima: {{max_length}}, Lunghezza attuale: {{actual_length}}",
+      "INPUT_FIELD_INVALID_BOOLEAN": "La riga {{row}} nella colonna \"{{column}}\" ha un valore errato.\nI valori ammessi sono: [ {{accepted_values}} ](case insensitive)",
+      "INPUT_FIELD_INVALID_NUMBER": "La riga {{row}} nella colonna \"{{column}}\" ha un valore non numerico",
+      "INPUT_FIELD_SCALE_EXCEEDED": "La riga {{row}} nella colonna \"{{column}}\" ha un valore decimale non corretto.\nLunghezza massima decimali: {{max_length}}, Lunghezza attuale: {{actual_length}}",
+      "INPUT_FIELD_PRECISION_EXCEEDED": "La riga {{row}} nella colonna \"{{column}}\" ha un valore troppo lungo.\nLunghezza massima: {{max_length}}, Lunghezza attuale: {{actual_length}}",
+      "INPUT_FIELD_INVALID_RADIO": "La riga {{row}} nella colonna \"{{column}}\" ha un valore inesistente.\nValore attuale: {{actual_value}}",
+      "INPUT_FIELD_INVALID_DATE_FORMAT": "La riga {{row}} nella colonna \"{{column}}\" ha una data formattata male.\nValore attuale: {{actual_value}}, Formato accettato: {{expected_format}}",
+      "INPUT_FIELD_INVALID_DATE": "La riga {{row}} nella colonna \"{{column}}\" non è una data corretta.\nValore attuale: {{actual_value}}",
+      "INPUT_FIELD_INVALID_LOOKUP_PICKLIST": "La riga {{row}} nella colonna \"{{column}}\" ha un valore inesistente.\nValore attuale: {{actual_value}}"
+    }
   },
+  "SETUP": {
+    "TABLE_SELECTION": "Tabella da modificare",
+    "SELECT_TABLE_MESSAGE": "Seleziona una tabella da modificare"
+  },
+
   "FORM_ERRORS": {
     "MANDATORY_FIELD_LABEL": "Campo obbligatorio",
     "MAX_FIELD_LABEL": "Massimo {{max_length}} caratteri",
@@ -28,55 +92,10 @@
     "INVALID_EMAIL_LABEL": "Inserire una mail valida",
     "IMAGE_NOT_FOUND": "Immagine non trovata"
   },
-  "TOAST": {
-    "ERROR_TOAST_TITLE_LABEL": "Errore",
-    "ERROR_TOAST_BODY_LABEL": "E' avvenuto un errore. Contattare un admin",
-    "SUCCESS_TOAST_TITLE_LABEL": "Successo",
-    "SUCCESS_TOAST_BODY_LABEL": "Operazione conclusa correttamente"
-  },
-  "MODAL": {
-    "DELETE": {
-      "TITLE_MODAL_DELETE_LABEL": "Conferma Cancellazione",
-      "BODY_MODAL_DELETE_LABEL": "Sei sicuro di voler cancellare il record?"
-    },
-    "INSERT": {
-      "NEW_RECORD_TITLE_LABEL": "Nuovo record",
-      "NEW_FIELD_TITLE_LABEL": "Nuovo campo"
-    }
-  },
-  "MISSING": {
-    "MISSING_DEFAULT_LABEL": "Pagina non trovata",
-    "MISSING_TABLE_LABEL": "Tabella non trovata",
-    "MISSING_RECORD_LABEL": "Nessun record trovato"
-  },
-  "MASSIVE": {
-    "UPLOAD_FILE_LABEL": "Carica File"
-  },
-  "MOBILE": {
-    "TABLES_LABEL": "Tabelle"
-  },
   "GENERIC": {
     "LOADING_LABEL": "Caricamento...",
-    "SETUP_TABLE_SELECTION_LABEL": "Tabella da modificare",
-    "SETUP_MSG_SELECT_TABLE_LABEL": "Seleziona una tabella da modificare",
     "DB_INTRO_LABEL": "Seleziona una tabella dalla sidebar",
     "SEARCH_PLACEHOLDER_LABEL": "Cerca parola chiave...",
     "TEXT_AREA_HELP_LABEL": "Dividere ogni valore con l'accapo"
-  },
-  "API_MASSIVE_IMPORT_ERROR_MESSAGES": {
-    "IMPORT_FILE_ENCODING_INVALID": "Impossibile leggere il file.\nAssicurati che il file sia salvato in formato CSV con codifica UTF-8 e che non contenga caratteri speciali non riconosciuti.",
-    "IMPORT_FILE_MISSING_REQUIRED_FIELDS": "Le colonne: [ {{columns}} ] sono obbligatorie",
-    "IMPORT_FILE_UNKNOWN_FIELDS": "Le colonne: [ {{columns}} ] non esistono sull'oggetto indicato",
-    "IMPORT_FIELD_LENGTH_EXCEEDED": "La riga {{row}} nella colonna \"{{column}}\" ha un valore troppo lungo.\nLunghezza massima: {{max_length}}, Lunghezza attuale: {{actual_length}}",
-    "INPUT_FIELD_INVALID_BOOLEAN": "La riga {{row}} nella colonna \"{{column}}\" ha un valore errato.\nI valori ammessi sono: [ {{accepted_values}} ](case insensitive)",
-    "INPUT_FIELD_INVALID_NUMBER": "La riga ${row} nella colonna \"{{column}}\" ha un valore non numerico",
-    "INPUT_FIELD_SCALE_EXCEEDED": "La riga {{row}} nella colonna \"{{column}}\" ha un valore decimale non corretto.\nLunghezza massima decimali: {{max_length}}, Lunghezza attuale: {{actual_length}}",
-    "INPUT_FIELD_PRECISION_EXCEEDED": "La riga {{row}} nella colonna \"{{column}}\" ha un valore troppo lungo.\nLunghezza massima: {{max_length}}, Lunghezza attuale: {{actual_length}}",
-    "IMPORT_FIELD_ROLLUP_UNAUTHORIZED": "La riga {{row}} ha un valore nella colonna \"{{column}}\".\nLe colonne rollup non accettano valori in input",
-    "INPUT_FIELD_INVALID_RADIO": "La riga {{row}} nella colonna \"{{column}}\" ha un valore inesistente.\nValore attuale: {{actual_value}}",
-    "INPUT_FIELD_INVALID_DATE_FORMAT": "La riga {{row}} nella colonna \"{{column}}\" ha una data formattata male.\nValore attuale: {{actual_value}}, Formato accettato: {{expected_format}}",
-    "INPUT_FIELD_INVALID_DATE": "La riga {{row}} nella colonna \"{{column}}\" non è una data corretta.\nValore attuale: {{actual_value}}",
-    "INPUT_FIELD_INVALID_LOOKUP_PICKLIST": "La riga {{row}} nella colonna \"{{column}}\" ha un valore inesistente.\nValore attuale: {{actual_value}}",
-    "IMPORT_FILE_WITH_MULTIPLE_RECORD_TYPE": "Record type trovati: [ {{record_type_name}} ]\nE' possibile caricare solo 1 record type alla volta"
   }
 }

@@ -11,6 +11,10 @@ export type ModalConfig = {
   body: string;
 };
 
+export interface CRUDResult {
+  result: number;
+}
+
 //###############################################
 // DATABASE
 //###############################################

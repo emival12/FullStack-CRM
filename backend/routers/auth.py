@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Request
+from core.responses import EnvelopeResponse
 from config import (
     get_cursor_readonly,
     get_current_config,
@@ -9,7 +10,8 @@ from services.auth_services import (
     check_user_login
 )
 
-router = APIRouter(prefix="/api", tags=["auth"])
+
+router = APIRouter(prefix="/api", tags=["auth"], default_response_class=EnvelopeResponse)
 
 @router.post("/login")
 async def endpoint_login(request: Request, cursor=Depends(get_cursor_readonly), config=Depends(get_current_config)):

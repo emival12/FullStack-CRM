@@ -2,9 +2,9 @@ import "./App.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import { PATH_DATABASE, PATH_IMPORT, PATH_LOGIN, PATH_SETUP } from "./config/K";
-import { useAuth } from "./context/Auth/Auth";
 import { useLabels } from "./context/Label/Label";
+import { useAuth } from "./context/Auth/Auth";
+import { PATH_DATABASE, PATH_IMPORT, PATH_LOGIN, PATH_SETUP } from "./config/K";
 import DatabaseMainPage from "./features/MainScreen/DatabaseMainPage";
 import RecordsListView from "./features/TableRecords/RecordsListView";
 import RecordDetail from "./features/TableRecordDetails/RecordDetail";
@@ -18,8 +18,8 @@ import LoadingScreen from "./components/LoadingScreen/LoadingScreen";
 import NavBar from "./components/NavBar/NavBar";
 
 function App() {
-  const { user, loading } = useAuth();
   const { getLabel } = useLabels();
+  const { user, loading } = useAuth();
 
   if (loading)
     return (

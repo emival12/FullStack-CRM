@@ -1,23 +1,24 @@
-import axios from "axios";
 import { useState } from "react";
 import { Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import type { DynamicRecordActionsProps } from "./DynamicRecordActions.types";
 
 import { useLabels } from "context/Label/Label";
+import { useFeedback } from "hooks/useFeedback";
+import { useApiMutation } from "hooks/useApiMutation";
+import { ApiError } from "api/types";
+import type { CRUDResult, ModalConfig } from "commot.types";
 import ModalScreen from "components/ModalScreen/ModalScreen";
-import type { ModalConfig } from "commot.types";
 
 /**
  * Shows an Action bar with buttons (based on the configuration)
  */
 export default function DynamicRecordActions({
-  setLoading,
   editLabel,
   isEdit,
   setIsEdit,
   reset,
-  setToastConfig,
+  errorPrefix,
   hasDeleteButton,
   pathAPI = undefined,
   payloadAPI = undefined,
@@ -26,6 +27,11 @@ export default function DynamicRecordActions({
   extraDescription = undefined,
 }: DynamicRecordActionsProps): React.ReactElement {
   const { getLabel } = useLabels();
+  const { showErrorToast } = useFeedback();
+  const { mutate, loading } = useApiMutation<Record<string, any>, CRUDResult>(
+    pathAPI ?? "", // if the pathAPI is empty the mutate is never called. So doesn't matter the creation of the hook with ""
+    "post",
+  );
   const navigate = useNavigate();
 
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
@@ -34,38 +40,18 @@ export default function DynamicRecordActions({
     body: "",
   });
 
-  const deleteRecord = () => {
-    if (!pathAPI || !redirectAPI) return;
+  const deleteRecord = async () => {
+    if (!pathAPI || !redirectAPI || !payloadAPI) return;
 
-    setLoading(true);
-    axios
-      .post(pathAPI, payloadAPI)
-      .then((res) => {
-        console.log("DynamicRecordActions - Delete Record results:", res.data);
-        if (res.data.result === 0) {
-          setToastConfig({
-            show: true,
-            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-            body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
-          });
-        } else {
-          navigate(redirectAPI);
-          if (extraActionOnDelete) {
-            extraActionOnDelete();
-          }
-        }
-      })
-      .catch((err) => {
-        console.error("DynamicRecordActions - Error:", err);
-        setToastConfig({
-          show: true,
-          title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-          body:
-            err?.response?.data?.detail ||
-            getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
-        });
-      })
-      .finally(() => setLoading(false));
+    try {
+      await mutate(payloadAPI);
+      navigate(redirectAPI);
+      if (extraActionOnDelete) {
+        extraActionOnDelete();
+      }
+    } catch (err) {
+      showErrorToast(err as ApiError, errorPrefix);
+    }
   };
 
   const editDeleteActions = () => {
@@ -86,12 +72,12 @@ export default function DynamicRecordActions({
             onClick={() => {
               setModalConfig({
                 show: true,
-                title: getLabel("MODAL.DELETE.TITLE_MODAL_DELETE_LABEL"),
-                body: getLabel("MODAL.DELETE.BODY_MODAL_DELETE_LABEL"),
+                title: getLabel("MODAL.DELETE.TITLE_MODAL_DELETE"),
+                body: getLabel("MODAL.DELETE.BODY_MODAL_DELETE"),
               });
             }}
           >
-            {getLabel("BUTTONS.DELETE_LABEL")}
+            {getLabel("BUTTONS.DELETE")}
           </Button>
         </span>
         <span>{extraDescription}</span>
@@ -108,7 +94,7 @@ export default function DynamicRecordActions({
           type="submit"
           form="recordDetailForm"
         >
-          {getLabel("BUTTONS.SAVE_LABEL")}
+          {getLabel("BUTTONS.SAVE")}
         </Button>
         <Button
           className="ms-3 fw-medium"
@@ -118,7 +104,7 @@ export default function DynamicRecordActions({
             reset();
           }}
         >
-          {getLabel("BUTTONS.CANCEL_LABEL")}
+          {getLabel("BUTTONS.CANCEL")}
         </Button>
       </span>
     );
@@ -133,6 +119,7 @@ export default function DynamicRecordActions({
         successFunction={deleteRecord}
         titleText={modalConfig.title}
         bodyText={modalConfig.body}
+        loading={loading}
       />
     </div>
   );

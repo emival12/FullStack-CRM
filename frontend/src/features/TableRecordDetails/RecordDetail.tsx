@@ -1,95 +1,83 @@
-import axios from "axios";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { Tab, Tabs } from "react-bootstrap";
-import type { ToastConfig, DatabaseOutletContext } from "commot.types";
+import type { DatabaseOutletContext, CRUDResult } from "commot.types";
 
 import {
-  API_BASE_URL,
   ERROR_MISSING_RECORD,
+  ERROR_MISSING_TABLE,
   PATH_DATABASE,
-  PATH_DELETE,
-  PATH_UPDATE,
 } from "config/K";
-import { useAuth } from "context/Auth/Auth";
 import { useLabels } from "context/Label/Label";
+import { useFeedback } from "hooks/useFeedback";
+import { useAuth } from "context/Auth/Auth";
+import { useApiQuery } from "hooks/useApiQuery";
+import { useApiMutation } from "hooks/useApiMutation";
+import { ENDPOINTS } from "api/endpoints";
+import { ApiError } from "api/types";
 import MissingPage from "components/MissingPage/MissingPage";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
-import ToastMsg from "components/ToastMsg/ToastMsg";
 import DynamicRecordActions from "components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
 import DynamicRecordsList from "components/dynamicUI/DynamicRecordsList/DynamicRecordsList";
 import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
 import type { DataRecordStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
-export default function RecordDetail() {
+const PREFIX = "RECORD_DETAIL";
+
+export default function RecordDetail(): React.ReactElement | null {
   const { tableKey, recordId } = useOutletContext<DatabaseOutletContext>();
-  const { user } = useAuth();
   const { getLabel } = useLabels();
+  const { user } = useAuth();
+  const { showErrorToast } = useFeedback();
+  const {
+    data: fields,
+    loading: loadingForm,
+    error: errorForm,
+    refetch,
+  } = useApiQuery<DataRecordStructure>(
+    ENDPOINTS.records.recordDetail(tableKey, recordId!),
+    { enabled: Boolean(tableKey && recordId) },
+  );
+  const { mutate, loading: loadingSubmit } = useApiMutation<
+    Record<string, any>,
+    CRUDResult
+  >(ENDPOINTS.crud.update, "post");
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true);
   const [isEdit, setIsEdit] = useState(false);
-  const [validated, setValidated] = useState(false);
-  const [controlledError, setControlledError] = useState(false);
-  const [toastConfig, setToastConfig] = useState<ToastConfig>({
-    show: false,
-    title: "",
-    body: "",
-  });
-
-  const [fields, setFields] = useState<DataRecordStructure>({
-    primary_key_name: "",
-    field_structure: {},
-    related_list: [],
-  });
+  const loading = loadingForm || loadingSubmit;
+  const isMissingLabel =
+    errorForm?.errorCode === ERROR_MISSING_RECORD
+      ? "MISSING.RECORD"
+      : errorForm?.errorCode === ERROR_MISSING_TABLE
+        ? "MISSING.TABLE"
+        : undefined;
+  const formValues = fields
+    ? Object.fromEntries(
+        Object.entries(fields.field_structure).map(([key, info]) => [
+          key,
+          info.value,
+        ]),
+      )
+    : undefined;
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm();
-
-  const fetchData = useCallback(() => {
-    if (!tableKey || !recordId) return; // Blocks execution if the selected tabel is not correct
-
-    setLoading(true);
-    setIsEdit(false);
-    axios
-      .get<DataRecordStructure>(`${API_BASE_URL}/${tableKey}/record`, {
-        params: { record_id: recordId },
-      })
-      .then((res) => {
-        console.log("RecordDetail - List of Fields Received:", res.data);
-        setFields(res.data);
-
-        //use to handle the values and redraw it
-        const formValues = Object.fromEntries(
-          Object.entries(res.data.field_structure).map(([key, info]) => [
-            key,
-            info.value,
-          ]),
-        );
-        reset(formValues);
-      })
-      .catch((err) => {
-        console.error("RecordDetail - Error:", err);
-        const errMsg = err.response.data.detail;
-        if (errMsg === ERROR_MISSING_RECORD) {
-          setControlledError(true);
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [tableKey, recordId, reset]);
+  } = useForm({ values: formValues });
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (errorForm && !isMissingLabel) showErrorToast(errorForm, PREFIX);
+  }, [errorForm, isMissingLabel, showErrorToast]);
 
   //Method fired when the button Save is pressed
-  const onSubmit = (data: Record<string, any>) => {
-    let modified_data: any = {};
+  const onSubmit = async (data: Record<string, any>) => {
+    if (!fields) return;
+
+    let modified_data: Record<string, any> = {};
     let new_PK = null;
     for (const key in fields.field_structure) {
       if (fields?.field_structure[key]?.value !== data[key]) {
@@ -102,60 +90,34 @@ export default function RecordDetail() {
     }
 
     if (Object.keys(modified_data).length > 0) {
-      setLoading(true);
-      const apiData = {
+      const payload = {
         table: tableKey,
         id: recordId,
         user: user,
         field: modified_data,
       };
 
-      axios
-        .post(`${API_BASE_URL}${PATH_UPDATE}`, apiData)
-        .then((res) => {
-          console.log(
-            "RecordDetail - Sumbit - Uploaded record results:",
-            res.data,
-          );
-          if (res.data.result === 0) {
-            setToastConfig({
-              show: true,
-              title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-              body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
-            });
-          } else {
-            if (new_PK) {
-              navigate(PATH_DATABASE + "/" + tableKey + "/" + new_PK);
-            } else {
-              fetchData();
-              setIsEdit(false);
-            }
-            setValidated(false);
-          }
-        })
-        .catch((err) => {
-          console.error("RecordDetail - Error:", err);
-          setToastConfig({
-            show: true,
-            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-            body:
-              err?.response?.data?.detail ||
-              getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
-          });
-        })
-        .finally(() => setLoading(false));
-
-      setValidated(true);
+      try {
+        await mutate(payload);
+        setIsEdit(false);
+        if (new_PK) {
+          navigate(PATH_DATABASE + "/" + tableKey + "/" + new_PK);
+        } else {
+          refetch();
+        }
+      } catch (err) {
+        showErrorToast(err as ApiError, PREFIX);
+      }
     }
   };
 
   if (loading) return <LoadingScreen />;
 
-  if (controlledError) {
-    return (
-      <MissingPage missingText={getLabel("MISSING.MISSING_RECORD_LABEL")} />
-    );
+  if (isMissingLabel) {
+    return <MissingPage missingText={getLabel(isMissingLabel)} />;
   }
+
+  if (!fields) return null;
 
   return (
     <div>
@@ -164,19 +126,15 @@ export default function RecordDetail() {
         id="uncontrolled-tab-example"
         className="mb-3"
       >
-        <Tab
-          eventKey="details"
-          title={getLabel("DETAIL_TABS.DETAIL_TAB_LABEL")}
-        >
+        <Tab eventKey="details" title={getLabel("TABS.RECORD_DETAIL.DETAIL")}>
           <DynamicRecordActions
-            setLoading={setLoading}
-            editLabel={getLabel("BUTTONS.EDIT_LABEL")}
+            editLabel={getLabel("BUTTONS.EDIT")}
             isEdit={isEdit}
             setIsEdit={setIsEdit}
             reset={reset}
-            setToastConfig={setToastConfig}
+            errorPrefix={PREFIX}
             hasDeleteButton={true}
-            pathAPI={API_BASE_URL + PATH_DELETE}
+            pathAPI={ENDPOINTS.crud.delete}
             payloadAPI={{
               table: tableKey,
               id: recordId,
@@ -185,7 +143,7 @@ export default function RecordDetail() {
           />
           <DynamicForm
             fields={fields.field_structure}
-            validated={validated}
+            validated={false}
             onSubmit={handleSubmit(onSubmit)}
             tableKey={tableKey}
             errors={errors}
@@ -193,19 +151,11 @@ export default function RecordDetail() {
             isNewForm={false}
             isEdit={isEdit}
           />
-          <ToastMsg
-            showToast={toastConfig.show}
-            setShowToast={(val) =>
-              setToastConfig({ ...toastConfig, show: val })
-            }
-            title={toastConfig.title}
-            body={toastConfig.body}
-          />
         </Tab>
         {fields.related_list.length > 0 ? (
           <Tab
             eventKey="relatedLists"
-            title={getLabel("DETAIL_TABS.RELATED_TAB_LABEL")}
+            title={getLabel("TABS.RECORD_DETAIL.RELATED")}
           >
             {Object.entries(fields.related_list).map(([key, related_list]) => (
               <div

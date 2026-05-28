@@ -1,11 +1,13 @@
-import axios from "axios";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "react-bootstrap";
 import { RecordListStructure } from "commot.types";
 import { SetupSectionBaseProps } from "features/Setup/SetupFeatures/SetupSections/SetupSections.types";
 
-import { API_BASE_URL, PATH_SETUP } from "config/K";
 import { useLabels } from "context/Label/Label";
+import { useFeedback } from "hooks/useFeedback";
+import { useApiQuery } from "hooks/useApiQuery";
+import { ENDPOINTS } from "api/endpoints";
+import { PATH_SETUP } from "config/K";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 import DynamicRecordsList from "components/dynamicUI/DynamicRecordsList/DynamicRecordsList";
 import NewFieldRecord from "./NewFieldRecord";
@@ -16,41 +18,28 @@ import NewFieldRecord from "./NewFieldRecord";
 export default function SetupSectionFieldsListView({
   tableKey,
   sectionKey,
-}: SetupSectionBaseProps): React.ReactElement {
+}: SetupSectionBaseProps): React.ReactElement | null {
   const { getLabel } = useLabels();
+  const { showErrorToast } = useFeedback();
+  const {
+    data: records,
+    loading,
+    error,
+    refetch,
+  } = useApiQuery<RecordListStructure>(
+    ENDPOINTS.setup.fields.recordsList(tableKey ?? ""),
+    { enabled: Boolean(tableKey) },
+  );
 
-  const [loading, setLoading] = useState(true);
   const [showNewModal, setShowNewModal] = useState(false);
-  const [records, setRecords] = useState<RecordListStructure>({
-    fields: [],
-    primary_key_name: "",
-    records: [],
-  });
-
-  const fetchData = useCallback(() => {
-    if (!tableKey || !sectionKey) return; // Blocks execution if the selected table is not correct
-
-    setLoading(true);
-    axios
-      .get<RecordListStructure>(
-        `${API_BASE_URL}${PATH_SETUP}/${tableKey}/${sectionKey}`,
-      )
-      .then((res) => {
-        console.log(
-          "SetupSectionFieldsListView - List of Fields Object received:",
-          res.data,
-        );
-        setRecords(res.data);
-      })
-      .catch((err) => console.error("SetupSectionFieldsListView - Error:", err))
-      .finally(() => setLoading(false));
-  }, [tableKey, sectionKey]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (error) showErrorToast(error, "SETUP_FIELDS_LIST");
+  }, [error, showErrorToast]);
 
   if (loading) return <LoadingScreen />;
+
+  if (!records) return null;
 
   return (
     <>
@@ -61,7 +50,7 @@ export default function SetupSectionFieldsListView({
             setShowNewModal(true);
           }}
         >
-          {getLabel("BUTTONS.NEW_LABEL")}
+          {getLabel("BUTTONS.NEW")}
         </Button>
       </div>
       <DynamicRecordsList
@@ -73,7 +62,7 @@ export default function SetupSectionFieldsListView({
         tableKey={tableKey}
         showNewModal={showNewModal}
         setShowNewModal={setShowNewModal}
-        refreshData={fetchData}
+        refreshData={refetch}
       />
     </>
   );

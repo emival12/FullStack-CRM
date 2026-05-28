@@ -1,33 +1,30 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { SetupOutletContext, ToastConfig } from "commot.types";
+import { CRUDResult, SetupOutletContext } from "commot.types";
 
-import { API_BASE_URL, PATH_SETUP } from "config/K";
-import { NEW_OBJECT_FIELD_STRUCTURE } from "features/Setup/K_SetupFormsStructure";
 import { useLabels } from "context/Label/Label";
+import { useFeedback } from "hooks/useFeedback";
+import { useApiMutation } from "hooks/useApiMutation";
+import { ENDPOINTS } from "api/endpoints";
+import { ApiError } from "api/types";
+import { NEW_OBJECT_FIELD_STRUCTURE } from "features/Setup/K_SetupFormsStructure";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
-import ToastMsg from "components/ToastMsg/ToastMsg";
 import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
 import DynamicRecordActions from "components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
 import { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
+const PREFIX = "SETUP_NEW_OBJECT";
+
 export default function SetupNewObject(): React.ReactElement {
-  const { getLabel } = useLabels();
   const { refreshSidebar, setRefreshSidebar } =
     useOutletContext<SetupOutletContext>();
-
-  const [loading, setLoading] = useState(false);
-  const [validated, setValidated] = useState(false);
-  const [showNewForm, setShowNewForm] = useState(false);
-
-  const [toastConfig, setToastConfig] = useState<ToastConfig>({
-    show: false,
-    title: "",
-    body: "",
-  });
-
+  const { getLabel } = useLabels();
+  const { showErrorToast } = useFeedback();
+  const { mutate, loading } = useApiMutation<Record<string, any>, CRUDResult>(
+    ENDPOINTS.setup.object.new,
+    "post",
+  );
   const {
     register,
     handleSubmit,
@@ -37,49 +34,30 @@ export default function SetupNewObject(): React.ReactElement {
     reset,
   } = useForm();
 
-  //Method fired when the button Save is pressed
-  const onSubmit = (data: Record<string, any>) => {
-    setLoading(true);
+  const [showNewForm, setShowNewForm] = useState(false);
 
-    const apiData = {
+  //Method fired when the button Save is pressed
+  const onSubmit = async (data: Record<string, any>) => {
+    const payload = {
       data: data,
     };
-    axios
-      .post(`${API_BASE_URL}${PATH_SETUP}/new-object`, apiData)
-      .then((res) => {
-        console.log("SetupNewObject - Insert object results:", res.data);
-        if (res.data.result === 0) {
-          setToastConfig({
-            show: true,
-            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-            body: getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
-          });
-        } else {
-          setShowNewForm(false);
-          setValidated(false);
-          setRefreshSidebar(!refreshSidebar);
-          reset();
-        }
-      })
-      .catch((err) => {
-        console.error("SetupNewObject - Error:", err);
-        setToastConfig({
-          show: true,
-          title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-          body:
-            err?.response?.data?.detail ||
-            getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
-        });
-      })
-      .finally(() => setLoading(false));
 
-    setValidated(true);
+    try {
+      await mutate(payload);
+      setShowNewForm(false);
+
+      setRefreshSidebar(!refreshSidebar);
+      reset();
+    } catch (err) {
+      showErrorToast(err as ApiError, PREFIX);
+    }
   };
 
   //Create the API name of the object
   const object_label_value = watch("object_label");
   useEffect(() => {
     if (!object_label_value) return;
+
     setValue(
       "object_name",
       object_label_value.replaceAll(" ", "_").toLowerCase(),
@@ -91,38 +69,25 @@ export default function SetupNewObject(): React.ReactElement {
   return (
     <>
       <DynamicRecordActions
-        setLoading={setLoading}
-        editLabel={getLabel("BUTTONS.NEW_LABEL")}
+        editLabel={getLabel("BUTTONS.NEW")}
         isEdit={showNewForm}
         setIsEdit={setShowNewForm}
         reset={reset}
-        setToastConfig={setToastConfig}
+        errorPrefix={PREFIX}
         hasDeleteButton={false}
-        extraDescription={getLabel("GENERIC.SETUP_MSG_SELECT_TABLE_LABEL")}
+        extraDescription={getLabel("SETUP.SELECT_TABLE_MESSAGE")}
       />
       {showNewForm ? (
-        <>
-          <DynamicForm
-            fields={NEW_OBJECT_FIELD_STRUCTURE as DataFieldStructure}
-            validated={validated}
-            onSubmit={handleSubmit(onSubmit)}
-            errors={errors}
-            register={register}
-            isNewForm={false}
-            isEdit={true}
-          />
-          <ToastMsg
-            showToast={toastConfig.show}
-            setShowToast={(val) =>
-              setToastConfig({ ...toastConfig, show: val })
-            }
-            title={toastConfig.title}
-            body={toastConfig.body}
-          />
-        </>
-      ) : (
-        ""
-      )}
+        <DynamicForm
+          fields={NEW_OBJECT_FIELD_STRUCTURE as DataFieldStructure}
+          validated={false}
+          onSubmit={handleSubmit(onSubmit)}
+          errors={errors}
+          register={register}
+          isNewForm={false}
+          isEdit={true}
+        />
+      ) : null}
     </>
   );
 }

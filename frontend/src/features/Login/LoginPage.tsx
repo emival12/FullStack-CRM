@@ -2,63 +2,39 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Button } from "react-bootstrap";
-import type { ToastConfig } from "commot.types";
 import type { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
-import { useAuth } from "context/Auth/Auth";
+import { ApiError } from "api/types";
 import { useLabels } from "context/Label/Label";
+import { useAuth } from "context/Auth/Auth";
+import { useFeedback } from "hooks/useFeedback";
 import { LOGIN_FIELD_STRUCTURE, PATH_DATABASE } from "config/K";
 import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
-import ToastMsg from "components/ToastMsg/ToastMsg";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 
 export default function LoginPage(): React.ReactElement {
-  const { login } = useAuth();
   const { getLabel } = useLabels();
+  const { login } = useAuth();
+  const { showErrorToast } = useFeedback();
   const navigate = useNavigate();
-
-  const [loading, setLoading] = useState(false);
-  const [validated] = useState(false);
-  const [toastConfig, setToastConfig] = useState<ToastConfig>({
-    show: false,
-    title: "",
-    body: "",
-  });
-
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data: Record<string, any>) => {
+  const [loading, setLoading] = useState(false);
+
+  const onSubmit = async (data: Record<string, any>) => {
     setLoading(true);
-    login(data["email"], data["password"])
-      .then((res) => {
-        console.log("LoginPage - result:", res.data);
-        navigate(PATH_DATABASE);
-      })
-      .catch((err) => {
-        console.error("LoginPage - Error:", err);
-        if (err?.response?.status === 401) {
-          const errorCode = err.response.data?.detail?.error_code;
-          const message = getLabel(`LOGIN.${errorCode}`);
-          setToastConfig({
-            show: true,
-            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-            body: message,
-          });
-        } else {
-          setToastConfig({
-            show: true,
-            title: getLabel("TOAST.ERROR_TOAST_TITLE_LABEL"),
-            body:
-              err?.response?.data?.detail ||
-              getLabel("TOAST.ERROR_TOAST_BODY_LABEL"),
-          });
-        }
-      })
-      .finally(() => setLoading(false));
+    try {
+      await login(data["email"], data["password"]);
+      navigate(PATH_DATABASE);
+    } catch (err) {
+      showErrorToast(err as ApiError, "LOGIN");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading)
@@ -76,7 +52,7 @@ export default function LoginPage(): React.ReactElement {
           <Col>
             <DynamicForm
               fields={LOGIN_FIELD_STRUCTURE as DataFieldStructure}
-              validated={validated}
+              validated={false}
               onSubmit={handleSubmit(onSubmit)}
               errors={errors}
               register={register}
@@ -90,7 +66,7 @@ export default function LoginPage(): React.ReactElement {
                 type="submit"
                 form="recordDetailForm"
               >
-                {getLabel("BUTTONS.CONFIRM_LABEL")}
+                {getLabel("BUTTONS.CONFIRM")}
               </Button>
             </div>
           </Col>
@@ -98,12 +74,6 @@ export default function LoginPage(): React.ReactElement {
         </Row>
         <Row></Row>
       </Container>
-      <ToastMsg
-        showToast={toastConfig.show}
-        setShowToast={(val) => setToastConfig({ ...toastConfig, show: val })}
-        title={toastConfig.title}
-        body={toastConfig.body}
-      />
     </>
   );
 }

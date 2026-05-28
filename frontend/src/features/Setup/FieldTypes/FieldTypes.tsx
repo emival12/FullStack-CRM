@@ -1,6 +1,4 @@
-import axios from "axios";
-import { useEffect, useState, useMemo, useCallback } from "react";
-import { API_BASE_URL, PATH_SETUP } from "config/K";
+import { useEffect, useMemo, useCallback } from "react";
 
 import {
   NEW_FIELD_OBJECT_STRUCTURE as NEW_FIELDS,
@@ -26,32 +24,24 @@ import {
   UpdateDependentOptionsFunc,
 } from "./FieldTypes.types";
 import { FieldOptionLookup, FieldOptionRadio } from "commot.types";
+import { ENDPOINTS } from "api/endpoints";
+import { useApiQuery } from "hooks/useApiQuery";
+import { useFeedback } from "hooks/useFeedback";
 
 export function FieldTypes() {
-  const [loading, setLoading] = useState(true);
-  const [databaseMetadata, setDatabaseMetadata] =
-    useState<NewSetupFieldStructure | null>(null);
+  const { showErrorToast } = useFeedback();
+  const {
+    data: databaseMetadata,
+    loading,
+    error,
+  } = useApiQuery<NewSetupFieldStructure>(ENDPOINTS.setup.fields.newStructure);
 
   useEffect(() => {
-    setLoading(true);
-    axios
-      .get<NewSetupFieldStructure>(
-        `${API_BASE_URL}${PATH_SETUP}/field/new/structure`,
-      )
-      .then((res) => {
-        console.log("FieldTypes - New Field structure Received:", res.data);
-        setDatabaseMetadata(res.data);
-      })
-      .catch((err) => console.error("FieldTypes - Error:", err))
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+    if (error) showErrorToast(error, "FIELD_TYPES");
+  }, [error, showErrorToast]);
 
   const formsData = useMemo(() => {
-    if (!databaseMetadata) {
-      return null;
-    }
+    if (!databaseMetadata) return null;
 
     const { field_types, lookup_options } = databaseMetadata;
 
