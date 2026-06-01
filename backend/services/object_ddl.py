@@ -136,8 +136,8 @@ _SQL_LENGTH_RESOLVERS: dict[str, Callable] = {
     FieldTypes.DATE.value:      lambda **_:                                 f'DATE',
     FieldTypes.DATE_TIME.value: lambda **_:                                 f'DATETIME',
     FieldTypes.AUTO_NUMBER.value:  lambda **_:                              f'INT AUTO_INCREMENT',
-    FieldTypes.LOOKUP.value:    lambda reference_field_type, length, **_:   convert_field_type_into_SQL_type(reference_field_type, length),
-    FieldTypes.PICKLIST.value:  lambda reference_field_type, length, **_:   convert_field_type_into_SQL_type(reference_field_type, length),
+    FieldTypes.LOOKUP.value:    lambda reference_field_type, length, **_:   convert_field_type_into_SQL_type(reference_field_type, length).replace(' AUTO_INCREMENT', ''),
+    FieldTypes.PICKLIST.value:  lambda reference_field_type, length, **_:   convert_field_type_into_SQL_type(reference_field_type, length).replace(' AUTO_INCREMENT', ''),
 }
 
 def convert_field_type_into_SQL_type(field_type: str, length: str, reference_field_type: str | None = None) -> str:
@@ -157,6 +157,7 @@ _FIELD_LENGTH_RESOLVERS: dict[str, Callable] = {
     FieldTypes.DATE.value:      lambda **_:                              (None,   None,                     FieldTypes.DATE.value),
     FieldTypes.DATE_TIME.value: lambda **_:                              (None,   None,                     FieldTypes.DATE_TIME.value),
     FieldTypes.ROLLUP.value:    lambda **_:                              (None,   "16, 2",                  FieldTypes.ROLLUP.value),
+    FieldTypes.AUTO_NUMBER.value:  lambda **_:                           (None,   None,                     FieldTypes.AUTO_NUMBER.value),
     FieldTypes.LOOKUP.value:    lambda cursor, reference_object, **_:   _resolve_lookup_length(cursor, reference_object),
     FieldTypes.PICKLIST.value:  lambda cursor, reference_object, **_:   _resolve_lookup_length(cursor, reference_object),
 }

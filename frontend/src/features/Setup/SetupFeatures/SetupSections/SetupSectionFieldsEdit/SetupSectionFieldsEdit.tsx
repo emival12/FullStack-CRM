@@ -7,14 +7,14 @@ import { ERROR_MISSING_RECORD, PATH_SETUP } from "config/K";
 import { useLabels } from "context/Label/Label";
 import { useFeedback } from "hooks/useFeedback";
 import { useApiMutation } from "hooks/useApiMutation";
+import { useFieldTypes } from "features/Setup/hooks/useFieldTypes";
 import { ENDPOINTS } from "api/endpoints";
 import { ApiError } from "api/types";
+import { FieldType } from "commot.types";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 import MissingPage from "components/MissingPage/MissingPage";
 import DynamicRecordActions from "components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
 import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
-import { FieldTypes } from "features/Setup/FieldTypes/FieldTypes";
-import { FieldType } from "commot.types";
 import { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
 const PREFIX = "SETUP_FIELD_EDIT";
@@ -24,9 +24,6 @@ export default function SetupSectionFieldsEdit({
   sectionKey,
   recordId,
 }: SetupSectionCompleteProps): React.ReactElement | null {
-  const { formsByType, loadingFieldType, updateDependentOptions } =
-    FieldTypes();
-
   const { getLabel } = useLabels();
   const { showErrorToast } = useFeedback();
   const {
@@ -37,6 +34,11 @@ export default function SetupSectionFieldsEdit({
     ENDPOINTS.setup.fields.record(tableKey ?? "", recordId ?? ""),
     "post",
   );
+  const {
+    formsByType,
+    loading: loadingFieldType,
+    getMetadataWithDependentOptions,
+  } = useFieldTypes();
 
   const {
     register,
@@ -64,7 +66,6 @@ export default function SetupSectionFieldsEdit({
     mutateForm(payload)
       .then((res) => {
         if (!cancelled) {
-          setFields(res);
           setIsDeletable(res.object_primary_key_name !== recordId); // prevent delete of PrimaryKey
 
           //Insert the values retrieved into the form and redraw it
@@ -76,12 +77,15 @@ export default function SetupSectionFieldsEdit({
           );
           reset(formValues);
 
-          updateDependentOptions(
-            res.field_type as FieldType,
-            res.field_structure?.Reference_object?.value,
-            "Reference_field",
-            res.field_structure,
-          );
+          const newStructure =
+            getMetadataWithDependentOptions(
+              res.field_type as FieldType,
+              res.field_structure?.Reference_object?.value,
+              "Reference_field",
+              res.field_structure,
+            ) || res.field_structure;
+
+          setFields({ ...res, field_structure: newStructure });
           resetField("reference_field");
         }
       })
@@ -99,7 +103,7 @@ export default function SetupSectionFieldsEdit({
     formsByType,
     reset,
     resetField,
-    updateDependentOptions,
+    getMetadataWithDependentOptions,
     mutateForm,
     showErrorToast,
   ]);

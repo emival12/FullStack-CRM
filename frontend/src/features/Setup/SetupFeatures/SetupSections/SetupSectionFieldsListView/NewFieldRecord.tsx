@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Modal } from "react-bootstrap";
-import { CRUDResult } from "commot.types";
+import { CRUDResult, MetadataFieldStructure } from "commot.types";
 import { NewFieldRecordProps } from "./SetupSectionFieldsListView.types";
 
 import { useLabels } from "context/Label/Label";
 import { useFeedback } from "hooks/useFeedback";
 import { useApiMutation } from "hooks/useApiMutation";
+import { useFieldTypes } from "features/Setup/hooks/useFieldTypes";
 import { ENDPOINTS } from "api/endpoints";
 import { ApiError } from "api/types";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
 import { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
-import { FieldTypes } from "features/Setup/FieldTypes/FieldTypes";
 
 /**
  * Modal used to retrieve the info needed on the field creation
@@ -29,6 +29,13 @@ export default function NewFieldRecord({
     Record<string, any>,
     CRUDResult
   >(ENDPOINTS.setup.fields.new(tableKey ?? ""), "post");
+  const {
+    formsByType,
+    selectionForm,
+    loading: loadingFieldType,
+    getSpecificFormByType,
+    getMetadataWithDependentOptions,
+  } = useFieldTypes();
 
   const {
     register,
@@ -40,15 +47,9 @@ export default function NewFieldRecord({
     resetField,
   } = useForm();
 
-  const {
-    selectionForm,
-    loadingFieldType,
-    getSpecificFormByType,
-    updateDependentOptions,
-  } = FieldTypes();
-
-  const loading = loadingSubmit || loadingFieldType;
+  const [currentForm, setCurrentForm] = useState<MetadataFieldStructure>();
   const [pageNumber, setPageNumber] = useState(1);
+  const loading = loadingSubmit || loadingFieldType;
 
   //Method fired when the button Save is pressed
   const onSubmit = async (data: Record<string, any>) => {
@@ -74,6 +75,8 @@ export default function NewFieldRecord({
 
     const formStructure = getSpecificFormByType(selectedFieldType);
     if (!formStructure) return;
+    setCurrentForm(formStructure);
+
     const formValues = Object.fromEntries(
       Object.entries(formStructure).map(([key, info]) => [key, info.value]),
     );
@@ -89,23 +92,25 @@ export default function NewFieldRecord({
   useEffect(() => {
     if (!selectedReferenceObject) return;
 
-    updateDependentOptions(
+    let newStructure = getMetadataWithDependentOptions(
       selectedFieldType,
       selectedReferenceObject,
       "reference_field",
     );
-    resetField("reference_field");
-
-    updateDependentOptions(
+    newStructure = getMetadataWithDependentOptions(
       selectedFieldType,
       selectedReferenceObject,
       "reference_object_record_type",
+      newStructure,
     );
+    if (newStructure) setCurrentForm(newStructure);
+
+    resetField("reference_field");
     resetField("reference_object_record_type");
   }, [
     selectedFieldType,
     selectedReferenceObject,
-    updateDependentOptions,
+    getMetadataWithDependentOptions,
     resetField,
   ]);
 
@@ -113,7 +118,7 @@ export default function NewFieldRecord({
     const fields =
       pageNumber === 1
         ? (selectionForm as DataFieldStructure)
-        : (getSpecificFormByType(selectedFieldType) as DataFieldStructure);
+        : (currentForm as DataFieldStructure);
 
     if (loading) return <LoadingScreen />;
     if (!fields) return getLabel("MODAL.INSERT.LOAD_ERROR");

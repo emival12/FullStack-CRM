@@ -1248,8 +1248,8 @@ def get_next_sort_order(cursor, sys_object_name: str, raw_filters: list[str], ra
             .get_query()
         )
         cursor.execute(query, params)
-        record = cursor.fetchone()
-        return int(record["sort_order"])+1 if record else 1
+        sort_order = cursor.fetchone()["sort_order"]
+        return int(sort_order)+1 if sort_order else 1
     except Exception as e:
         raise_server_exception(logger, "DB query failed", query=query)
 
