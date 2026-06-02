@@ -73,7 +73,7 @@ export default function DynamicForm({
             validate: (value: any): boolean | string => {
               if (!info.is_required) return true;
               if (value !== "NULL") return true;
-              return getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL");
+              return getLabel("FORM.ERRORS.MANDATORY_FIELD");
             },
           })}
         >
@@ -113,7 +113,7 @@ export default function DynamicForm({
                 {...register(key, {
                   required: {
                     value: !!info.is_required,
-                    message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
+                    message: getLabel("FORM.ERRORS.MANDATORY_FIELD"),
                   },
                 })}
               />
@@ -143,7 +143,7 @@ export default function DynamicForm({
             {...register(key, {
               required: {
                 value: !!required,
-                message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
+                message: getLabel("FORM.ERRORS.MANDATORY_FIELD"),
               },
             })}
           />
@@ -175,25 +175,25 @@ export default function DynamicForm({
           {...register(key, {
             required: {
               value: !!info.is_required,
-              message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
+              message: getLabel("FORM.ERRORS.MANDATORY_FIELD"),
             },
             maxLength: info.length
               ? {
                   value: Number(info.length),
-                  message: getLabel("FORM_ERRORS.MAX_FIELD_LABEL", {
+                  message: getLabel("FORM.ERRORS.MAX_LENGTH", {
                     max_length: String(info.length ?? ""),
                   }),
                 }
               : undefined,
             min: {
               value: Number(info?.min_limit_value),
-              message: getLabel("FORM_ERRORS.MIN_NUMBER_LABEL", {
+              message: getLabel("FORM.ERRORS.MIN_NUMBER", {
                 min_value: String(info?.min_limit_value ?? ""),
               }),
             },
             max: {
               value: Number(info?.max_limit_value),
-              message: getLabel("FORM_ERRORS.MAX_NUMBER_LABEL", {
+              message: getLabel("FORM.ERRORS.MAX_NUMBER", {
                 max_value: String(info?.max_limit_value ?? ""),
               }),
             },
@@ -201,7 +201,7 @@ export default function DynamicForm({
               (info.field_type as string) === "email"
                 ? {
                     value: /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                    message: getLabel("FORM_ERRORS.INVALID_EMAIL_LABEL"),
+                    message: getLabel("FORM.ERRORS.INVALID_EMAIL"),
                   }
                 : undefined,
           })}
@@ -210,7 +210,7 @@ export default function DynamicForm({
           {errors[key]?.message?.toString()}
         </Form.Control.Feedback>
         {info?.is_textarea ? (
-          <div>{getLabel("GENERIC.TEXT_AREA_HELP_LABEL")}</div>
+          <div>{getLabel("FORM.TEXT_AREA_HELP")}</div>
         ) : (
           <></>
         )}

@@ -12,7 +12,7 @@ export const useFeedback = () => {
     (apiErr: ApiError, featurePrefix: string) => {
       const prefix =
         apiErr.kind === "system" || apiErr.kind === "business_shared"
-          ? "COMMON"
+          ? "COMMON_API_ERRORS"
           : featurePrefix;
       return getLabel(`${prefix}.${apiErr.errorCode}`, apiErr.errorData);
     },

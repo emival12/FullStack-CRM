@@ -1,5 +1,5 @@
 {
-  "COMMON": {
+  "COMMON_API_ERRORS": {
     "NETWORK_ERROR": "Si è verificato un errore imprevisto. Contatta un admin",
     "UNKNOWN_ERROR": "Si è verificato un errore imprevisto. Contatta un admin",
     "RUNTIME_ERROR": "Si è verificato un errore imprevisto. Contatta un admin",
@@ -48,14 +48,29 @@
   },
   "MODAL": {
     "DELETE": {
-      "TITLE_MODAL_DELETE": "Conferma Cancellazione",
-      "BODY_MODAL_DELETE": "Sei sicuro di voler cancellare il record?"
+      "TITLE": "Conferma Cancellazione",
+      "BODY": "Sei sicuro di voler cancellare il record?"
     },
     "INSERT": {
       "RECORD_TITLE": "Nuovo record",
       "LOAD_ERROR": "Errore nel caricamento dei campi",
       "FIELD_TITLE": "Nuovo campo"
     }
+  },
+  "FORM": {
+    "ERRORS": {
+      "MANDATORY_FIELD": "Campo obbligatorio",
+      "MAX_LENGTH": "Massimo {{max_length}} caratteri",
+      "MAX_NUMBER": "Valore massimo accettato: {{max_value}}",
+      "MIN_NUMBER": "Valore minimo accettato: {{min_value}}",
+      "INVALID_EMAIL": "Inserire una mail valida"
+    },
+    "IMAGE_NOT_FOUND": "Immagine non trovata",
+    "TEXT_AREA_HELP": "Dividere ogni valore con l'accapo"
+  },
+  "UI": {
+    "LOADING": "Caricamento...",
+    "SEARCH_PLACEHOLDER": "Cerca parola chiave..."
   },
   "MASSIVE_IMPORT": {
     "UPLOAD_FILE": "Carica File",
@@ -79,23 +94,18 @@
       "INPUT_FIELD_INVALID_LOOKUP_PICKLIST": "La riga {{row}} nella colonna \"{{column}}\" ha un valore inesistente.\nValore attuale: {{actual_value}}"
     }
   },
+  "DATABASE": {
+    "SELECT_TABLE_MESSAGE": "Seleziona una tabella dalla sidebar"
+  },
   "SETUP": {
     "TABLE_SELECTION": "Tabella da modificare",
-    "SELECT_TABLE_MESSAGE": "Seleziona una tabella da modificare"
-  },
-
-  "FORM_ERRORS": {
-    "MANDATORY_FIELD_LABEL": "Campo obbligatorio",
-    "MAX_FIELD_LABEL": "Massimo {{max_length}} caratteri",
-    "MAX_NUMBER_LABEL": "Valore massimo accettato: {{max_value}}",
-    "MIN_NUMBER_LABEL": "Valore minimo accettato: {{min_value}}",
-    "INVALID_EMAIL_LABEL": "Inserire una mail valida",
-    "IMAGE_NOT_FOUND": "Immagine non trovata"
-  },
-  "GENERIC": {
-    "LOADING_LABEL": "Caricamento...",
-    "DB_INTRO_LABEL": "Seleziona una tabella dalla sidebar",
-    "SEARCH_PLACEHOLDER_LABEL": "Cerca parola chiave...",
-    "TEXT_AREA_HELP_LABEL": "Dividere ogni valore con l'accapo"
+    "SELECT_TABLE_MESSAGE": "Seleziona una tabella da modificare",
+    "SECTIONS": {
+      "HOME": "Home",
+      "FIELDS": "Campi",
+      "LAYOUT": "Layout",
+      "RECORD_TYPES": "Record Types",
+      "RELATED_LISTS": "Related Lists"
+    }
   }
 }

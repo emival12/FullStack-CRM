@@ -53,7 +53,7 @@ function App() {
               /Database/XXXX is rendered the second path
             */}
           <Route path={PATH_DATABASE} element={<DatabaseMainPage />}>
-            <Route index element={getLabel("GENERIC.DB_INTRO_LABEL")} />
+            <Route index element={getLabel("DATABASE.SELECT_TABLE_MESSAGE")} />
             <Route path=":tableKey" element={<RecordsListView />} />
             <Route path=":tableKey/:recordId" element={<RecordDetail />} />
           </Route>

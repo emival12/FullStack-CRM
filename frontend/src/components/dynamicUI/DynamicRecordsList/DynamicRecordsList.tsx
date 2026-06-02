@@ -111,7 +111,7 @@ export default function DynamicRecordsList({
         <Col xs={12} md={4}>
           <Form.Control
             type="text"
-            placeholder={getLabel("GENERIC.SEARCH_PLACEHOLDER_LABEL")}
+            placeholder={getLabel("UI.SEARCH_PLACEHOLDER")}
             onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
           />
         </Col>

@@ -3,12 +3,12 @@ import { Form, FloatingLabel, ListGroup } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 
 import { PlainSidebarStructure, SetupSidebarProps } from "./SetupSidebar.types";
+import { Sections } from "types/routing.types";
 import { PATH_SETUP } from "config/K";
 import { ENDPOINTS } from "api/endpoints";
 import { useLabels } from "context/Label/Label";
 import { useFeedback } from "hooks/useFeedback";
 import { useApiQuery } from "hooks/useApiQuery";
-import { SECTIONS } from "features/Setup/K_SetupFormsStructure";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 import ScreenAdaptiveSidebar from "components/ScreenAdaptiveSidebar/ScreenAdaptiveSidebar";
 
@@ -74,18 +74,18 @@ export default function SetupSidebar({
 
         {tableKey ? (
           <ListGroup className="mt-2" variant="pills">
-            {SECTIONS.map((section) => (
+            {Object.values(Sections).map((section) => (
               <ListGroup.Item
                 action
                 as={Link}
-                to={`${PATH_SETUP}/${tableKey}/${section.key}`}
-                key={section.key}
-                active={section.key === sectionKey}
+                to={`${PATH_SETUP}/${tableKey}/${section}`}
+                key={section}
+                active={section === sectionKey}
                 onClick={() => {
                   toggleSidebar(); //useful only for the mobile
                 }}
               >
-                {section.label}
+                {getLabel(`SETUP.SECTIONS.${section.toUpperCase()}`)}
               </ListGroup.Item>
             ))}
           </ListGroup>

@@ -33,7 +33,7 @@ export default function DynamicImage({
 
   const renderImage = () => {
     if (!info?.value) return <></>;
-    if (imgError) return <div>{getLabel("FORM_ERRORS.IMAGE_NOT_FOUND")}</div>;
+    if (imgError) return <div>{getLabel("FORM.IMAGE_NOT_FOUND")}</div>;
 
     return (
       <Image
@@ -68,11 +68,11 @@ export default function DynamicImage({
               {...register(fieldKey, {
                 required: {
                   value: !!info.is_required,
-                  message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
+                  message: getLabel("FORM.ERRORS.MANDATORY_FIELD"),
                 },
                 maxLength: {
                   value: Number(info.length),
-                  message: getLabel("FORM_ERRORS.MAX_FIELD_LABEL", {
+                  message: getLabel("FORM.ERRORS.MAX_LENGTH", {
                     max_length: String(info.length ?? ""),
                   }),
                 },

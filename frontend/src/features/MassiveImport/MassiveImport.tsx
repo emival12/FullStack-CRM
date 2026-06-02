@@ -114,7 +114,7 @@ export default function MassiveImport(): React.ReactElement | null {
               {...register("file", {
                 required: {
                   value: true,
-                  message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
+                  message: getLabel("FORM.ERRORS.MANDATORY_FIELD"),
                 },
               })}
             />

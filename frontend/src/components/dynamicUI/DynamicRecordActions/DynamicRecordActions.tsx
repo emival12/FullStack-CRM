@@ -74,8 +74,8 @@ export default function DynamicRecordActions({
             onClick={() => {
               setModalConfig({
                 show: true,
-                title: getLabel("MODAL.DELETE.TITLE_MODAL_DELETE"),
-                body: getLabel("MODAL.DELETE.BODY_MODAL_DELETE"),
+                title: getLabel("MODAL.DELETE.TITLE"),
+                body: getLabel("MODAL.DELETE.BODY"),
               });
             }}
           >
