@@ -6,14 +6,15 @@ import {
   useCallback,
   useMemo,
 } from "react";
+
 import type {
   LabelContextType,
   LabelProviderProps,
   TranslationData,
   GetLabelFunc,
 } from "./Label.types";
-import client from "api/client";
 import { ENDPOINTS } from "api/endpoints";
+import client from "api/client";
 
 //Creation of context (place where i can save things and avoid the props)
 const LabelContext = createContext<LabelContextType | null>(null);

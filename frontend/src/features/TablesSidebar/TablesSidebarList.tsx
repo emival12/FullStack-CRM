@@ -1,7 +1,7 @@
 import { ListGroup } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import type { TablesSidebarListProps } from "./TableSidebar.types";
 
+import type { TablesSidebarListProps } from "./TablesSidebar.types";
 import { PATH_DATABASE } from "config/K";
 
 /**

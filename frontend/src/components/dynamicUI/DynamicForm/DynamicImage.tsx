@@ -7,9 +7,9 @@ import {
   Col,
   Image,
 } from "react-bootstrap";
-import { FieldType } from "commot.types";
-import type { DynamicImageProps } from "./DynamicForm.types";
 
+import type { DynamicImageProps } from "./DynamicForm.types";
+import { FieldType } from "types/field.types";
 import { useLabels } from "context/Label/Label";
 import { DIRECT_ENDPOINTS } from "api/endpoints";
 

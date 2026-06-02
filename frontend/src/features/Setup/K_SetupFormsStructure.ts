@@ -1,4 +1,12 @@
-import { MetadataFieldStructure, Sections } from "commot.types";
+import {
+  SECTIONS_FIELDS_NAME,
+  SECTIONS_HOME_NAME,
+  SECTIONS_LAYOUT_NAME,
+  SECTIONS_RECORD_TYPE_NAME,
+  SECTIONS_RELATED_LIST_NAME,
+} from "./K_Setup";
+import { Sections } from "types/routing.types";
+import { MetadataFieldStructure } from "types/field.types";
 import {
   AGGREGATION_FUNCTION_BASE,
   CATEGORY_BASE,
@@ -23,13 +31,6 @@ import {
   REFERENCE_OBJECT_RECORD_TYPE_BASE,
   SORT_ORDER_BASE,
 } from "config/K_FieldBaseStructure";
-import {
-  SECTIONS_FIELDS_NAME,
-  SECTIONS_HOME_NAME,
-  SECTIONS_LAYOUT_NAME,
-  SECTIONS_RECORD_TYPE_NAME,
-  SECTIONS_RELATED_LIST_NAME,
-} from "./K_Setup";
 
 export const SECTIONS = [
   { key: Sections.HOME, label: SECTIONS_HOME_NAME },

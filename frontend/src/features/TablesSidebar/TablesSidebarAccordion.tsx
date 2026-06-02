@@ -1,10 +1,10 @@
 import { Accordion } from "react-bootstrap";
+
 import type {
   SidebarItem,
   SidebarStructure,
   TablesSidebarAccordionProps,
-} from "./TableSidebar.types";
-
+} from "./TablesSidebar.types";
 import TablesSidebarList from "./TablesSidebarList";
 
 /**

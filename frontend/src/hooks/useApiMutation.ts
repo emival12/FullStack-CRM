@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
-import client from "api/client";
+
 import { ApiError } from "api/types";
+import client from "api/client";
 
 export const useApiMutation = <TBody, TResp>(
   path: string,

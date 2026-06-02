@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import { Outlet, useParams } from "react-router-dom";
-import { Sections } from "commot.types";
 
+import { Sections } from "types/routing.types";
 import SetupSidebar from "features/Setup/SetupSidebar/SetupSidebar";
 
 export default function SetupMainPage(): React.ReactElement {

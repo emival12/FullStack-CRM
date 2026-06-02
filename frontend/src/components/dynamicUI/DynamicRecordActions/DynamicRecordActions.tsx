@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import type { DynamicRecordActionsProps } from "./DynamicRecordActions.types";
 
+import type {
+  DynamicRecordActionsProps,
+  ModalConfig,
+} from "./DynamicRecordActions.types";
+import { ApiError, CRUDResult } from "api/types";
 import { useLabels } from "context/Label/Label";
 import { useFeedback } from "hooks/useFeedback";
 import { useApiMutation } from "hooks/useApiMutation";
-import { ApiError } from "api/types";
-import type { CRUDResult, ModalConfig } from "commot.types";
 import ModalScreen from "components/ModalScreen/ModalScreen";
 
 /**

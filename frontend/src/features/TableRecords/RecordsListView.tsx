@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Button } from "react-bootstrap";
-import type { DatabaseOutletContext, RecordListStructure } from "commot.types";
 
+import NewRecord from "./NewRecord";
+import { DatabaseOutletContext } from "types/routing.types";
+import { RecordListStructure } from "types/list.types";
+import { ERROR_MISSING_TABLE } from "config/K";
+import { ENDPOINTS } from "api/endpoints";
 import { useLabels } from "context/Label/Label";
 import { useFeedback } from "hooks/useFeedback";
 import { useApiQuery } from "hooks/useApiQuery";
-import { ENDPOINTS } from "api/endpoints";
-import { ERROR_MISSING_TABLE } from "config/K";
 import MissingPage from "components/MissingPage/MissingPage";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 import DynamicRecordsList from "components/dynamicUI/DynamicRecordsList/DynamicRecordsList";
-import NewRecord from "./NewRecord";
 
 const getDisplayTitle = (key: string) => {
   if (!key) return "";

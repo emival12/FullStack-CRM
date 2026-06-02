@@ -6,6 +6,7 @@ import {
   useCallback,
   useMemo,
 } from "react";
+
 import type {
   AuthContextType,
   AuthProviderProps,
@@ -13,8 +14,8 @@ import type {
   LoginFunc,
   LoginBody,
 } from "./Auth.types";
-import { useApiMutation } from "hooks/useApiMutation";
 import { ENDPOINTS } from "api/endpoints";
+import { useApiMutation } from "hooks/useApiMutation";
 import client from "api/client";
 
 //Creation of context (place where i can save things and avoid the props)

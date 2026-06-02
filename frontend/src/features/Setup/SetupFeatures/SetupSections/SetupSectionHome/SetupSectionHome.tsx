@@ -1,25 +1,21 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useOutletContext } from "react-router-dom";
-import {
-  CRUDResult,
-  MetadataFieldStructure,
-  SetupOutletContext,
-} from "commot.types";
-import { SetupSectionBaseProps } from "../SetupSections.types";
-import { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
+import { SetupSectionBaseProps } from "../SetupSections.types";
+import { SetupOutletContext } from "types/routing.types";
+import { MetadataFieldStructure } from "types/field.types";
+import { ApiError, CRUDResult } from "api/types";
+import { PATH_SETUP } from "config/K";
+import { ENDPOINTS } from "api/endpoints";
 import { useLabels } from "context/Label/Label";
 import { useFeedback } from "hooks/useFeedback";
 import { useApiQuery } from "hooks/useApiQuery";
 import { useApiMutation } from "hooks/useApiMutation";
-import { ENDPOINTS } from "api/endpoints";
-import { ApiError } from "api/types";
 import { HOME_OBJECT_FIELD_STRUCTURE } from "features/Setup/K_SetupFormsStructure";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
 import DynamicRecordActions from "components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
-import { PATH_SETUP } from "config/K";
 
 const PREFIX = "SETUP_HOME";
 
@@ -120,7 +116,7 @@ export default function SetupSectionHome({
         }}
       />
       <DynamicForm
-        fields={HOME_OBJECT_FIELD_STRUCTURE as DataFieldStructure}
+        fields={HOME_OBJECT_FIELD_STRUCTURE}
         validated={false}
         onSubmit={handleSubmit(onSubmit)}
         errors={errors}

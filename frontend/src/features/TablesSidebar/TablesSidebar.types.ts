@@ -1,18 +1,12 @@
+import { ObjectDefinitionItem } from "types/object.types";
+
 export interface TablesSidebarProps {
   /** Table currently selected */
   tableKey: string | undefined;
 }
 
-export interface SidebarItem {
-  object_label: string;
-  object_name: string;
+export interface SidebarItem extends ObjectDefinitionItem {
   record_type_name: string;
-  category: string;
-  sort_order: number;
-  is_system_object: 0 | 1;
-  is_single_record_type: 0 | 1;
-  key: string;
-  label: string;
 }
 
 export type SidebarEntry = SidebarItem | Record<string, SidebarEntry[]>;

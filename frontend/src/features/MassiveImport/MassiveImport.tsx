@@ -1,17 +1,16 @@
 import { useEffect, useMemo } from "react";
 import { Container, Row, Form, Button, Col } from "react-bootstrap";
 import { useForm } from "react-hook-form";
-import { CRUDResult, FieldOptionLookup } from "commot.types";
-import { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
+import { FieldOptionLookup } from "types/field.types";
+import { ApiError, CRUDResult } from "api/types";
+import { IMPORT_FIELD_STRUCTURE } from "config/K";
+import { ENDPOINTS } from "api/endpoints";
 import { useLabels } from "context/Label/Label";
 import { useFeedback } from "hooks/useFeedback";
 import { useAuth } from "context/Auth/Auth";
 import { useApiQuery } from "hooks/useApiQuery";
 import { useApiMutation } from "hooks/useApiMutation";
-import { ENDPOINTS } from "api/endpoints";
-import { ApiError } from "api/types";
-import { IMPORT_FIELD_STRUCTURE } from "config/K";
 import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 
@@ -95,7 +94,7 @@ export default function MassiveImport(): React.ReactElement | null {
       <Row>
         <Col>
           <DynamicForm
-            fields={fieldStructure as DataFieldStructure}
+            fields={fieldStructure}
             validated={false}
             onSubmit={handleSubmit(onSubmit)}
             errors={errors}

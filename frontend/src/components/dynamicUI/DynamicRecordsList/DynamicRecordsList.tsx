@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { Table, Form, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import type { RecordListStructure } from "commot.types";
+
+import { RecordListStructure } from "types/list.types";
 import type {
   DynamicRecordsListProps,
   FormatDateSimpleFunction,
   RecordCellProps,
 } from "./DynamicRecordsList.types";
-
-import { useLabels } from "context/Label/Label";
 import { NUM_RECORD_TO_SHOW, PATH_DATABASE } from "config/K";
+import { useLabels } from "context/Label/Label";
 import MissingPage from "components/MissingPage/MissingPage";
 import PaginationControl from "components/PaginationControl/PaginationControl";
 

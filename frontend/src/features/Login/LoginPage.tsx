@@ -2,13 +2,12 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Button } from "react-bootstrap";
-import type { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
 import { ApiError } from "api/types";
+import { LOGIN_FIELD_STRUCTURE, PATH_DATABASE } from "config/K";
 import { useLabels } from "context/Label/Label";
 import { useAuth } from "context/Auth/Auth";
 import { useFeedback } from "hooks/useFeedback";
-import { LOGIN_FIELD_STRUCTURE, PATH_DATABASE } from "config/K";
 import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 
@@ -51,7 +50,7 @@ export default function LoginPage(): React.ReactElement {
           <Col />
           <Col>
             <DynamicForm
-              fields={LOGIN_FIELD_STRUCTURE as DataFieldStructure}
+              fields={LOGIN_FIELD_STRUCTURE}
               validated={false}
               onSubmit={handleSubmit(onSubmit)}
               errors={errors}

@@ -3,40 +3,11 @@ import type {
   FieldErrors,
   FieldValues,
 } from "react-hook-form";
-import type {
-  BaseFieldInfo,
-  FieldOptionLookup,
-  FieldOptionRadio,
-  FieldType,
-} from "commot.types";
+import { BaseFieldInfo, MetadataFieldStructure } from "types/field.types";
 
-export interface FieldInfo extends BaseFieldInfo {
-  object_name: string;
-  record_type_name: string;
-  field_name: string;
-  field_type: FieldType;
-  length: number | null;
-  numeric_precision: number | null;
-  numeric_scale: number | null;
-  reference_object: string | null;
-  reference_field: string | null;
-  is_editable: 0 | 1;
-  is_required: 0 | 1;
-  is_primary_key: 0 | 1;
-  lookup_filter: string;
-  options?: (FieldOptionRadio & FieldOptionLookup)[];
-  value: any;
-  max_limit_value?: string;
-  min_limit_value?: string;
-
-  is_textarea?: boolean; //used only in the setup
-  label?: string; //used only in the setup
-}
-
-export type DataFieldStructure = Record<string, FieldInfo>;
 export interface DynamicFormProps {
   /** Fields to show with their structure */
-  fields: DataFieldStructure;
+  fields: MetadataFieldStructure;
 
   /** Flag to show or hide the validation */
   validated: boolean;
@@ -62,7 +33,7 @@ export interface DynamicFormProps {
 
 export type FieldRenderFunction = (
   key: string,
-  info: FieldInfo,
+  info: BaseFieldInfo,
 ) => React.ReactElement;
 
 export interface DynamicImageProps {
@@ -70,7 +41,7 @@ export interface DynamicImageProps {
   fieldKey: string;
 
   /** Object with all the information of the field */
-  info: FieldInfo;
+  info: BaseFieldInfo;
 
   /** Flag to understand if the form is and edit or new record form */
   isNewForm?: boolean;
@@ -83,10 +54,4 @@ export interface DynamicImageProps {
 
   /** Function to register the form element (standard of react-hook-form) */
   register: UseFormRegister<FieldValues>;
-}
-
-export interface DataRecordStructure {
-  primary_key_name: string;
-  field_structure: DataFieldStructure;
-  related_list: any[]; //TODO FIX
 }

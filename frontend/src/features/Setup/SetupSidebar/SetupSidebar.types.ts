@@ -1,5 +1,5 @@
-import { Sections } from "commot.types";
-import { SidebarItem } from "features/TablesSidebar/TableSidebar.types";
+import { Sections } from "types/routing.types";
+import { SidebarItem } from "features/TablesSidebar/TablesSidebar.types";
 
 export interface SetupSidebarProps {
   /** Key of the table selected */

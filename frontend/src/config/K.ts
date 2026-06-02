@@ -1,10 +1,10 @@
-import type { MetadataFieldStructure } from "commot.types";
 import {
   EMAIL_LOGIN_BASE,
   OBJECT_NAME_MASSIVE_IMPORT_BASE,
   OPERTION_TYPE_BASE,
   PASSWORD_LOGIN_BASE,
 } from "./K_FieldBaseStructure";
+import { MetadataFieldStructure } from "types/field.types";
 
 export const PATH_LOGIN = "/login";
 export const PATH_DATABASE = "/database";

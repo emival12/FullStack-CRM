@@ -34,3 +34,9 @@ export interface DynamicRecordActionsProps {
   /** Variable with an optional text to be shown near the Delete/New buttons */
   extraDescription?: string;
 }
+
+export type ModalConfig = {
+  show: boolean;
+  title: string;
+  body: string;
+};

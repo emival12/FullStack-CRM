@@ -1,21 +1,20 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+
 import { SetupSectionCompleteProps } from "../SetupSections.types";
 import { SetupFieldStructure } from "./SetupSectionFieldsEdit.types";
-
+import { FieldType } from "types/field.types";
+import { ApiError } from "api/types";
 import { ERROR_MISSING_RECORD, PATH_SETUP } from "config/K";
+import { ENDPOINTS } from "api/endpoints";
 import { useLabels } from "context/Label/Label";
 import { useFeedback } from "hooks/useFeedback";
 import { useApiMutation } from "hooks/useApiMutation";
 import { useFieldTypes } from "features/Setup/hooks/useFieldTypes";
-import { ENDPOINTS } from "api/endpoints";
-import { ApiError } from "api/types";
-import { FieldType } from "commot.types";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 import MissingPage from "components/MissingPage/MissingPage";
 import DynamicRecordActions from "components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
 import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
-import { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
 const PREFIX = "SETUP_FIELD_EDIT";
 
@@ -137,7 +136,7 @@ export default function SetupSectionFieldsEdit({
         redirectAPI={`${PATH_SETUP}/${tableKey}/${sectionKey}`}
       />
       <DynamicForm
-        fields={fields?.field_structure as DataFieldStructure}
+        fields={fields?.field_structure}
         validated={false}
         onSubmit={handleSubmit(onSubmit)}
         tableKey={tableKey}

@@ -6,9 +6,9 @@ import App from "./App";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./index.css";
 
-import ToastProvider from "context/Toast/Toast";
-import AuthProvider from "context/Auth/Auth";
-import LabelProvider from "context/Label/Label";
+import ToastProvider from "./context/Toast/Toast";
+import AuthProvider from "./context/Auth/Auth";
+import LabelProvider from "./context/Label/Label";
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {

@@ -1,4 +1,4 @@
-import { FieldType, type BaseFieldInfo } from "commot.types";
+import { FieldType, type BaseFieldInfo } from "types/field.types";
 
 // SINGLE FIELDS FOR LOGIN
 export const EMAIL_LOGIN_BASE: BaseFieldInfo = {
@@ -22,6 +22,7 @@ type OperationsType = {
   insert: string;
   update: string;
 };
+
 export const OPERTION_TYPE_BASE = (
   Operations: OperationsType,
 ): BaseFieldInfo => {

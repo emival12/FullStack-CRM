@@ -1,16 +1,15 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Modal } from "react-bootstrap";
-import type { CRUDResult } from "commot.types";
-import type { NewRecordProps } from "./TableRecors.types";
-import type { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
+import type { NewRecordProps } from "./TableRecords.types";
+import { MetadataFieldStructure } from "types/field.types";
+import { ApiError, CRUDResult } from "api/types";
+import { ENDPOINTS } from "api/endpoints";
 import { useLabels } from "context/Label/Label";
 import { useFeedback } from "hooks/useFeedback";
 import { useApiQuery } from "hooks/useApiQuery";
 import { useAuth } from "context/Auth/Auth";
-import { ENDPOINTS } from "api/endpoints";
-import { ApiError } from "api/types";
 import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 import { useApiMutation } from "hooks/useApiMutation";
@@ -33,9 +32,12 @@ export default function NewRecord({
     data: fields,
     loading: loadingForm,
     error: errorForm,
-  } = useApiQuery<DataFieldStructure>(ENDPOINTS.records.newRecord(tableKey), {
-    enabled: showNewModal,
-  });
+  } = useApiQuery<MetadataFieldStructure>(
+    ENDPOINTS.records.newRecord(tableKey),
+    {
+      enabled: showNewModal,
+    },
+  );
   const { mutate, loading: loadingSubmit } = useApiMutation<
     Record<string, any>,
     CRUDResult

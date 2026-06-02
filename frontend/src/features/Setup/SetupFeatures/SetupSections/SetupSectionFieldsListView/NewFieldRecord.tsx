@@ -1,18 +1,17 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Modal } from "react-bootstrap";
-import { CRUDResult, MetadataFieldStructure } from "commot.types";
-import { NewFieldRecordProps } from "./SetupSectionFieldsListView.types";
 
+import { NewFieldRecordProps } from "./SetupSectionFieldsListView.types";
+import { MetadataFieldStructure } from "types/field.types";
+import { ApiError, CRUDResult } from "api/types";
+import { ENDPOINTS } from "api/endpoints";
 import { useLabels } from "context/Label/Label";
 import { useFeedback } from "hooks/useFeedback";
 import { useApiMutation } from "hooks/useApiMutation";
 import { useFieldTypes } from "features/Setup/hooks/useFieldTypes";
-import { ENDPOINTS } from "api/endpoints";
-import { ApiError } from "api/types";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
-import { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
 /**
  * Modal used to retrieve the info needed on the field creation
@@ -115,10 +114,7 @@ export default function NewFieldRecord({
   ]);
 
   const renderBody = () => {
-    const fields =
-      pageNumber === 1
-        ? (selectionForm as DataFieldStructure)
-        : (currentForm as DataFieldStructure);
+    const fields = pageNumber === 1 ? selectionForm : currentForm;
 
     if (loading) return <LoadingScreen />;
     if (!fields) return getLabel("MODAL.INSERT.LOAD_ERROR");

@@ -1,18 +1,17 @@
 import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { CRUDResult, SetupOutletContext } from "commot.types";
 
+import { SetupOutletContext } from "types/routing.types";
+import { ApiError, CRUDResult } from "api/types";
+import { NEW_OBJECT_FIELD_STRUCTURE } from "features/Setup/K_SetupFormsStructure";
+import { ENDPOINTS } from "api/endpoints";
 import { useLabels } from "context/Label/Label";
 import { useFeedback } from "hooks/useFeedback";
 import { useApiMutation } from "hooks/useApiMutation";
-import { ENDPOINTS } from "api/endpoints";
-import { ApiError } from "api/types";
-import { NEW_OBJECT_FIELD_STRUCTURE } from "features/Setup/K_SetupFormsStructure";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
 import DynamicRecordActions from "components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
-import { DataFieldStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
 const PREFIX = "SETUP_NEW_OBJECT";
 
@@ -79,7 +78,7 @@ export default function SetupNewObject(): React.ReactElement {
       />
       {showNewForm ? (
         <DynamicForm
-          fields={NEW_OBJECT_FIELD_STRUCTURE as DataFieldStructure}
+          fields={NEW_OBJECT_FIELD_STRUCTURE}
           validated={false}
           onSubmit={handleSubmit(onSubmit)}
           errors={errors}

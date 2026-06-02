@@ -1,15 +1,15 @@
 import { useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
-import { SetupOutletContext, Sections } from "commot.types";
 
-import { useLabels } from "context/Label/Label";
-import { useFeedback } from "hooks/useFeedback";
-import { useApiQuery } from "hooks/useApiQuery";
-import { ENDPOINTS } from "api/endpoints";
-import { ERROR_MISSING_TABLE } from "config/K";
 import SetupSectionHome from "./SetupSectionHome/SetupSectionHome";
 import SetupSectionFieldsListView from "./SetupSectionFieldsListView/SetupSectionFieldsListView";
 import SetupSectionFieldsEdit from "./SetupSectionFieldsEdit/SetupSectionFieldsEdit";
+import { SetupOutletContext, Sections } from "types/routing.types";
+import { ERROR_MISSING_TABLE } from "config/K";
+import { ENDPOINTS } from "api/endpoints";
+import { useLabels } from "context/Label/Label";
+import { useFeedback } from "hooks/useFeedback";
+import { useApiQuery } from "hooks/useApiQuery";
 import MissingPage from "components/MissingPage/MissingPage";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 

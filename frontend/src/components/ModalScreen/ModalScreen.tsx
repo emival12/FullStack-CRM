@@ -1,6 +1,6 @@
 import { Button, Modal, Spinner } from "react-bootstrap";
-import type { ModalScreenProps } from "./ModalScreen.types";
 
+import type { ModalScreenProps } from "./ModalScreen.types";
 import { useLabels } from "context/Label/Label";
 
 /**

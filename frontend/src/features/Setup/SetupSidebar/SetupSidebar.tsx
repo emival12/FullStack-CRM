@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { Form, FloatingLabel, ListGroup } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
-import { PlainSidebarStructure, SetupSidebarProps } from "./SetupSidebar.types";
 
+import { PlainSidebarStructure, SetupSidebarProps } from "./SetupSidebar.types";
+import { PATH_SETUP } from "config/K";
+import { ENDPOINTS } from "api/endpoints";
 import { useLabels } from "context/Label/Label";
 import { useFeedback } from "hooks/useFeedback";
 import { useApiQuery } from "hooks/useApiQuery";
-import { ENDPOINTS } from "api/endpoints";
-import { PATH_SETUP } from "config/K";
 import { SECTIONS } from "features/Setup/K_SetupFormsStructure";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 import ScreenAdaptiveSidebar from "components/ScreenAdaptiveSidebar/ScreenAdaptiveSidebar";

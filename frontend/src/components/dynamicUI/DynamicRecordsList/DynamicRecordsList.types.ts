@@ -1,4 +1,4 @@
-import type { FieldDefinition, RecordListStructure } from "commot.types";
+import { FieldDefinition, RecordListStructure } from "types/list.types";
 
 export interface DynamicRecordsListProps {
   /** Data structure of the record retrieved on the DB */
@@ -12,7 +12,7 @@ export interface DynamicRecordsListProps {
 }
 
 export interface RecordCellProps {
-  fieldValue: RecordListStructure["records"][number][string]; // accedi a records e prendi un valore qualsiasi dell'array (number) e prendi una chiave qualsiasi (string)
+  fieldValue: RecordListStructure["records"][number][string]; // this syntax access to records, takes a random element (number) e take a random key (string)
   fieldType: FieldDefinition["field_type"];
   isPrimaryKey: boolean;
   onNavigate: (val: string) => void;

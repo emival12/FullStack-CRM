@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import client from "api/client";
+
 import { ApiError } from "api/types";
+import client from "api/client";
 
 export const useApiQuery = <T>(
   path: string,

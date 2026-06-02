@@ -21,3 +21,7 @@ export type ApiError = {
   // Optional context dict from the backend
   errorData: Record<string, unknown> | undefined;
 };
+
+export interface CRUDResult {
+  result: number;
+}

@@ -1,13 +1,25 @@
 import { Form, FloatingLabel } from "react-bootstrap";
 import TextareaAutosize from "react-textarea-autosize";
-import { FieldType } from "commot.types";
+
 import {
   type DynamicFormProps,
   type FieldRenderFunction,
 } from "./DynamicForm.types";
-
-import { useLabels } from "context/Label/Label";
 import DynamicImage from "./DynamicImage";
+import {
+  FieldType,
+  FieldOptionLookup,
+  FieldOptionRadio,
+} from "types/field.types";
+import { useLabels } from "context/Label/Label";
+
+const isLookupOptionArray = (
+  arr: (FieldOptionRadio | FieldOptionLookup)[],
+): arr is FieldOptionLookup[] => arr.length > 0 && "id" in arr[0];
+
+const isRadioOptionArray = (
+  arr: (FieldOptionRadio | FieldOptionLookup)[],
+): arr is FieldOptionRadio[] => arr.length > 0 && "option_key" in arr[0];
 
 /**
  * Shows a form with some fields
@@ -40,6 +52,7 @@ export default function DynamicForm({
   };
 
   const get_selection_entry: FieldRenderFunction = (key, info) => {
+    const options = info.options;
     return (
       <>
         <Form.Select
@@ -65,11 +78,13 @@ export default function DynamicForm({
           })}
         >
           <option value="NULL"></option>
-          {info.options?.map((opt) => (
-            <option key={opt.id} value={opt.id}>
-              {opt.reference_field}
-            </option>
-          ))}
+          {options &&
+            isLookupOptionArray(options) &&
+            options.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.reference_field}
+              </option>
+            ))}
         </Form.Select>
         <Form.Control.Feedback type="invalid">
           {errors[key]?.message?.toString()}
@@ -79,31 +94,34 @@ export default function DynamicForm({
   };
 
   const get_radio: FieldRenderFunction = (key, info) => {
+    const options = info.options;
     return (
       <>
-        {info.options?.map((opt) => (
-          <div key={opt.option_key} className="ms-2">
-            <Form.Check
-              inline
-              type={info.field_type as any}
-              required={!!info.is_required}
-              disabled={isNewForm ? false : !info.is_editable || !isEdit}
-              id={opt.option_key}
-              label={opt.option_label}
-              value={opt.option_key}
-              isInvalid={!!errors[key]} // !! means if the object exist writes true otherwise false
-              {...register(key, {
-                required: {
-                  value: !!info.is_required,
-                  message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
-                },
-              })}
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors[key]?.message?.toString()}
-            </Form.Control.Feedback>
-          </div>
-        ))}
+        {options &&
+          isRadioOptionArray(options) &&
+          options.map((opt) => (
+            <div key={opt.option_key} className="ms-2">
+              <Form.Check
+                inline
+                type={info.field_type as any}
+                required={!!info.is_required}
+                disabled={isNewForm ? false : !info.is_editable || !isEdit}
+                id={opt.option_key}
+                label={opt.option_label}
+                value={opt.option_key}
+                isInvalid={!!errors[key]} // !! means if the object exist writes true otherwise false
+                {...register(key, {
+                  required: {
+                    value: !!info.is_required,
+                    message: getLabel("FORM_ERRORS.MANDATORY_FIELD_LABEL"),
+                  },
+                })}
+              />
+              <Form.Control.Feedback type="invalid">
+                {errors[key]?.message?.toString()}
+              </Form.Control.Feedback>
+            </div>
+          ))}
       </>
     );
   };
@@ -208,10 +226,9 @@ export default function DynamicForm({
       onSubmit={onSubmit}
     >
       {Object.entries(fields).map(([key, info]) => {
-        const isFloatingNotAllowed = [
-          FieldType.RADIO,
-          FieldType.CHECKBOX,
-        ].includes(info.field_type);
+        const isFloatingNotAllowed =
+          info.field_type === FieldType.RADIO ||
+          info.field_type === FieldType.CHECKBOX;
         if (isFloatingNotAllowed) {
           return (
             <Form.Group

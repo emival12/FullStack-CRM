@@ -1,25 +1,15 @@
 import {
+  FieldType,
   FieldOptionLookup,
   FieldOptionRadio,
-  FieldType,
   MetadataFieldStructure,
-} from "commot.types";
-
-interface LookupOptionItem {
-  object_label: string;
-  object_name: string;
-  category: string;
-  sort_order: number;
-  is_system_object: 0 | 1;
-  is_single_record_type: 0 | 1;
-  key: string;
-  label: string;
-}
+} from "types/field.types";
+import { ObjectDefinitionItem } from "types/object.types";
 
 type StructureOptions = Record<string, string[]>;
 export interface NewSetupFieldStructure {
   field_types: Record<string, FieldType>;
-  lookup_options: LookupOptionItem[];
+  lookup_options: ObjectDefinitionItem[];
   fields_options: StructureOptions;
   fields_options_rollup: StructureOptions;
   rt_options: StructureOptions;
@@ -32,15 +22,15 @@ export type GenerateOptionsFunc = <T>(
 ) => T[];
 
 export type NormalizeInputOptionsFunc = (
-  options: LookupOptionItem[] | string[],
+  options: ObjectDefinitionItem[] | string[],
 ) => Record<string, string>;
 
 export type GenerateLookupOptionsFunc = (
-  options: LookupOptionItem[] | string[],
+  options: ObjectDefinitionItem[] | string[],
 ) => FieldOptionLookup[];
 
 export type GenerateRadioOptionsFunc = (
-  options: LookupOptionItem[] | string[],
+  options: ObjectDefinitionItem[] | string[],
 ) => FieldOptionRadio[];
 
 export type CloneAndAddOptionsFunc = (

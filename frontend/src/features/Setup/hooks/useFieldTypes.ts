@@ -1,6 +1,19 @@
 import { useCallback, useEffect, useMemo } from "react";
 
 import {
+  CloneAndAddOptionsFunc,
+  ComputeDependentFormFunc,
+  GenerateLookupOptionsFunc,
+  GenerateOptionsFunc,
+  GenerateRadioOptionsFunc,
+  GetMetadataWithDependentOptionsFunc,
+  GetSpecificFormByTypeFunc,
+  NewSetupFieldStructure,
+  NormalizeInputOptionsFunc,
+  SortDictFunc,
+} from "./useFieldTypes.types";
+import { FieldOptionLookup, FieldOptionRadio } from "types/field.types";
+import {
   NEW_FIELD_OBJECT_STRUCTURE as NEW_FIELDS,
   NEW_TEXT_FIELD_OBJECT_STRUCTURE as NEW_TEXT_FIELDS,
   NEW_NUMBER_FIELD_OBJECT_STRUCTURE as NEW_NUMBER_FIELDS,
@@ -14,22 +27,9 @@ import {
   NEW_IMG_FIELD_OBJECT_STRUCTURE,
   NEW_FORMULA_FIELD_STRUCTURE,
 } from "features/Setup/K_SetupFormsStructure";
-import {
-  CloneAndAddOptionsFunc,
-  ComputeDependentFormFunc,
-  GenerateLookupOptionsFunc,
-  GenerateOptionsFunc,
-  GenerateRadioOptionsFunc,
-  GetMetadataWithDependentOptionsFunc,
-  GetSpecificFormByTypeFunc,
-  NewSetupFieldStructure,
-  NormalizeInputOptionsFunc,
-  SortDictFunc,
-} from "./useFieldTypes.types";
+import { ENDPOINTS } from "api/endpoints";
 import { useFeedback } from "hooks/useFeedback";
 import { useApiQuery } from "hooks/useApiQuery";
-import { ENDPOINTS } from "api/endpoints";
-import { FieldOptionLookup, FieldOptionRadio } from "commot.types";
 
 // Receive an array with some values and convert them into an array of object with the format of Form options
 const generateOptions: GenerateOptionsFunc = (

@@ -2,26 +2,26 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { Tab, Tabs } from "react-bootstrap";
-import type { DatabaseOutletContext, CRUDResult } from "commot.types";
 
+import { DataRecordStructure } from "./RecordDetail.types";
+import { DatabaseOutletContext } from "types/routing.types";
+import { ApiError, CRUDResult } from "api/types";
 import {
   ERROR_MISSING_RECORD,
   ERROR_MISSING_TABLE,
   PATH_DATABASE,
 } from "config/K";
+import { ENDPOINTS } from "api/endpoints";
 import { useLabels } from "context/Label/Label";
 import { useFeedback } from "hooks/useFeedback";
 import { useAuth } from "context/Auth/Auth";
 import { useApiQuery } from "hooks/useApiQuery";
 import { useApiMutation } from "hooks/useApiMutation";
-import { ENDPOINTS } from "api/endpoints";
-import { ApiError } from "api/types";
 import MissingPage from "components/MissingPage/MissingPage";
 import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 import DynamicRecordActions from "components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
 import DynamicRecordsList from "components/dynamicUI/DynamicRecordsList/DynamicRecordsList";
 import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
-import type { DataRecordStructure } from "components/dynamicUI/DynamicForm/DynamicForm.types";
 
 const PREFIX = "RECORD_DETAIL";
 
@@ -165,7 +165,7 @@ export default function RecordDetail(): React.ReactElement | null {
                 <div className="fw-bold mb-2">{related_list.label}</div>
                 <DynamicRecordsList
                   data={related_list}
-                  redirectKey={related_list?.table?.key}
+                  redirectKey={related_list.table.key}
                 />
               </div>
             ))}
