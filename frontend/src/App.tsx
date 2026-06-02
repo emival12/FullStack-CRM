@@ -1,6 +1,6 @@
 import "./App.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import { useLabels } from "./context/Label/Label";
 import { useAuth } from "./context/Auth/Auth";
@@ -16,10 +16,12 @@ import MissingPage from "./components/MissingPage/MissingPage";
 import LoginPage from "./features/Login/LoginPage";
 import LoadingScreen from "./components/LoadingScreen/LoadingScreen";
 import NavBar from "./components/NavBar/NavBar";
+import ErrorBoundary from "components/ErrorBoundary/ErrorBoundary";
 
 function App() {
   const { getLabel } = useLabels();
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading)
     return (
@@ -28,52 +30,47 @@ function App() {
       </div>
     );
 
-  return (
-    <BrowserRouter>
-      {!user ? (
+  return !user ? (
+    <Routes>
+      <Route path="*" element={<Navigate to={PATH_LOGIN} replace />} />
+      <Route path={PATH_LOGIN} element={<LoginPage />} />
+    </Routes>
+  ) : (
+    <>
+      <NavBar />
+      <ErrorBoundary resetKey={location.pathname}>
         <Routes>
-          <Route path="*" element={<Navigate to={PATH_LOGIN} replace />} />
-          <Route path={PATH_LOGIN} element={<LoginPage />} />
-        </Routes>
-      ) : (
-        <>
-          <NavBar />
-          <Routes>
-            {/* Automatic redirect from "/" or "/login" to "/Database" */}
-            <Route path="/" element={<Navigate to={PATH_DATABASE} replace />} />
-            <Route
-              path={PATH_LOGIN}
-              element={<Navigate to={PATH_DATABASE} replace />}
-            />
+          {/* Automatic redirect from "/" or "/login" to "/Database" */}
+          <Route path="/" element={<Navigate to={PATH_DATABASE} replace />} />
+          <Route
+            path={PATH_LOGIN}
+            element={<Navigate to={PATH_DATABASE} replace />}
+          />
 
-            {/* 
+          {/* 
             When the path is: 
               /Database is rendered the index
               /Database/XXXX is rendered the second path
             */}
-            <Route path={PATH_DATABASE} element={<DatabaseMainPage />}>
-              <Route index element={getLabel("GENERIC.DB_INTRO_LABEL")} />
-              <Route path=":tableKey" element={<RecordsListView />} />
-              <Route path=":tableKey/:recordId" element={<RecordDetail />} />
-            </Route>
-            <Route path={PATH_IMPORT} element={<MassiveImport />} />
-            <Route path={PATH_SETUP} element={<SetupMainPage />}>
-              <Route index element={<SetupNewObject />} />
-              <Route
-                path=":tableKey"
-                element={<Navigate to="home" replace />}
-              />
-              <Route path=":tableKey/:sectionKey" element={<SetupSections />} />
-              <Route
-                path=":tableKey/:sectionKey/:recordId"
-                element={<SetupSections />}
-              />
-            </Route>
-            <Route path="*" element={<MissingPage />} />
-          </Routes>
-        </>
-      )}
-    </BrowserRouter>
+          <Route path={PATH_DATABASE} element={<DatabaseMainPage />}>
+            <Route index element={getLabel("GENERIC.DB_INTRO_LABEL")} />
+            <Route path=":tableKey" element={<RecordsListView />} />
+            <Route path=":tableKey/:recordId" element={<RecordDetail />} />
+          </Route>
+          <Route path={PATH_IMPORT} element={<MassiveImport />} />
+          <Route path={PATH_SETUP} element={<SetupMainPage />}>
+            <Route index element={<SetupNewObject />} />
+            <Route path=":tableKey" element={<Navigate to="home" replace />} />
+            <Route path=":tableKey/:sectionKey" element={<SetupSections />} />
+            <Route
+              path=":tableKey/:sectionKey/:recordId"
+              element={<SetupSections />}
+            />
+          </Route>
+          <Route path="*" element={<MissingPage />} />
+        </Routes>
+      </ErrorBoundary>
+    </>
   );
 }
 

@@ -1,11 +1,13 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 //import reportWebVitals from "./reportWebVitals";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./index.css";
 
+import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import ToastProvider from "./context/Toast/Toast";
 import AuthProvider from "./context/Auth/Auth";
 import LabelProvider from "./context/Label/Label";
@@ -17,13 +19,17 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <ToastProvider>
-      <LabelProvider>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </LabelProvider>
-    </ToastProvider>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <ToastProvider>
+          <LabelProvider>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </LabelProvider>
+        </ToastProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   </React.StrictMode>,
 );
 
