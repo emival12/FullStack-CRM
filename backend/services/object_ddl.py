@@ -224,7 +224,7 @@ _SQL_KEYWORDS = {"drop", "create", "alter", "truncate", "insert", "update", "del
 _RESERVED_WORDS = frozenset(_SQL_KEYWORDS | {obj.value for obj in SystemObjects})
 
 _AUTHORIZED_STRING = re.compile(r'^[a-z][a-z0-9_]*$')
-_AUTHORIZED_NUMBER = re.compile(r'^\d+(,\d+)?$')
+_AUTHORIZED_NUMBER = re.compile(r'^\d+(, \d+)?$')
 
 regex_pattern = r"(--|;)|\b(" + "|".join(re.escape(word) for word in _RESERVED_WORDS) + r")\b"
 _LOOKUP_FILTER_BLACKLIST = re.compile(regex_pattern, re.IGNORECASE)
@@ -274,7 +274,7 @@ def create_table(cursor, object_name: str, pk_field_name: str, pk_field_type: st
 def add_column(cursor, object_name: str, column_name: str, field_type: str, field_length: str, reference_field_type: str, reference_object: str) -> None:
     object_name = verify_keywords(object_name)
     column_name = verify_keywords(column_name)
-    field_length = verify_keywords(field_length, _AUTHORIZED_NUMBER) if field_length else None
+    field_length = verify_keywords(str(field_length), _AUTHORIZED_NUMBER) if field_length else None
     
     sql_field_type = convert_field_type_into_SQL_type(field_type, field_length, reference_field_type)
     constraint = ""

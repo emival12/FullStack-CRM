@@ -104,7 +104,7 @@ export default function DynamicForm({
               <Form.Check
                 inline
                 type={info.field_type as any}
-                required={!!info.is_required}
+                required={Boolean(info.is_required)}
                 disabled={isNewForm ? false : !info.is_editable || !isEdit}
                 id={opt.option_key}
                 label={opt.option_label}
@@ -112,7 +112,7 @@ export default function DynamicForm({
                 isInvalid={!!errors[key]} // !! means if the object exist writes true otherwise false
                 {...register(key, {
                   required: {
-                    value: !!info.is_required,
+                    value: Boolean(info.is_required),
                     message: getLabel("FORM.ERRORS.MANDATORY_FIELD"),
                   },
                 })}
@@ -128,21 +128,21 @@ export default function DynamicForm({
 
   const get_checkbox: FieldRenderFunction = (key, info) => {
     const disabled = isNewForm ? false : !info.is_editable || !isEdit;
-    const required = info.is_required && !disabled;
+    const required = Boolean(info.is_required) && !disabled;
     return (
       <>
         <span className="ms-2">
           <Form.Check
             inline
             type={info.field_type as any}
-            required={!!required}
+            required={required}
             disabled={disabled}
             id={key}
             label={info.label}
             isInvalid={!!errors[key]}
             {...register(key, {
               required: {
-                value: !!required,
+                value: required,
                 message: getLabel("FORM.ERRORS.MANDATORY_FIELD"),
               },
             })}
@@ -161,7 +161,7 @@ export default function DynamicForm({
         <Form.Control
           type={info.field_type}
           as={info?.is_textarea ? (TextareaAutosize as any) : undefined}
-          required={!!info.is_required}
+          required={Boolean(info.is_required)}
           defaultValue={isNewForm ? null : info?.value}
           disabled={isNewForm ? false : !info.is_editable || !isEdit}
           isInvalid={!!errors[key]}
@@ -174,7 +174,7 @@ export default function DynamicForm({
           max={info?.max_limit_value && Number(info.max_limit_value)}
           {...register(key, {
             required: {
-              value: !!info.is_required,
+              value: Boolean(info.is_required),
               message: getLabel("FORM.ERRORS.MANDATORY_FIELD"),
             },
             maxLength: info.length
@@ -253,7 +253,7 @@ export default function DynamicForm({
               fieldKey={key}
               info={info}
               isNewForm={isNewForm}
-              isEdit={!!isEdit}
+              isEdit={Boolean(isEdit)}
               errors={errors}
               register={register}
             />

@@ -61,13 +61,13 @@ export default function DynamicImage({
           >
             <Form.Control
               type={FieldType.TEXT}
-              required={!!info.is_required}
+              required={Boolean(info.is_required)}
               defaultValue={isNewForm ? null : info?.value}
               disabled={isNewForm ? false : !info.is_editable || !isEdit}
               isInvalid={!!errors[fieldKey]}
               {...register(fieldKey, {
                 required: {
-                  value: !!info.is_required,
+                  value: Boolean(info.is_required),
                   message: getLabel("FORM.ERRORS.MANDATORY_FIELD"),
                 },
                 maxLength: {
