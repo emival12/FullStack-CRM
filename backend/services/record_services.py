@@ -4,6 +4,7 @@ from config import get_triggers_folder
 from core.exceptions import raise_server_exception, log_event
 from core.models import FieldStructureMode, FieldTypes, SystemFieldName_FD, RldFilterConditions
 from db.db_queries import (
+    SEPARATOR,
     check_allowed_table,
     make_table_key,
     get_object_definition_records,
@@ -35,10 +36,9 @@ from engines import formula_engine, rollup_engine
 logger = logging.getLogger(__name__) 
 MAX_RECURSION_DEPTH = 25
 
-# TODO pensare di unsare un carattere speciale diverso
 def split_table_name(table_name: str) -> tuple[str, str]:
-    """Split 'ObjectName_RecordType' into ('ObjectName', 'RecordType') on the last underscore."""
-    t_name, _, rt_name = table_name.rpartition("_")
+    """Split 'ObjectName-RecordType' into ('ObjectName', 'RecordType') on a special char"""
+    t_name, _, rt_name = table_name.rpartition(SEPARATOR)
     return t_name, rt_name
 
 def validate_and_split_table_name(cursor, table_name: str) -> tuple[str, str]:

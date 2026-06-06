@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 ########## START - Key Builders ##########
 # Pure string helpers that build dictionary keys and table aliases used throughout the module.
-SEPARATOR = "_"
+SEPARATOR = "-"
 
 def make_table_key(object_name: str, record_type_name: str) -> str:
     return f'{object_name}{SEPARATOR}{record_type_name}'

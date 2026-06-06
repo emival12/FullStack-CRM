@@ -58,7 +58,7 @@ export default function DynamicForm({
           defaultValue={
             editability === "all"
               ? info.reference_field === "record_type_name"
-                ? tableKey?.split("_")[1]
+                ? tableKey?.split("-")[1]
                 : null
               : info?.value
           }
@@ -127,7 +127,7 @@ export default function DynamicForm({
 
   const get_checkbox: FieldRenderFunction = (key, info) => {
     const disabled = isDisabled(editability, info);
-    const required = Boolean(info.is_required) && disabled;
+    const required = Boolean(info.is_required) && !disabled;
     return (
       <>
         <span className="ms-2">

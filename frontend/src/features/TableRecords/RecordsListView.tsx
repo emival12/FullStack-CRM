@@ -17,13 +17,14 @@ import DynamicRecordsList from "components/dynamicUI/DynamicRecordsList/DynamicR
 const getDisplayTitle = (key: string) => {
   if (!key) return "";
 
-  const splittedKey = key.split("_");
-  const recordTypeName = splittedKey.pop() || "master";
-  const tableName = splittedKey.join(" ");
+  const splittedKey = key.split("-");
+  const recordTypeName = splittedKey[1] || "master";
+  const tableName = splittedKey[0];
 
-  const title =
+  let title =
     recordTypeName.toLowerCase() !== "master" ? recordTypeName : tableName;
 
+  title = title.replaceAll("_", " ");
   return title.charAt(0)?.toUpperCase() + title.slice(1);
 };
 
