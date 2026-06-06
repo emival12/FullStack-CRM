@@ -1,4 +1,3 @@
-import "App.css";
 import type { MissingPageProps } from "./MissingPage.types";
 import { useLabels } from "context/Label/Label";
 

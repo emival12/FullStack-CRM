@@ -1,4 +1,3 @@
-import "App.css";
 import { Spinner } from "react-bootstrap";
 
 import { useLabels } from "context/Label/Label";

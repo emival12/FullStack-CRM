@@ -1,7 +1,6 @@
 import { Navbar, Nav, Container } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
-import "App.css";
 import { PATH_DATABASE, PATH_IMPORT, PATH_SETUP } from "config/K";
 import { useAuth } from "context/Auth/Auth";
 import { useLabels } from "context/Label/Label";
