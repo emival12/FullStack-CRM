@@ -95,12 +95,10 @@ export default function MassiveImport(): React.ReactElement | null {
         <Col>
           <DynamicForm
             fields={fieldStructure}
-            validated={false}
             onSubmit={handleSubmit(onSubmit)}
             errors={errors}
             register={register}
-            isNewForm={false}
-            isEdit={true}
+            editability="byField"
           />
         </Col>
         <Col>

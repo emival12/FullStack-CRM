@@ -79,12 +79,11 @@ export default function NewRecord({
     return (
       <DynamicForm
         fields={fields}
-        validated={false}
         onSubmit={handleSubmit(onSubmit)}
         tableKey={tableKey}
         errors={errors}
         register={register}
-        isNewForm={true}
+        editability="all"
       />
     );
   };

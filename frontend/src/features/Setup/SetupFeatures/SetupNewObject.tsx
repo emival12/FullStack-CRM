@@ -79,12 +79,10 @@ export default function SetupNewObject(): React.ReactElement {
       {showNewForm ? (
         <DynamicForm
           fields={NEW_OBJECT_FIELD_STRUCTURE}
-          validated={false}
           onSubmit={handleSubmit(onSubmit)}
           errors={errors}
           register={register}
-          isNewForm={false}
-          isEdit={true}
+          editability="byField"
         />
       ) : null}
     </>

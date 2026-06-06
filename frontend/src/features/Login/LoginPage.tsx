@@ -51,12 +51,10 @@ export default function LoginPage(): React.ReactElement {
           <Col>
             <DynamicForm
               fields={LOGIN_FIELD_STRUCTURE}
-              validated={false}
               onSubmit={handleSubmit(onSubmit)}
               errors={errors}
               register={register}
-              isNewForm={false}
-              isEdit={true}
+              editability="byField"
             />
             <div className="d-flex justify-content-center pt-3">
               <Button

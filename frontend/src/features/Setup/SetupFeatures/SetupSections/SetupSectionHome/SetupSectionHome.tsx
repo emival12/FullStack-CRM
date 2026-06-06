@@ -117,11 +117,10 @@ export default function SetupSectionHome({
       />
       <DynamicForm
         fields={HOME_OBJECT_FIELD_STRUCTURE}
-        validated={false}
         onSubmit={handleSubmit(onSubmit)}
         errors={errors}
         register={register}
-        isEdit={isEdit}
+        editability={isEdit ? "byField" : "none"}
       />
     </>
   );

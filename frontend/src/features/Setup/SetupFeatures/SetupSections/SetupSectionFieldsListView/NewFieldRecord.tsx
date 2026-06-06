@@ -121,13 +121,11 @@ export default function NewFieldRecord({
     return (
       <DynamicForm
         fields={fields}
-        validated={false}
         onSubmit={handleSubmit(onSubmit)}
         tableKey={tableKey}
         errors={errors}
         register={register}
-        isNewForm={false}
-        isEdit={true}
+        editability="byField"
       />
     );
   };

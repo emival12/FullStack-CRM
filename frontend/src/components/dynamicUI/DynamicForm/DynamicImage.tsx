@@ -12,6 +12,7 @@ import type { DynamicImageProps } from "./DynamicForm.types";
 import { FieldType } from "types/field.types";
 import { useLabels } from "context/Label/Label";
 import { DIRECT_ENDPOINTS } from "api/endpoints";
+import { isDisabled } from "./helpers";
 
 /**
  * Shows an image with his name
@@ -19,10 +20,9 @@ import { DIRECT_ENDPOINTS } from "api/endpoints";
 export default function DynamicImage({
   fieldKey,
   info,
-  isNewForm = undefined,
-  isEdit,
   errors,
   register,
+  editability,
 }: DynamicImageProps): React.ReactElement {
   const { getLabel } = useLabels();
   const [imgError, setImgError] = useState(false);
@@ -62,8 +62,8 @@ export default function DynamicImage({
             <Form.Control
               type={FieldType.TEXT}
               required={Boolean(info.is_required)}
-              defaultValue={isNewForm ? null : info?.value}
-              disabled={isNewForm ? false : !info.is_editable || !isEdit}
+              defaultValue={info?.value}
+              disabled={isDisabled(editability, info)}
               isInvalid={!!errors[fieldKey]}
               {...register(fieldKey, {
                 required: {

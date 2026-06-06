@@ -143,13 +143,11 @@ export default function RecordDetail(): React.ReactElement | null {
           />
           <DynamicForm
             fields={fields.field_structure}
-            validated={false}
             onSubmit={handleSubmit(onSubmit)}
             tableKey={tableKey}
             errors={errors}
             register={register}
-            isNewForm={false}
-            isEdit={isEdit}
+            editability={isEdit ? "byField" : "none"}
           />
         </Tab>
         {fields.related_list.length > 0 ? (

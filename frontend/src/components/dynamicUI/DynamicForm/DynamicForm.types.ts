@@ -5,12 +5,11 @@ import type {
 } from "react-hook-form";
 import { BaseFieldInfo, MetadataFieldStructure } from "types/field.types";
 
+export type Editability = "all" | "byField" | "none";
+
 export interface DynamicFormProps {
   /** Fields to show with their structure */
   fields: MetadataFieldStructure;
-
-  /** Flag to show or hide the validation */
-  validated: boolean;
 
   /** Function to use on submit */
   onSubmit: React.SubmitEventHandler<HTMLFormElement>;
@@ -24,11 +23,8 @@ export interface DynamicFormProps {
   /** Function to register the form element (standard of react-hook-form) */
   register: UseFormRegister<FieldValues>;
 
-  /** Flag to understand if the form is and edit or new record form */
-  isNewForm?: boolean;
-
-  /** Flag to understand if is in view or edit mode */
-  isEdit?: boolean;
+  /** Editability policy applied to the fields */
+  editability: Editability;
 }
 
 export type FieldRenderFunction = (
@@ -43,15 +39,12 @@ export interface DynamicImageProps {
   /** Object with all the information of the field */
   info: BaseFieldInfo;
 
-  /** Flag to understand if the form is and edit or new record form */
-  isNewForm?: boolean;
-
-  /** Flag to understand if is in view or edit mode */
-  isEdit: boolean;
-
   /** Collection of errors messages (standard of react-hook-form) */
   errors: FieldErrors<FieldValues>;
 
   /** Function to register the form element (standard of react-hook-form) */
   register: UseFormRegister<FieldValues>;
+
+  /** Editability policy applied to the fields */
+  editability: Editability;
 }

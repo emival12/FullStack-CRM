@@ -12,6 +12,7 @@ import {
   FieldOptionRadio,
 } from "types/field.types";
 import { useLabels } from "context/Label/Label";
+import { isDisabled } from "./helpers";
 
 const isLookupOptionArray = (
   arr: (FieldOptionRadio | FieldOptionLookup)[],
@@ -26,13 +27,11 @@ const isRadioOptionArray = (
  */
 export default function DynamicForm({
   fields,
-  validated,
   onSubmit,
   tableKey = undefined,
   errors,
   register,
-  isNewForm = undefined,
-  isEdit = undefined,
+  editability,
 }: DynamicFormProps): React.ReactElement {
   const { getLabel } = useLabels();
 
@@ -57,16 +56,16 @@ export default function DynamicForm({
       <>
         <Form.Select
           defaultValue={
-            isNewForm
+            editability === "all"
               ? info.reference_field === "record_type_name"
                 ? tableKey?.split("_")[1]
                 : null
               : info?.value
           }
           disabled={
-            isNewForm
+            editability === "all"
               ? info.reference_field === "record_type_name"
-              : !info.is_editable || !isEdit
+              : isDisabled(editability, info)
           }
           isInvalid={!!errors[key]} // !! means if the object exist writes true otherwise false
           {...register(key, {
@@ -105,7 +104,7 @@ export default function DynamicForm({
                 inline
                 type={info.field_type as any}
                 required={Boolean(info.is_required)}
-                disabled={isNewForm ? false : !info.is_editable || !isEdit}
+                disabled={isDisabled(editability, info)}
                 id={opt.option_key}
                 label={opt.option_label}
                 value={opt.option_key}
@@ -127,8 +126,8 @@ export default function DynamicForm({
   };
 
   const get_checkbox: FieldRenderFunction = (key, info) => {
-    const disabled = isNewForm ? false : !info.is_editable || !isEdit;
-    const required = Boolean(info.is_required) && !disabled;
+    const disabled = isDisabled(editability, info);
+    const required = Boolean(info.is_required) && disabled;
     return (
       <>
         <span className="ms-2">
@@ -162,8 +161,8 @@ export default function DynamicForm({
           type={info.field_type}
           as={info?.is_textarea ? (TextareaAutosize as any) : undefined}
           required={Boolean(info.is_required)}
-          defaultValue={isNewForm ? null : info?.value}
-          disabled={isNewForm ? false : !info.is_editable || !isEdit}
+          defaultValue={info?.value}
+          disabled={isDisabled(editability, info)}
           isInvalid={!!errors[key]}
           step={
             info.numeric_scale
@@ -219,17 +218,13 @@ export default function DynamicForm({
   };
 
   return (
-    <Form
-      id="recordDetailForm"
-      noValidate
-      validated={validated}
-      onSubmit={onSubmit}
-    >
+    <Form id="recordDetailForm" noValidate onSubmit={onSubmit}>
       {Object.entries(fields).map(([key, info]) => {
         const isFloatingNotAllowed =
           info.field_type === FieldType.RADIO ||
           info.field_type === FieldType.CHECKBOX;
         if (isFloatingNotAllowed) {
+          const disabled = isDisabled(editability, info);
           return (
             <Form.Group
               key={key}
@@ -237,7 +232,7 @@ export default function DynamicForm({
                 info.field_type === FieldType.RADIO ? "mb-3" : "mb-3 d-flex"
               }
             >
-              <Form.Label>
+              <Form.Label className={disabled ? "text-secondary" : undefined}>
                 {key.replaceAll("_", " ") + (info.is_required ? " *" : "")}
               </Form.Label>
               {renderField(key, info)}
@@ -252,10 +247,9 @@ export default function DynamicForm({
               key={key}
               fieldKey={key}
               info={info}
-              isNewForm={isNewForm}
-              isEdit={Boolean(isEdit)}
               errors={errors}
               register={register}
+              editability={editability}
             />
           );
         }
