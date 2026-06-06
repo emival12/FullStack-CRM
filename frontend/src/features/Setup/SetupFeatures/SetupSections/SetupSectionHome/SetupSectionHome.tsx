@@ -4,7 +4,7 @@ import { useOutletContext } from "react-router-dom";
 
 import { SetupOutletContext } from "types/routing.types";
 import { SetupSectionBaseProps } from "features/Setup/SetupFeatures/SetupSections/SetupSections.types";
-import { MetadataFieldStructure } from "types/field.types";
+import { ObjectDefinitionItem } from "types/object.types";
 import { ApiError, CRUDResult } from "api/types";
 import { PATH_SETUP } from "config/K";
 import { ENDPOINTS } from "api/endpoints";
@@ -31,11 +31,11 @@ export default function SetupSectionHome({
   const { getLabel } = useLabels();
   const { showErrorToast } = useFeedback();
   const {
-    data: fields,
+    data: objectData,
     loading: loadingForm,
     error,
     refetch,
-  } = useApiQuery<MetadataFieldStructure>(
+  } = useApiQuery<ObjectDefinitionItem>(
     ENDPOINTS.setup.object.definition(tableKey ?? ""),
     { enabled: Boolean(tableKey) },
   );
@@ -44,11 +44,11 @@ export default function SetupSectionHome({
     CRUDResult
   >(ENDPOINTS.setup.object.update, "post");
 
-  const formValues = fields
+  const formValues = objectData
     ? Object.fromEntries(
-        Object.entries(HOME_OBJECT_FIELD_STRUCTURE).map(([key, info]) => [
+        Object.entries(HOME_OBJECT_FIELD_STRUCTURE).map(([key]) => [
           key,
-          fields[key.toLowerCase()],
+          objectData[key.toLowerCase() as keyof ObjectDefinitionItem],
         ]),
       )
     : undefined;
@@ -68,11 +68,13 @@ export default function SetupSectionHome({
 
   //Method fired when the button Save is pressed
   const onSubmit = async (data: Record<string, any>) => {
-    if (!fields || !tableKey || !sectionKey) return;
+    if (!objectData || !tableKey || !sectionKey) return;
 
     let modified_data: Record<string, any> = {};
     for (const [key, value] of Object.entries(data)) {
-      if (fields[key.toLowerCase()] !== value) {
+      if (
+        objectData[key.toLowerCase() as keyof ObjectDefinitionItem] !== value
+      ) {
         modified_data[key] = value;
       }
     }
@@ -95,7 +97,7 @@ export default function SetupSectionHome({
 
   if (loading) return <LoadingScreen />;
 
-  if (!fields) return null;
+  if (!objectData) return null;
 
   return (
     <>
