@@ -71,9 +71,9 @@ export default function SetupSectionHome({
     if (!fields || !tableKey || !sectionKey) return;
 
     let modified_data: Record<string, any> = {};
-    for (const key in data) {
-      if (fields[key.toLowerCase()] !== data[key]) {
-        modified_data[key] = data[key];
+    for (const [key, value] of Object.entries(data)) {
+      if (fields[key.toLowerCase()] !== value) {
+        modified_data[key] = value;
       }
     }
 

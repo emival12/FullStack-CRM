@@ -79,13 +79,13 @@ export default function RecordDetail(): React.ReactElement | null {
 
     let modified_data: Record<string, any> = {};
     let new_PK = null;
-    for (const key in fields.field_structure) {
-      if (fields?.field_structure[key]?.value !== data[key]) {
+    for (const [key, info] of Object.entries(fields.field_structure)) {
+      if (info?.value !== data[key]) {
         modified_data[key] = data[key];
-        new_PK =
-          key.toLowerCase() === fields.primary_key_name.toLowerCase()
-            ? data[key]
-            : null;
+
+        if (key.toLowerCase() === fields.primary_key_name.toLowerCase()) {
+          new_PK = data[key];
+        }
       }
     }
 
@@ -100,7 +100,7 @@ export default function RecordDetail(): React.ReactElement | null {
       try {
         await mutate(payload);
         setIsEdit(false);
-        if (new_PK) {
+        if (new_PK !== null) {
           navigate(PATH_DATABASE + "/" + tableKey + "/" + new_PK);
         } else {
           refetch();
