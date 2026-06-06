@@ -29,7 +29,6 @@ export default function NewFieldRecord({
     CRUDResult
   >(ENDPOINTS.setup.fields.new(tableKey ?? ""), "post");
   const {
-    formsByType,
     selectionForm,
     loading: loadingFieldType,
     getSpecificFormByType,

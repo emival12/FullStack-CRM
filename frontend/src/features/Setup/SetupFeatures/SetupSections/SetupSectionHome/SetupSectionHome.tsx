@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useOutletContext } from "react-router-dom";
 
-import { SetupSectionBaseProps } from "../SetupSections.types";
 import { SetupOutletContext } from "types/routing.types";
+import { SetupSectionBaseProps } from "features/Setup/SetupFeatures/SetupSections/SetupSections.types";
 import { MetadataFieldStructure } from "types/field.types";
 import { ApiError, CRUDResult } from "api/types";
 import { PATH_SETUP } from "config/K";

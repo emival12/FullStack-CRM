@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { SetupSectionCompleteProps } from "../SetupSections.types";
 import { SetupFieldStructure } from "./SetupSectionFieldsEdit.types";
+import { SetupSectionCompleteProps } from "features/Setup/SetupFeatures/SetupSections/SetupSections.types";
 import { FieldType } from "types/field.types";
 import { ApiError } from "api/types";
 import { ERROR_MISSING_RECORD, PATH_SETUP } from "config/K";
