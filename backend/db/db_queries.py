@@ -1065,16 +1065,19 @@ def group_object_definition_by_category(tables: list[dict]) -> dict[str, list]:
             tables (list[dict]): Records from get_object_definition_records_join_rt().
 
         Returns:
-            dict[str, list]: Keys are capitalized category names. Each value is a list where:
-                - Single-record-type objects appear directly as dicts.
-                - Multi-record-type objects appear as {object_name: [record_type_dicts...]}.
+            dict[str, list]: Keys are capitalized category names. Each value is a list of
+                discriminated entries, each tagged with a "type" field:
+                - Leaf (single-record-type object or a record type of a group):
+                  {"type": "leaf", ...object definition fields}.
+                - Group (multi-record-type object):
+                  {"type": "group", "label": object_name, "children": [leaf, ...]}.
     """
 
     # Groups object definitions by object name
     map_object_RT = {}
     for table in tables:
         obj_name = table[SystemFieldName_OD.OBJECT_NAME].capitalize()
-        map_object_RT.setdefault(obj_name, []).append(table)
+        map_object_RT.setdefault(obj_name, []).append({"type": "leaf", **table})
 
     processed_objects = set()
     grouped_structure = {}
@@ -1088,7 +1091,7 @@ def group_object_definition_by_category(tables: list[dict]) -> dict[str, list]:
             if is_single_rt:
                 grouped_structure[cat].extend(map_object_RT[obj_name])
             else:
-                grouped_structure[cat].append({obj_name: map_object_RT[obj_name]})
+                grouped_structure[cat].append({"type": "group", "label": obj_name, "children": map_object_RT[obj_name]})
 
             processed_objects.add(obj_name)
 

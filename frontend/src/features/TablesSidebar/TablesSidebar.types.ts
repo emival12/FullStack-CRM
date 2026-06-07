@@ -6,10 +6,18 @@ export interface TablesSidebarProps {
 }
 
 export interface SidebarItem extends ObjectDefinitionItem {
+  type: "leaf";
   record_type_name: string;
+  is_active: 0 | 1;
 }
 
-export type SidebarEntry = SidebarItem | Record<string, SidebarEntry[]>;
+export interface SidebarGroup {
+  type: "group";
+  label: string;
+  children: SidebarItem[];
+}
+
+export type SidebarEntry = SidebarItem | SidebarGroup;
 export type SidebarStructure = Record<string, SidebarEntry[]>;
 
 export interface TablesSidebarAccordionProps {

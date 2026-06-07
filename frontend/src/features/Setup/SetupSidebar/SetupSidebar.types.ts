@@ -1,5 +1,5 @@
 import { Sections } from "types/routing.types";
-import { SidebarItem } from "features/TablesSidebar/TablesSidebar.types";
+import { ObjectDefinitionItem } from "types/object.types";
 
 export interface SetupSidebarProps {
   /** Key of the table selected */
@@ -12,4 +12,4 @@ export interface SetupSidebarProps {
   refreshSidebar: boolean;
 }
 
-export type PlainSidebarStructure = SidebarItem[];
+export type PlainSidebarStructure = ObjectDefinitionItem[];

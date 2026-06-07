@@ -1,15 +1,11 @@
 import { Accordion } from "react-bootstrap";
 
-import type {
-  SidebarItem,
-  SidebarStructure,
-  TablesSidebarAccordionProps,
-} from "./TablesSidebar.types";
+import type { TablesSidebarAccordionProps } from "./TablesSidebar.types";
 import TablesSidebarList from "./TablesSidebarList";
 
 /**
- * Shows a series of accordion, continues to shows accordion until it reach the deepes level
- * On the deepest level there is a list of options, each option is a tables
+ * Renders a tree of nested accordions, one level per group, recursing until a leaf is reached.
+ * Each entry is discriminated on its `type`: a "group" recurses, a "leaf" renders as a selectable table.
  */
 export default function TablesSidebarAccordion({
   tablesData,
@@ -18,17 +14,16 @@ export default function TablesSidebarAccordion({
 }: TablesSidebarAccordionProps): React.ReactElement {
   return (
     <Accordion alwaysOpen>
-      {Object.entries(tablesData).map(([key, value]) => (
+      {Object.entries(tablesData).map(([key, values]) => (
         <Accordion.Item eventKey={key} key={key}>
           <Accordion.Header>{key}</Accordion.Header>
           <Accordion.Body>
-            {Object.entries(value).map(([idx, item]) => {
-              const keys = Object.keys(item);
-              if (keys.length === 1) {
+            {values.map((item) => {
+              if (item.type === "group") {
                 return (
                   <TablesSidebarAccordion
-                    key={idx}
-                    tablesData={item as SidebarStructure}
+                    key={item.label}
+                    tablesData={{ [item.label]: item.children }}
                     tableKey={tableKey}
                     toggleSidebar={toggleSidebar}
                   />
@@ -37,8 +32,8 @@ export default function TablesSidebarAccordion({
 
               return (
                 <TablesSidebarList
-                  key={idx}
-                  tableItem={item as SidebarItem}
+                  key={item.key}
+                  tableItem={item}
                   tableKey={tableKey}
                   toggleSidebar={toggleSidebar}
                 />
