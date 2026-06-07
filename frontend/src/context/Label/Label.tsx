@@ -15,6 +15,7 @@ import type {
 } from "./Label.types";
 import { ENDPOINTS } from "api/endpoints";
 import client from "api/client";
+import { ApiError } from "api/types";
 
 //Creation of context (place where i can save things and avoid the props)
 const LabelContext = createContext<LabelContextType | null>(null);
@@ -30,11 +31,22 @@ export const useLabels = () => {
 export default function LabelProvider({ children }: LabelProviderProps) {
   const browserLang = navigator.language;
   const [translationJson, setTranslationJson] = useState<TranslationData>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     client
       .get(ENDPOINTS.config.translations(browserLang))
-      .then((res) => setTranslationJson(res.data));
+      .then((res) => setTranslationJson(res.data))
+      .catch((err) => {
+        const apiError = err as ApiError;
+        console.error(
+          "Translation file retrieve failed:",
+          apiError.errorCode,
+          apiError.errorData,
+        );
+      })
+      .finally(() => setLoading(false));
   }, [browserLang]);
 
   const getLabel: GetLabelFunc = useCallback(
@@ -64,7 +76,7 @@ export default function LabelProvider({ children }: LabelProviderProps) {
     [translationJson],
   );
 
-  const value = useMemo(() => ({ getLabel }), [getLabel]);
+  const value = useMemo(() => ({ getLabel, loading }), [getLabel, loading]);
   return (
     <LabelContext.Provider value={value}>{children}</LabelContext.Provider>
   );

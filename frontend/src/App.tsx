@@ -19,14 +19,14 @@ import NavBar from "./components/NavBar/NavBar";
 import ErrorBoundary from "components/ErrorBoundary/ErrorBoundary";
 
 function App() {
-  const { getLabel } = useLabels();
-  const { user, loading } = useAuth();
+  const { getLabel, loading: loadingLabels } = useLabels();
+  const { user, loading: loadingAuth } = useAuth();
   const location = useLocation();
 
-  if (loading)
+  if (loadingAuth || loadingLabels)
     return (
       <div className="min-vh-100 d-flex flex-column">
-        <LoadingScreen />
+        <LoadingScreen compact={true} />
       </div>
     );
 

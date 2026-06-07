@@ -5,6 +5,7 @@ export type GetLabelFunc = (
 
 export interface LabelContextType {
   getLabel: GetLabelFunc;
+  loading: boolean;
 }
 
 export interface LabelProviderProps {
