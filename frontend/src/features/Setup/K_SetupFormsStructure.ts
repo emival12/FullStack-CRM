@@ -91,6 +91,10 @@ export const NEW_RADIO_FIELD_OBJECT_STRUCTURE: MetadataFieldStructure = {
 
 export const NEW_CHECKBOX_FIELD_OBJECT_STRUCTURE: MetadataFieldStructure = {
   ...BASE_FIELD_OBJECT_STRUCTURE,
+  is_required: {
+    ...IS_REQUIRED_BASE,
+    is_editable: 0,
+  },
 };
 
 export const NEW_DATE_FIELD_OBJECT_STRUCTURE: MetadataFieldStructure = {

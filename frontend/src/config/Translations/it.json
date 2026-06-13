@@ -7,7 +7,9 @@
     "INPUT_TABLE_NAME_NOT_FOUND": "La tabella indicata non esiste",
     "INPUT_RECORD_ID_NOT_FOUND": "Il record indicato non esiste",
     "BROKEN_FORMULA": "Si è verificato un errore nel calcolo della formula \"{{field_name}}\". Contatta un admin",
-    "DUPLICATE_PK": "Esiste già un record con questa chiave"
+    "DUPLICATE_PK": "Esiste già un record con questa chiave",
+    "OBJECT_REFERENCED_BY_LOOKUP": "Conflitti trovati, per poter eliminare la tabella è necessario eliminare prima i seguenti campi:\n[ {{fields}} ]",
+    "ROLLUP_DETAIL_NO_LOOKUP": "Conflitto trovato, per poter creare una rollup è necessario che esista una lookup da {{reference_object}} a {{object_name}}"
   },
   "TOAST": {
     "ERROR_TITLE": "Errore",

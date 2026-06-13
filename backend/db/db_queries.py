@@ -50,10 +50,10 @@ def make_options_key_from_row(row: dict) -> str:
     )
 
 def make_rollup_key_from_row(row: dict) -> str:
-    object_col = SystemFieldName_RLD.MASTER_OBJECT_NAME             if SystemFieldName_RLD.MASTER_OBJECT_NAME in row        else SystemFieldName_FD.OBJECT_NAME
-    record_type_col = SystemFieldName_RLD.MASTER_RECORD_TYPE_NAME   if SystemFieldName_RLD.MASTER_RECORD_TYPE_NAME in row   else SystemFieldName_FD.RECORD_TYPE_NAME
-    field_col = SystemFieldName_RLD.MASTER_FIELD_NAME               if SystemFieldName_RLD.MASTER_FIELD_NAME in row         else SystemFieldName_FD.FIELD_NAME
-    reference_object_col = SystemFieldName_RLD.DETAIL_OBJECT_NAME   if SystemFieldName_RLD.DETAIL_OBJECT_NAME in row        else SystemFieldName_FD.REFERENCE_OBJECT
+    object_col = SystemFieldName_ROLLD.MASTER_OBJECT_NAME             if SystemFieldName_ROLLD.MASTER_OBJECT_NAME in row        else SystemFieldName_FD.OBJECT_NAME
+    record_type_col = SystemFieldName_ROLLD.MASTER_RECORD_TYPE_NAME   if SystemFieldName_ROLLD.MASTER_RECORD_TYPE_NAME in row   else SystemFieldName_FD.RECORD_TYPE_NAME
+    field_col = SystemFieldName_ROLLD.MASTER_FIELD_NAME               if SystemFieldName_ROLLD.MASTER_FIELD_NAME in row         else SystemFieldName_FD.FIELD_NAME
+    reference_object_col = SystemFieldName_ROLLD.DETAIL_OBJECT_NAME   if SystemFieldName_ROLLD.DETAIL_OBJECT_NAME in row        else SystemFieldName_FD.REFERENCE_OBJECT
 
     return make_rollup_key(
         row[object_col], 
@@ -683,6 +683,49 @@ def get_rollup_definitions_by_detail_object(cursor, table_name: str) -> list[dic
 
     return cursor.fetchall()
 
+def get_fields_referencing_object(cursor, table_name:str) -> list[dict]:
+    """
+        Retrieve the lookup/picklist fields of other objects that reference the given object.
+
+        Used as a pre-check before deleting an object: the object cannot be dropped while a
+        foreign key from another object's lookup/picklist still points to it. Self-references
+        are excluded, since dropping the table also removes its own constraints.
+
+        Args:
+            cursor (MySQLCursor): Database cursor used to execute SQL queries.
+            table_name (str): Name of the referenced object to find incoming references to.
+
+        Returns:
+            list[dict]: One row per referencing field (object_name, field_name and related metadata).
+                Empty when no other object references the given one.
+
+        Raises:
+            HTTPException 500: On any database error.
+    """
+
+    fd_table_name = "field_definition"
+    fd_table_alias = QueryBuilder.alias(fd_table_name)
+    select_fields = [
+        f"{fd_table_alias}.object_name",
+        f"{fd_table_alias}.record_type_name",
+        f"{fd_table_alias}.field_name",
+    ]
+
+    try:
+        query, params = (
+            QueryBuilder(fd_table_name, select_fields)
+            .begin_filter()
+                .add(f"{fd_table_alias}.reference_object", QueryBuilderComparisonOperator.EQUAL, table_name)
+                .add(f"{fd_table_alias}.object_name", QueryBuilderComparisonOperator.NOT_EQUAL, table_name)
+                .add(f"{fd_table_alias}.field_type", QueryBuilderComparisonOperator.IN, [FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value])
+            .end_filter()
+            .get_query()
+        )
+        cursor.execute(query, params)
+    except Exception as e:
+        raise_server_exception(logger, "DB query failed", query=query)
+
+    return cursor.fetchall()
 
 ########## START    - Core SystemObjects queries -> Filtred by field Type ##########
 # Same pattern as above, but methods receive fields already pre-filtered by type (rollup, radio, etc.).
@@ -999,7 +1042,7 @@ def get_records_from_table(cursor, table_name: str, record_type_name: str, field
         Returns:
             list[dict]: Query results as a list of row dictionaries
     """
-    (select_fields, joins, group_clause) = calculate_query_clause(cursor, table_name, fields)
+    (select_fields, joins) = calculate_query_clause(cursor, table_name, fields)
 
     try:
         table_alias = QueryBuilder.alias(table_name)
@@ -1008,14 +1051,13 @@ def get_records_from_table(cursor, table_name: str, record_type_name: str, field
         ]
 
         qb = QueryBuilder(table_name, select_fields)
-        for (join_type, join_table, join_conditions) in joins:
-            qb.add_join(join_type, join_table, join_conditions)
+        for (join_type, join_table, join_conditions, alias) in joins:
+            qb.add_join(join_type, join_table, join_conditions, alias)
         
         query, params = (qb
             .begin_filter()
                 .add(f"{table_alias}.{StandardObjectField.RECORD_TYPE_NAME}", QueryBuilderComparisonOperator.EQUAL, record_type_name)
             .end_filter()
-            .group_by(group_clause)
             .order_by(order_by)
             .get_query()
         )
@@ -1120,9 +1162,12 @@ def get_fields_with_label(fields: list[dict] | list[str]) -> list[dict]:
 
     return new_fields
 
-def calculate_query_clause(cursor, table_name: str, fields: list[dict], map_object_primary_key_names: dict | None = None) -> tuple[list[str], list[str], list[str]]:
+def calculate_query_clause(cursor, table_name: str, fields: list[dict], map_object_primary_key_names: dict | None = None) -> tuple[list[str], list[str]]:
     """
-        Build the SELECT fields, JOIN clauses, and GROUP BY fields from field metadata.
+        Build the SELECT field expressions and JOIN clauses from field metadata.
+
+        radio / picklist / lookup fields produce a JOIN to resolve the stored key into a label;
+        every other field (checkbox, rollup, plain types) is selected directly from the main table.
 
         Args:
             cursor (MySQLCursor): Database cursor used to execute SQL queries
@@ -1132,10 +1177,9 @@ def calculate_query_clause(cursor, table_name: str, fields: list[dict], map_obje
                 fetched automatically if not provided
 
         Returns:
-            tuple[list[str], list[str], list[str]]: A 3-element tuple containing:
+            tuple[list[str], list[str]]: A 2-element tuple containing:
                 - list[str]: SELECT field expressions
-                - list[str]: JOIN clauses in QueryBuilder format
-                - list[str]: Fields for the GROUP BY clause (empty if no aggregations)
+                - list[str]: JOIN clauses in QueryBuilder format (each a 4-tuple with its field-scoped alias)
     """
 
     ########### START - PREPROCESS
@@ -1156,15 +1200,14 @@ def calculate_query_clause(cursor, table_name: str, fields: list[dict], map_obje
 
     select_fields = []
     joins = []
-    exclude_from_group_clause = []
     table_name_alias = QueryBuilder.alias(table_name)
 
-    # For each field, build the appropriate SELECT expression and JOIN clause based on the field type.
-    # Fields that require joining another table (radio, checkbox, picklist, lookup, rollup) produce a JOIN clause alongside their SELECT expression. 
-    # Plain fields are selected directly from the main table.
+    # For each field, build the SELECT expression based on its type.
+    # radio / picklist / lookup join another table to resolve the stored key into a human-readable label.
+    # Every other field (checkbox, rollup, plain types) is selected directly from the main table as its raw stored value.
     for row in fields:
         field_type = row[SystemFieldName_FD.FIELD_TYPE]
-        if field_type in (FieldTypes.RADIO.value, FieldTypes.CHECKBOX.value):
+        if field_type == FieldTypes.RADIO.value:
             # Join the shared radio_checkbox_options table to resolve the stored key into a human-readable label
             (select_clause, join_clause) = QueryBuilder.build_join_clause(
                 table_name,
@@ -1189,53 +1232,11 @@ def calculate_query_clause(cursor, table_name: str, fields: list[dict], map_obje
             )
             select_fields.append(select_clause)
             joins.append(join_clause)
-        elif field_type == FieldTypes.ROLLUP.value:
-            # Join the detail table and apply the aggregation function (SUM, COUNT, etc.) to compute the rollup value.
-            rollup_definition = map_record_info_rollup_record.get(make_rollup_key_from_row(row))
-            (select_clause, join_clause) = QueryBuilder.build_join_clause_aggregated(
-                table_name,
-                rollup_definition[SystemFieldName_ROLLD.MASTER_PRIMARY_KEY],
-                row[SystemFieldName_FD.REFERENCE_OBJECT],
-                rollup_definition[SystemFieldName_ROLLD.DETAIL_JOIN_KEY],
-                rollup_definition[SystemFieldName_ROLLD.AGGREGATION_FUNCTION],
-                rollup_definition[SystemFieldName_ROLLD.DETAIL_FIELD_NAME],
-                rollup_definition[SystemFieldName_ROLLD.MASTER_FIELD_NAME]
-            )
-            select_fields.append(select_clause)
-            joins.append(join_clause)
-
-            # The aggregated expression is tracked separately so it can be excluded from the GROUP BY clause.
-            exclude_from_group_clause.append(select_clause)
         else:
             # Plain field: select directly from the main table
             select_fields.append(f"{table_name_alias}.{row[SystemFieldName_FD.FIELD_NAME]}")
 
-    # GROUP BY is only needed when at least one rollup aggregation is present
-    group_clause = build_group_by_clause(select_fields, exclude_from_group_clause) if exclude_from_group_clause else []
-    return (select_fields, joins, group_clause)
-
-def build_group_by_clause(select_clause: list[str], exclude_from_group_clause: list[str]) -> list[str]:
-    """
-        Build the GROUP BY field list by excluding aggregated fields from the SELECT clause.
-
-        Args:
-            select_clause (list[str]): Full list of SELECT field expressions
-            exclude_from_group_clause (list[str]): SELECT expressions to exclude (aggregated fields)
-
-        Returns:
-            list[str]: Field names to use in the GROUP BY clause
-    """
-
-    groups_select = []
-    for f in select_clause:
-        if f not in exclude_from_group_clause:
-            parts = f.split()          # ex: account__tab.name niceName
-            if len(parts) > 1:
-                f = parts[0]           # if have an alias take only the real name
-
-            groups_select.append(f.strip())
-
-    return groups_select
+    return (select_fields, joins)
 
 def get_next_sort_order(cursor, sys_object_name: str, raw_filters: list[str], raw_params: list) -> int:
 
@@ -1262,7 +1263,7 @@ def get_next_sort_order(cursor, sys_object_name: str, raw_filters: list[str], ra
 
 
 
-def get_lookup_field_definition(cursor, table_name: str, raw_filters: list[str], raw_params: list) -> int:
+def get_lookup_field_definition(cursor, table_name: str, raw_filters: list[str], raw_params: list) -> list[dict]:
 
     table_alias = QueryBuilder.alias(table_name)
     select_fields = [ f"{table_alias}.field_name" ]
@@ -1279,8 +1280,4 @@ def get_lookup_field_definition(cursor, table_name: str, raw_filters: list[str],
     except Exception as e:
         raise_server_exception(logger, "DB query failed", query=query)
 
-    detail_join_key = cursor.fetchall()
-    if len(detail_join_key) <= 0:
-        raise_server_exception(logger, "Lookup field not found", object_name=table_name)
-
-    return detail_join_key[0]["field_name"]
+    return cursor.fetchall()

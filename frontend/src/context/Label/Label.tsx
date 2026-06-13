@@ -76,7 +76,10 @@ export default function LabelProvider({ children }: LabelProviderProps) {
     [translationJson],
   );
 
-  const value = useMemo(() => ({ getLabel, loading }), [getLabel, loading]);
+  const value = useMemo(
+    () => ({ getLabel, loading, language: browserLang }),
+    [getLabel, loading, browserLang],
+  );
   return (
     <LabelContext.Provider value={value}>{children}</LabelContext.Provider>
   );

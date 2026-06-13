@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { RecordListStructure } from "types/list.types";
 import type {
   DynamicRecordsListProps,
-  FormatDateSimpleFunction,
   RecordCellProps,
 } from "./DynamicRecordsList.types";
 import { NUM_RECORD_TO_SHOW, PATH_DATABASE } from "config/K";
@@ -19,9 +18,8 @@ const RecordCell = ({
   fieldType,
   isPrimaryKey,
   onNavigate,
+  formatterDate,
 }: RecordCellProps) => {
-  let correctFormatDate = formatDateSimple(fieldValue, fieldType);
-
   if (isPrimaryKey) {
     return (
       <td
@@ -33,26 +31,47 @@ const RecordCell = ({
     );
   }
 
-  fieldValue =
-    String(fieldValue) === "false" || String(fieldValue) === "true"
-      ? String(fieldValue)
-      : fieldValue;
-  return <td>{correctFormatDate || fieldValue}</td>;
+  if (fieldValue == null || fieldValue === "") return <td></td>;
+
+  switch (fieldType) {
+    case "date":
+    case "datetime-local":
+      const formatter = formatterDate[fieldType];
+      const date =
+        fieldType === "date"
+          ? new Date(fieldValue + "T00:00:00")
+          : new Date(fieldValue);
+      return <td>{formatter.format(date)}</td>;
+
+    case "checkbox":
+      return fieldValue ? (
+        <td className="text-center">
+          <i className="bi bi-check-lg" />
+        </td>
+      ) : (
+        <td></td>
+      );
+    default:
+      return <td>{fieldValue}</td>;
+  }
 };
 
-const formatDateSimple: FormatDateSimpleFunction = (fieldValue, fieldType) => {
-  if (!fieldValue) return undefined;
+const getFormatterDate = (language: string) => {
+  return new Intl.DateTimeFormat(language, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+};
 
-  if (fieldType === "date") {
-    const dateSplit = fieldValue.toString().split("-");
-    return `${dateSplit[2]}/${dateSplit[1]}/${dateSplit[0]}`;
-  } else if (fieldType === "datetime-local") {
-    const dateTimeSplit = fieldValue.toString().split("T");
-    const dateSplit = dateTimeSplit[0].split("-");
-    return `${dateSplit[2]}/${dateSplit[1]}/${dateSplit[0]} ${dateTimeSplit[1].substring(0, 5)}`;
-  } else {
-    return undefined;
-  }
+const getFormatterDateTime = (language: string) => {
+  return new Intl.DateTimeFormat(language, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 /**
@@ -63,11 +82,16 @@ export default function DynamicRecordsList({
   redirectKey,
   pathRedirect = PATH_DATABASE,
 }: DynamicRecordsListProps): React.ReactElement {
-  const { getLabel } = useLabels();
+  const { getLabel, language } = useLabels();
   const navigate = useNavigate();
 
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const formatterDate = {
+    date: getFormatterDate(language),
+    "datetime-local": getFormatterDateTime(language),
+  };
 
   // Calculate the data filtered by searchTerm
   const filteredData: RecordListStructure = searchTerm
@@ -136,6 +160,7 @@ export default function DynamicRecordsList({
                   onNavigate={(val: string) =>
                     navigate(`${pathRedirect}/${redirectKey}/${val}`)
                   }
+                  formatterDate={formatterDate}
                 />
               ))}
             </tr>

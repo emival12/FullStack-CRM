@@ -176,19 +176,18 @@ def get_related_list_records(cursor, table_name: str, record_id: str, related_li
 
     # Build and execute a query for each related list
     rel_lists = []
-    table_alias = QueryBuilder.alias(table_name)
     for related_list in related_lists:
         child_table_name = related_list[SystemFieldName_RLD.CHILD_OBJECT_NAME]
         child_record_type_name = related_list[SystemFieldName_RLD.CHILD_RECORD_TYPE_NAME]
         table_key = make_table_key_from_row(related_list, SystemFieldName_RLD.CHILD_OBJECT_NAME, SystemFieldName_RLD.CHILD_RECORD_TYPE_NAME)
 
-        # Calculate the join and group clause based on all the fields of the object
+        # Calculate the join clause based on all the fields of the object
         all_fields = dict_all_fields.get(table_key, [])
-        (_, joins, group_clause) = calculate_query_clause(cursor, child_table_name, all_fields, map_object_primary_key_names)
+        (_, joins) = calculate_query_clause(cursor, child_table_name, all_fields, map_object_primary_key_names)
 
         # Calculate the select clause based only on the fields in the layout of the object
         layout_fields = dict_layout_fields.get(table_key, [])
-        (select_fields, _, _) = calculate_query_clause(cursor, child_table_name, layout_fields, map_object_primary_key_names)
+        (select_fields, _) = calculate_query_clause(cursor, child_table_name, layout_fields, map_object_primary_key_names)
 
         # Retrieve the related records
         try:
@@ -198,15 +197,14 @@ def get_related_list_records(cursor, table_name: str, record_id: str, related_li
             ]
 
             qb = QueryBuilder(child_table_name, select_fields)
-            for (join_type, join_table, join_conditions) in joins:
-                qb.add_join(join_type, join_table, join_conditions)
+            for (join_type, join_table, join_conditions, alias) in joins:
+                qb.add_join(join_type, join_table, join_conditions, alias)
             
             query, params = (qb
                 .begin_filter()
                     .add(f"{child_table_alias}.{StandardObjectField.RECORD_TYPE_NAME}", QueryBuilderComparisonOperator.EQUAL, child_record_type_name)
-                    .add(f"{table_alias}.{map_object_primary_key_names.get(table_name)}", QueryBuilderComparisonOperator.EQUAL, record_id)
+                    .add(f"{child_table_alias}.{related_list[SystemFieldName_RLD.CHILD_JOIN_KEY]}", QueryBuilderComparisonOperator.EQUAL, record_id)
                 .end_filter()
-                .group_by(group_clause)
                 .order_by(order_by)
                 .get_query()
             )

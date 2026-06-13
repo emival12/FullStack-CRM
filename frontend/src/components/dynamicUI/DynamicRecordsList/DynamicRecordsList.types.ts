@@ -16,9 +16,5 @@ export interface RecordCellProps {
   fieldType: FieldDefinition["field_type"];
   isPrimaryKey: boolean;
   onNavigate: (val: string) => void;
+  formatterDate: Record<"date" | "datetime-local", Intl.DateTimeFormat>;
 }
-
-export type FormatDateSimpleFunction = (
-  fieldValue: RecordListStructure["records"][number][string],
-  fieldType: FieldDefinition["field_type"],
-) => string | undefined;

@@ -3,7 +3,7 @@ import re
 import logging
 from fastapi import HTTPException
 from core.models import SystemObjects, SystemFieldName_OD, SystemFieldName_FD, SystemFieldName_ROLLD, SystemFieldName_RTD, FieldTypes, StandardObjectField, MASTER_RECORD_TYPE
-from core.exceptions import raise_input_exception, raise_server_exception, log_event
+from core.exceptions import raise_input_exception, raise_server_exception, log_event, ExceptionKind
 from db.db_queries import (
     make_table_key,
     make_options_key_from_row,
@@ -16,7 +16,9 @@ from db.db_queries import (
     get_next_sort_order,
     get_record_layout_definition_fields,
     get_fields_definition,
-    get_rollup_definition_by_master_field
+    get_rollup_definition_by_master_field,
+    get_lookup_field_definition,
+    get_fields_referencing_object
 )
 
 from services.record_crud import get_caller_name, execute_query
@@ -128,7 +130,7 @@ def insert_radio_checkbox_options(cursor, params: list[tuple]) -> None:
 _SQL_LENGTH_RESOLVERS: dict[str, Callable] = {
     FieldTypes.TEXT.value:      lambda length, **_:                         f'VARCHAR ({length})',
     FieldTypes.RADIO.value:     lambda length, **_:                         f'VARCHAR ({length})',
-    FieldTypes.CHECKBOX.value:  lambda length, **_:                         f'VARCHAR ({length})',
+    FieldTypes.CHECKBOX.value:  lambda length, **_:                         f'TINYINT ({length})',
     FieldTypes.FORMULA.value:   lambda length, **_:                         f'VARCHAR ({length})',
     FieldTypes.IMG.value:       lambda length, **_:                         f'VARCHAR ({length})',
     FieldTypes.NUMBER.value:    lambda length, **_:                         f'DECIMAL ({length})',
@@ -288,6 +290,8 @@ def add_column(cursor, object_name: str, column_name: str, field_type: str, fiel
         FOREIGN KEY ({column_name}) REFERENCES {reference_object}({primary_key_reference_object})
         ON DELETE SET NULL
         '''
+    elif field_type == FieldTypes.CHECKBOX.value:
+        constraint = ' NOT NULL DEFAULT 0'
 
     command = f'''
     ALTER TABLE {object_name}
@@ -299,7 +303,7 @@ def delete_column(cursor, table_name: str, column_name: str, field_type: str):
     table_name = verify_keywords(table_name)
     column_name = verify_keywords(column_name)
 
-    constraint = f'''DROP CONSTRAINT fk_{table_name}_{column_name} ''' if field_type in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value) else ""
+    constraint = f'''DROP CONSTRAINT fk_{table_name}_{column_name}, ''' if field_type in (FieldTypes.LOOKUP.value, FieldTypes.PICKLIST.value) else ""
     command = f'''
     ALTER TABLE {table_name}
     {constraint}
@@ -616,6 +620,11 @@ def delete_object_ddl(cursor, table_name: str) -> dict:
         Raises:
             HTTPException: If a database error occurs.
     """
+    
+    lookups = get_fields_referencing_object(cursor, table_name)
+    if lookups:
+        constraint_fields = [ f"{l[SystemFieldName_FD.OBJECT_NAME]}.{l[SystemFieldName_FD.RECORD_TYPE_NAME]}.{l[SystemFieldName_FD.FIELD_NAME]}" for l in lookups]
+        raise_input_exception(409, "OBJECT_REFERENCED_BY_LOOKUP", {"fields": ", ".join(constraint_fields)}, kind=ExceptionKind.BUSINESS_SHARED)
 
     _delete_object_system_metadata(cursor, table_name)
     delete_table(cursor, table_name)
@@ -743,7 +752,7 @@ def _build_field_system_metadata_params(
     rollup_def_params = []
     if field_type == FieldTypes.ROLLUP.value: 
         # Fetch the lookup field on the detail object (reference_object) that points to object_name
-        detail_lookup_field_name = get_lookup_field_definition(                                                                                                                                                         
+        detail_join_key = get_lookup_field_definition(                                                                                                                                                         
             cursor,                                                                                                                                                                                            
             "field_definition",                               
             [
@@ -754,6 +763,9 @@ def _build_field_system_metadata_params(
             ],
             [reference_object, FieldTypes.LOOKUP.value, object_name]
         )
+        if len(detail_join_key) <= 0:
+            raise_input_exception(409, "ROLLUP_DETAIL_NO_LOOKUP", {"object_name": object_name, "reference_object": reference_object}, kind=ExceptionKind.BUSINESS_SHARED)
+        detail_lookup_field_name = detail_join_key[0]["field_name"]
 
         # TODO Bug: il record type del child non viene salvato, in casi estremamente rari e specifici potrebbe portare errori
         master_object_pk_field = get_primary_keys_from_multiple_objects(cursor, [object_name]).get(object_name)

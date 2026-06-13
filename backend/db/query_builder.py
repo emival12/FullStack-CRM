@@ -75,8 +75,13 @@ class QueryBuilder:
 
     @staticmethod
     def alias(table_name: str) -> str:
-        """Return the standard SQL alias for a table name."""
+        """Return the standard SQL alias for a table name"""
         return f"{table_name}__tab"
+
+    @staticmethod
+    def alias_join(table_name: str, table_field: str) -> str:
+        """Return a per-field SQL alias for a joined table, unique when the same table is joined more than once in a query."""
+        return f"{table_name}__tab_{table_field}"
 
     @staticmethod
     def build_join_clause(table_name: str, table_field: str, join_table_name: str, join_field: str, join_reference_field: str) -> tuple[str, tuple]:
@@ -94,9 +99,9 @@ class QueryBuilder:
                 tuple[str, tuple]: SELECT field expression and JOIN clause in QueryBuilder format
         """
         table_name_alias = QueryBuilder.alias(table_name)
-        join_table_alias = QueryBuilder.alias(join_table_name)
+        join_table_alias = QueryBuilder.alias_join(join_table_name, table_field)
 
-        join_clause = (QueryBuilderJoinType.LEFT, join_table_name, [(f"{table_name_alias}.{table_field}", f"{join_table_alias}.{join_field}")])
+        join_clause = (QueryBuilderJoinType.LEFT, join_table_name, [(f"{table_name_alias}.{table_field}", f"{join_table_alias}.{join_field}")], join_table_alias)
         select_field = f"{join_table_alias}.{join_reference_field} {table_field}"
 
         return (select_field, join_clause)
@@ -118,9 +123,9 @@ class QueryBuilder:
                 tuple[str, tuple]: Aggregated SELECT field expression and JOIN clause in QueryBuilder format
         """
         table_name_alias = QueryBuilder.alias(table_name)
-        join_table_alias = QueryBuilder.alias(join_table_name)
+        join_table_alias = QueryBuilder.alias_join(join_table_name, master_field)
 
-        join_clause = (QueryBuilderJoinType.LEFT, join_table_name, [(f"{table_name_alias}.{table_field}", f"{join_table_alias}.{join_field}")])
+        join_clause = (QueryBuilderJoinType.LEFT, join_table_name, [(f"{table_name_alias}.{table_field}", f"{join_table_alias}.{join_field}")], join_table_alias)
         select_field = f"{aggregation_function}({join_table_alias}.{detail_field}) {master_field}"
 
         return (select_field, join_clause)
@@ -243,20 +248,22 @@ class QueryBuilder:
         self,
         join_type: QueryBuilderJoinType,
         join_table: str,
-        on_conditions: list[tuple[str,str]]
+        on_conditions: list[tuple[str,str]],
+        alias: str | None = None
     ) -> QueryBuilder:
         """
             Append a JOIN clause.
 
             Args:
                 join_type:     INNER / LEFT / RIGHT
-                join_table:    name of the table to join (alias is derived automatically)
+                join_table:    name of the table to join
                 on_conditions: list of (left, right) pairs joined with AND in the ON clause
+                alias:         explicit table alias; defaults to the standard table alias when omitted
         """
         if not join_type or not join_table or not on_conditions:
             raise ValueError("join_type, join_table and on_conditions are required")
 
-        join_alias = QueryBuilder.alias(join_table)
+        join_alias = alias or QueryBuilder.alias(join_table)
         join_conditions = " AND ".join(f"{l} = {r}" for l, r in on_conditions)
         self._joins.append(f"{join_type.value} JOIN {join_table} {join_alias} ON {join_conditions}")
         return self
