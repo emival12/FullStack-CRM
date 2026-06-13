@@ -13,6 +13,7 @@ import {
 } from "types/field.types";
 import { useLabels } from "context/Label/Label";
 import { isDisabled } from "./helpers";
+import { isBlank } from "utils/string";
 
 const isLookupOptionArray = (
   arr: (FieldOptionRadio | FieldOptionLookup)[],
@@ -169,8 +170,16 @@ export default function DynamicForm({
               ? "0." + "1".padStart(info.numeric_scale, "0")
               : "1"
           }
-          min={info?.min_limit_value && Number(info.min_limit_value)}
-          max={info?.max_limit_value && Number(info.max_limit_value)}
+          min={
+            isBlank(info?.min_limit_value)
+              ? undefined
+              : Number(info.min_limit_value)
+          }
+          max={
+            isBlank(info?.max_limit_value)
+              ? undefined
+              : Number(info.max_limit_value)
+          }
           {...register(key, {
             required: {
               value: Boolean(info.is_required),
@@ -184,18 +193,22 @@ export default function DynamicForm({
                   }),
                 }
               : undefined,
-            min: {
-              value: Number(info?.min_limit_value),
-              message: getLabel("FORM.ERRORS.MIN_NUMBER", {
-                min_value: String(info?.min_limit_value ?? ""),
-              }),
-            },
-            max: {
-              value: Number(info?.max_limit_value),
-              message: getLabel("FORM.ERRORS.MAX_NUMBER", {
-                max_value: String(info?.max_limit_value ?? ""),
-              }),
-            },
+            min: isBlank(info?.min_limit_value)
+              ? undefined
+              : {
+                  value: Number(info?.min_limit_value),
+                  message: getLabel("FORM.ERRORS.MIN_NUMBER", {
+                    min_value: String(info?.min_limit_value ?? ""),
+                  }),
+                },
+            max: isBlank(info?.max_limit_value)
+              ? undefined
+              : {
+                  value: Number(info?.max_limit_value),
+                  message: getLabel("FORM.ERRORS.MAX_NUMBER", {
+                    max_value: String(info?.max_limit_value ?? ""),
+                  }),
+                },
             pattern:
               (info.field_type as string) === "email"
                 ? {

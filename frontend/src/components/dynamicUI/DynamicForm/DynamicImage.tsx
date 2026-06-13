@@ -70,12 +70,14 @@ export default function DynamicImage({
                   value: Boolean(info.is_required),
                   message: getLabel("FORM.ERRORS.MANDATORY_FIELD"),
                 },
-                maxLength: {
-                  value: Number(info.length),
-                  message: getLabel("FORM.ERRORS.MAX_LENGTH", {
-                    max_length: String(info.length ?? ""),
-                  }),
-                },
+                maxLength: info.length
+                  ? {
+                      value: Number(info.length),
+                      message: getLabel("FORM.ERRORS.MAX_LENGTH", {
+                        max_length: String(info.length ?? ""),
+                      }),
+                    }
+                  : undefined,
               })}
             />
             <Form.Control.Feedback type="invalid">

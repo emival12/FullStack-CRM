@@ -12,6 +12,7 @@ import { NUM_RECORD_TO_SHOW, PATH_DATABASE } from "config/K";
 import { useLabels } from "context/Label/Label";
 import MissingPage from "components/MissingPage/MissingPage";
 import PaginationControl from "components/PaginationControl/PaginationControl";
+import { isBlank } from "utils/string";
 
 //Dinamic construction of the body entry
 const RecordCell = ({
@@ -72,7 +73,7 @@ const formatValue: FormatValueFunction = (
   fieldType,
   formatterDate,
 ) => {
-  if (fieldValue == null || fieldValue === "") return undefined;
+  if (isBlank(fieldValue)) return undefined;
 
   switch (fieldType) {
     case "date":
