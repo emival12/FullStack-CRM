@@ -116,6 +116,21 @@ def get_record(cursor, table_name: str, record_type_name: str, record_id: str) -
         "related_list": rel_lists
     }
 
+def _normalize_input_record(record: dict) -> dict:
+    """
+        Lowercase field keys and collapse empty sentinels to None.
+
+        The frontend submits "" (empty text input) and "NULL" (empty select option) for
+        unset fields; both are normalized to None so the whole write pipeline
+        (formula / trigger / rollup / DB binding) sees a single empty representation.
+        Note: 0 and False are preserved — Python == does not coerce them to "" or "NULL".
+    """
+    normalized = {}
+    for k, v in record.items():
+        value = None if v == "" or v == "NULL" else v
+        normalized[k.lower()] = value
+    return normalized
+
 def insert_record(cursor, table_name: str, record_type_name: str, record: dict, user_id: str) -> dict:
     """
         Insert a new record into the given table, evaluating formulas and triggers, then refreshing parent rollups.
@@ -145,7 +160,7 @@ def insert_record(cursor, table_name: str, record_type_name: str, record: dict, 
     complex_formula = formula_engine.extract_formula_dependencies(map_field_by_type.formula_fields, already_extracted, fields_to_retrieve)
 
     # Normalize keys, inject record type, and cast values to their declared types
-    record = {k.lower(): v for k, v in record.items()}
+    record = _normalize_input_record(record)
     record[SystemFieldName_FD.RECORD_TYPE_NAME] = record_type_name
     record = formula_engine.cast_record_types(record, fields)
 
@@ -233,7 +248,7 @@ def update_record(
     rollup_values = rollup_engine.calculate_record_rollups(cursor, table_name, primary_key_field, record_id, map_field_by_type.rollup_fields, rollup_map)
 
     # Normalize keys, inject new values, and cast values to their declared types
-    new_record = {k.lower(): v for k, v in new_record.items()}
+    new_record = _normalize_input_record(new_record)
     record = {**old_record}
     record.update(new_record)
     record.update(rollup_values)

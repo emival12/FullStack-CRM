@@ -60,8 +60,8 @@ export default function DynamicForm({
             editability === "all"
               ? info.reference_field === "record_type_name"
                 ? tableKey?.split("-")[1]
-                : null
-              : info?.value
+                : undefined
+              : (info?.value ?? undefined)
           }
           disabled={
             editability === "all"
