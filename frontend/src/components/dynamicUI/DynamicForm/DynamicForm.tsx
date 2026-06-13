@@ -70,7 +70,7 @@ export default function DynamicForm({
           }
           isInvalid={!!errors[key]} // !! means if the object exist writes true otherwise false
           {...register(key, {
-            validate: (value: any): boolean | string => {
+            validate: (value: unknown): boolean | string => {
               if (!info.is_required) return true;
               if (value !== "NULL") return true;
               return getLabel("FORM.ERRORS.MANDATORY_FIELD");
@@ -103,7 +103,7 @@ export default function DynamicForm({
             <div key={opt.option_key} className="ms-2">
               <Form.Check
                 inline
-                type={info.field_type as any}
+                type="radio"
                 required={Boolean(info.is_required)}
                 disabled={isDisabled(editability, info)}
                 id={opt.option_key}
@@ -134,7 +134,7 @@ export default function DynamicForm({
         <span className="ms-2">
           <Form.Check
             inline
-            type={info.field_type as any}
+            type="checkbox"
             required={required}
             disabled={disabled}
             id={key}
@@ -160,7 +160,11 @@ export default function DynamicForm({
       <>
         <Form.Control
           type={info.field_type}
-          as={info?.is_textarea ? (TextareaAutosize as any) : undefined}
+          as={
+            info?.is_textarea
+              ? (TextareaAutosize as React.ElementType)
+              : undefined
+          }
           required={Boolean(info.is_required)}
           defaultValue={info?.value}
           disabled={isDisabled(editability, info)}
@@ -210,7 +214,7 @@ export default function DynamicForm({
                   }),
                 },
             pattern:
-              (info.field_type as string) === "email"
+              info.field_type === "email"
                 ? {
                     value: /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
                     message: getLabel("FORM.ERRORS.INVALID_EMAIL"),
