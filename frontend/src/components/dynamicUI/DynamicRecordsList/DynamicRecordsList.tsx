@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Table, Form, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import { RecordListStructure } from "types/list.types";
 import type {
   DynamicRecordsListProps,
+  FormatValueFunction,
   RecordCellProps,
 } from "./DynamicRecordsList.types";
 import { NUM_RECORD_TO_SHOW, PATH_DATABASE } from "config/K";
@@ -20,40 +21,32 @@ const RecordCell = ({
   onNavigate,
   formatterDate,
 }: RecordCellProps) => {
+  const formattedValue = formatValue(fieldValue, fieldType, formatterDate);
+
   if (isPrimaryKey) {
     return (
       <td
         className="cursor-pointer text-primary"
         onClick={() => onNavigate(encodeURIComponent(String(fieldValue)))}
       >
-        {fieldValue}
+        {formattedValue}
       </td>
     );
   }
 
-  if (fieldValue == null || fieldValue === "") return <td></td>;
+  if (formattedValue === undefined) return <td></td>;
 
-  switch (fieldType) {
-    case "date":
-    case "datetime-local":
-      const formatter = formatterDate[fieldType];
-      const date =
-        fieldType === "date"
-          ? new Date(fieldValue + "T00:00:00")
-          : new Date(fieldValue);
-      return <td>{formatter.format(date)}</td>;
-
-    case "checkbox":
-      return fieldValue ? (
-        <td className="text-center">
-          <i className="bi bi-check-lg" />
-        </td>
-      ) : (
-        <td></td>
-      );
-    default:
-      return <td>{fieldValue}</td>;
+  if (fieldType === "checkbox") {
+    return formattedValue ? (
+      <td className="text-center">
+        <i className="bi bi-check-lg" />
+      </td>
+    ) : (
+      <td></td>
+    );
   }
+
+  return <td>{formattedValue}</td>;
 };
 
 const getFormatterDate = (language: string) => {
@@ -74,6 +67,29 @@ const getFormatterDateTime = (language: string) => {
   });
 };
 
+const formatValue: FormatValueFunction = (
+  fieldValue,
+  fieldType,
+  formatterDate,
+) => {
+  if (fieldValue == null || fieldValue === "") return undefined;
+
+  switch (fieldType) {
+    case "date":
+    case "datetime-local":
+      const formatter = formatterDate[fieldType];
+      const date =
+        fieldType === "date"
+          ? new Date(fieldValue + "T00:00:00")
+          : new Date(fieldValue);
+      return formatter.format(date);
+    case "checkbox":
+      return fieldValue ? true : false;
+    default:
+      return fieldValue;
+  }
+};
+
 /**
  * Shows a table with all the records
  */
@@ -87,24 +103,37 @@ export default function DynamicRecordsList({
 
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const deferredSearchTerm = useDeferredValue(searchTerm);
 
-  const formatterDate = {
-    date: getFormatterDate(language),
-    "datetime-local": getFormatterDateTime(language),
-  };
+  const formatterDate = useMemo(() => {
+    return {
+      date: getFormatterDate(language),
+      "datetime-local": getFormatterDateTime(language),
+    };
+  }, [language]);
 
   // Calculate the data filtered by searchTerm
-  const filteredData: RecordListStructure = searchTerm
-    ? {
-        ...data,
-        records: data?.records.filter((record) => {
-          const concatenedValues = Object.values(record)
-            .join("_")
-            .toLowerCase();
-          return concatenedValues.includes(searchTerm);
-        }),
-      }
-    : data;
+  const filteredData: RecordListStructure = useMemo(() => {
+    return deferredSearchTerm
+      ? {
+          ...data,
+          records: data?.records.filter((record) => {
+            const formattedFields = data?.fields.map((field) => {
+              const value = formatValue(
+                record[field.key],
+                field.field_type,
+                formatterDate,
+              );
+              return String(value ?? "").toLowerCase();
+            });
+
+            return formattedFields.some((element) =>
+              element.includes(deferredSearchTerm),
+            );
+          }),
+        }
+      : data;
+  }, [deferredSearchTerm, data, formatterDate]);
 
   // Calculate the slice of the data to show
   const dataStart: number = (currentPage - 1) * NUM_RECORD_TO_SHOW;
