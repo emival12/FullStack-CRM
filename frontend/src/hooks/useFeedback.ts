@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 
-import { ApiError } from "api/types";
-import { useToast } from "context/Toast/Toast";
-import { useLabels } from "context/Label/Label";
+import { ApiError } from "@/api/types";
+import { useLabels } from "@/context/Label/Label";
+import { useToast } from "@/context/Toast/Toast";
 
 export const useFeedback = () => {
   const { showToast } = useToast();

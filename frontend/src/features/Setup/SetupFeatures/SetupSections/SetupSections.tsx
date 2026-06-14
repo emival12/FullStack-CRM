@@ -1,17 +1,18 @@
 import { useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 
-import SetupSectionHome from "./SetupSectionHome/SetupSectionHome";
-import SetupSectionFieldsListView from "./SetupSectionFieldsListView/SetupSectionFieldsListView";
+import { Sections,SetupOutletContext } from "@/types/routing.types";
+import { ENDPOINTS } from "@/api/endpoints";
+import { ERROR_MISSING_TABLE } from "@/config/K";
+import { useLabels } from "@/context/Label/Label";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useFeedback } from "@/hooks/useFeedback";
+import LoadingScreen from "@/components/LoadingScreen/LoadingScreen";
+import MissingPage from "@/components/MissingPage/MissingPage";
+
 import SetupSectionFieldsEdit from "./SetupSectionFieldsEdit/SetupSectionFieldsEdit";
-import { SetupOutletContext, Sections } from "types/routing.types";
-import { ERROR_MISSING_TABLE } from "config/K";
-import { ENDPOINTS } from "api/endpoints";
-import { useLabels } from "context/Label/Label";
-import { useFeedback } from "hooks/useFeedback";
-import { useApiQuery } from "hooks/useApiQuery";
-import MissingPage from "components/MissingPage/MissingPage";
-import LoadingScreen from "components/LoadingScreen/LoadingScreen";
+import SetupSectionFieldsListView from "./SetupSectionFieldsListView/SetupSectionFieldsListView";
+import SetupSectionHome from "./SetupSectionHome/SetupSectionHome";
 
 export default function SetupSection(): React.ReactElement | null {
   const { tableKey, sectionKey, recordId } =

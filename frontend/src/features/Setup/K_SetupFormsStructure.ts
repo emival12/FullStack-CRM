@@ -1,4 +1,4 @@
-import { MetadataFieldStructure } from "types/field.types";
+import { MetadataFieldStructure } from "@/types/field.types";
 import {
   AGGREGATION_FUNCTION_BASE,
   CATEGORY_BASE,
@@ -22,7 +22,7 @@ import {
   REFERENCE_OBJECT_BASE,
   REFERENCE_OBJECT_RECORD_TYPE_BASE,
   SORT_ORDER_BASE,
-} from "config/K_FieldBaseStructure";
+} from "@/config/K_FieldBaseStructure";
 
 //Structure to edit a new table
 export const HOME_OBJECT_FIELD_STRUCTURE: MetadataFieldStructure = {

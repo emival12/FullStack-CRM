@@ -8,10 +8,10 @@ import {
 import { ToastContainer } from "react-bootstrap";
 
 import type {
-  ToastContextType,
-  ToastProviderProps,
   ShowToastFunc,
+  ToastContextType,
   ToastDef,
+  ToastProviderProps,
 } from "./Toast.types";
 import ToastMsg from "./ToastMsg";
 

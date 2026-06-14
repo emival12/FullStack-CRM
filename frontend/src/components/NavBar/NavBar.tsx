@@ -1,9 +1,9 @@
-import { Navbar, Nav, Container } from "react-bootstrap";
+import { Container,Nav, Navbar } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
-import { PATH_DATABASE, PATH_IMPORT, PATH_SETUP } from "config/K";
-import { useAuth } from "context/Auth/Auth";
-import { useLabels } from "context/Label/Label";
+import { PATH_DATABASE, PATH_IMPORT, PATH_SETUP } from "@/config/K";
+import { useAuth } from "@/context/Auth/Auth";
+import { useLabels } from "@/context/Label/Label";
 
 export default function NavBar(): React.ReactElement {
   const { logout } = useAuth();

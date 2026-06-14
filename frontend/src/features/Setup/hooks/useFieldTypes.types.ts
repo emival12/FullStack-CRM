@@ -1,10 +1,10 @@
 import {
-  FieldType,
   FieldOptionLookup,
   FieldOptionRadio,
+  FieldType,
   MetadataFieldStructure,
-} from "types/field.types";
-import { ObjectDefinitionItem } from "types/object.types";
+} from "@/types/field.types";
+import { ObjectDefinitionItem } from "@/types/object.types";
 
 type StructureOptions = Record<string, string[]>;
 export interface NewSetupFieldStructure {

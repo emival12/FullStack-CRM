@@ -1,18 +1,19 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
 import { Button, Modal } from "react-bootstrap";
+import { useForm } from "react-hook-form";
+
+import { MetadataFieldStructure } from "@/types/field.types";
+import { ENDPOINTS } from "@/api/endpoints";
+import { ApiError, CRUDResult } from "@/api/types";
+import { useAuth } from "@/context/Auth/Auth";
+import { useLabels } from "@/context/Label/Label";
+import { useApiMutation } from "@/hooks/useApiMutation";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useFeedback } from "@/hooks/useFeedback";
+import DynamicForm from "@/components/dynamicUI/DynamicForm/DynamicForm";
+import LoadingScreen from "@/components/LoadingScreen/LoadingScreen";
 
 import type { NewRecordProps } from "./TableRecords.types";
-import { MetadataFieldStructure } from "types/field.types";
-import { ApiError, CRUDResult } from "api/types";
-import { ENDPOINTS } from "api/endpoints";
-import { useLabels } from "context/Label/Label";
-import { useFeedback } from "hooks/useFeedback";
-import { useApiQuery } from "hooks/useApiQuery";
-import { useAuth } from "context/Auth/Auth";
-import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
-import LoadingScreen from "components/LoadingScreen/LoadingScreen";
-import { useApiMutation } from "hooks/useApiMutation";
 
 const PREFIX = "NEW_RECORD";
 

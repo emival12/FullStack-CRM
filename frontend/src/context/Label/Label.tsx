@@ -1,21 +1,22 @@
 import {
   createContext,
-  useContext,
-  useState,
-  useEffect,
   useCallback,
+  useContext,
+  useEffect,
   useMemo,
+  useState,
 } from "react";
 
+import client from "@/api/client";
+import { ENDPOINTS } from "@/api/endpoints";
+import { ApiError } from "@/api/types";
+
 import type {
+  GetLabelFunc,
   LabelContextType,
   LabelProviderProps,
   TranslationData,
-  GetLabelFunc,
 } from "./Label.types";
-import { ENDPOINTS } from "api/endpoints";
-import client from "api/client";
-import { ApiError } from "api/types";
 
 //Creation of context (place where i can save things and avoid the props)
 const LabelContext = createContext<LabelContextType | null>(null);

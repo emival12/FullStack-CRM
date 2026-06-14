@@ -2,20 +2,20 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useOutletContext } from "react-router-dom";
 
-import { SetupOutletContext } from "types/routing.types";
-import { SetupSectionBaseProps } from "features/Setup/SetupFeatures/SetupSections/SetupSections.types";
-import { ObjectDefinitionItem } from "types/object.types";
-import { ApiError, CRUDResult } from "api/types";
-import { PATH_SETUP } from "config/K";
-import { ENDPOINTS } from "api/endpoints";
-import { useLabels } from "context/Label/Label";
-import { useFeedback } from "hooks/useFeedback";
-import { useApiQuery } from "hooks/useApiQuery";
-import { useApiMutation } from "hooks/useApiMutation";
-import { HOME_OBJECT_FIELD_STRUCTURE } from "features/Setup/K_SetupFormsStructure";
-import LoadingScreen from "components/LoadingScreen/LoadingScreen";
-import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
-import DynamicRecordActions from "components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
+import { ObjectDefinitionItem } from "@/types/object.types";
+import { SetupOutletContext } from "@/types/routing.types";
+import { ENDPOINTS } from "@/api/endpoints";
+import { ApiError, CRUDResult } from "@/api/types";
+import { PATH_SETUP } from "@/config/K";
+import { useLabels } from "@/context/Label/Label";
+import { useApiMutation } from "@/hooks/useApiMutation";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useFeedback } from "@/hooks/useFeedback";
+import DynamicForm from "@/components/dynamicUI/DynamicForm/DynamicForm";
+import DynamicRecordActions from "@/components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
+import LoadingScreen from "@/components/LoadingScreen/LoadingScreen";
+import { HOME_OBJECT_FIELD_STRUCTURE } from "@/features/Setup/K_SetupFormsStructure";
+import { SetupSectionBaseProps } from "@/features/Setup/SetupFeatures/SetupSections/SetupSections.types";
 
 const PREFIX = "SETUP_HOME";
 

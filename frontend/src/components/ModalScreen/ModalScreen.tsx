@@ -1,7 +1,8 @@
 import { Button, Modal, Spinner } from "react-bootstrap";
 
+import { useLabels } from "@/context/Label/Label";
+
 import type { ModalScreenProps } from "./ModalScreen.types";
-import { useLabels } from "context/Label/Label";
 
 /**
  * Displays a modal with a message and two buttons: one to confirm, the other one to cancel

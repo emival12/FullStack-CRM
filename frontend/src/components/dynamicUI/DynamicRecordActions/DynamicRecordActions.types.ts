@@ -1,4 +1,4 @@
-import type { UseFormReset, FieldValues } from "react-hook-form";
+import type { FieldValues,UseFormReset } from "react-hook-form";
 
 export interface DynamicRecordActionsProps {
   /** Label used for the first button near the delete (generally is New or Edit) */

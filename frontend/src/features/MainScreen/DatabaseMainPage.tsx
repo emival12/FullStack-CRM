@@ -1,7 +1,7 @@
-import { Container, Row, Col } from "react-bootstrap";
+import { Col,Container, Row } from "react-bootstrap";
 import { Outlet, useParams } from "react-router-dom";
 
-import TablesSidebar from "features/TablesSidebar/TablesSidebar";
+import TablesSidebar from "@/features/TablesSidebar/TablesSidebar";
 
 export default function DatabaseMainPage(): React.ReactElement {
   const { tableKey, recordId } = useParams();

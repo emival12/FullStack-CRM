@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
-import { useOutletContext } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { useOutletContext } from "react-router-dom";
 
-import { SetupOutletContext } from "types/routing.types";
-import { ApiError, CRUDResult } from "api/types";
-import { NEW_OBJECT_FIELD_STRUCTURE } from "features/Setup/K_SetupFormsStructure";
-import { ENDPOINTS } from "api/endpoints";
-import { useLabels } from "context/Label/Label";
-import { useFeedback } from "hooks/useFeedback";
-import { useApiMutation } from "hooks/useApiMutation";
-import LoadingScreen from "components/LoadingScreen/LoadingScreen";
-import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
-import DynamicRecordActions from "components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
+import { SetupOutletContext } from "@/types/routing.types";
+import { ENDPOINTS } from "@/api/endpoints";
+import { ApiError, CRUDResult } from "@/api/types";
+import { useLabels } from "@/context/Label/Label";
+import { useApiMutation } from "@/hooks/useApiMutation";
+import { useFeedback } from "@/hooks/useFeedback";
+import DynamicForm from "@/components/dynamicUI/DynamicForm/DynamicForm";
+import DynamicRecordActions from "@/components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
+import LoadingScreen from "@/components/LoadingScreen/LoadingScreen";
+import { NEW_OBJECT_FIELD_STRUCTURE } from "@/features/Setup/K_SetupFormsStructure";
 
 const PREFIX = "SETUP_NEW_OBJECT";
 

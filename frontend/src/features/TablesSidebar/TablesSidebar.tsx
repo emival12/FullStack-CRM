@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
 
+import { ENDPOINTS } from "@/api/endpoints";
+import { useLabels } from "@/context/Label/Label";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useFeedback } from "@/hooks/useFeedback";
+import LoadingScreen from "@/components/LoadingScreen/LoadingScreen";
+import ScreenAdaptiveSidebar from "@/components/ScreenAdaptiveSidebar/ScreenAdaptiveSidebar";
+
 import type {
   SidebarStructure,
   TablesSidebarProps,
 } from "./TablesSidebar.types";
 import TablesSidebarAccordion from "./TablesSidebarAccordion";
-import { ENDPOINTS } from "api/endpoints";
-import { useLabels } from "context/Label/Label";
-import { useFeedback } from "hooks/useFeedback";
-import { useApiQuery } from "hooks/useApiQuery";
-import ScreenAdaptiveSidebar from "components/ScreenAdaptiveSidebar/ScreenAdaptiveSidebar";
-import LoadingScreen from "components/LoadingScreen/LoadingScreen";
 
 /**
  * Shows a list of availables tables grouped by category and recordTypes

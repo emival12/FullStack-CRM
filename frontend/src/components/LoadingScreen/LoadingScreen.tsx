@@ -1,6 +1,6 @@
 import { Spinner } from "react-bootstrap";
 
-import { useLabels } from "context/Label/Label";
+import { useLabels } from "@/context/Label/Label";
 
 type LoadingScreenProps = { compact?: boolean };
 export default function LoadingScreen({

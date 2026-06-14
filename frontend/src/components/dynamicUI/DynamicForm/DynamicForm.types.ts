@@ -1,9 +1,10 @@
 import type {
-  UseFormRegister,
   FieldErrors,
   FieldValues,
+  UseFormRegister,
 } from "react-hook-form";
-import { BaseFieldInfo, MetadataFieldStructure } from "types/field.types";
+
+import { BaseFieldInfo, MetadataFieldStructure } from "@/types/field.types";
 
 export type Editability = "all" | "byField" | "none";
 

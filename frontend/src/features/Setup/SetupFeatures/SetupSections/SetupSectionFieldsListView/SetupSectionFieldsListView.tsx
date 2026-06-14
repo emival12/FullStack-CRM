@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
 import { Button } from "react-bootstrap";
 
+import { RecordListStructure } from "@/types/list.types";
+import { ENDPOINTS } from "@/api/endpoints";
+import { PATH_SETUP } from "@/config/K";
+import { useLabels } from "@/context/Label/Label";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useFeedback } from "@/hooks/useFeedback";
+import DynamicRecordsList from "@/components/dynamicUI/DynamicRecordsList/DynamicRecordsList";
+import LoadingScreen from "@/components/LoadingScreen/LoadingScreen";
+import { SetupSectionBaseProps } from "@/features/Setup/SetupFeatures/SetupSections/SetupSections.types";
+
 import NewFieldRecord from "./NewFieldRecord";
-import { RecordListStructure } from "types/list.types";
-import { SetupSectionBaseProps } from "features/Setup/SetupFeatures/SetupSections/SetupSections.types";
-import { PATH_SETUP } from "config/K";
-import { ENDPOINTS } from "api/endpoints";
-import { useLabels } from "context/Label/Label";
-import { useFeedback } from "hooks/useFeedback";
-import { useApiQuery } from "hooks/useApiQuery";
-import LoadingScreen from "components/LoadingScreen/LoadingScreen";
-import DynamicRecordsList from "components/dynamicUI/DynamicRecordsList/DynamicRecordsList";
 
 /**
  * Page used for the section Fields of an object in the setup

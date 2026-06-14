@@ -1,4 +1,4 @@
-import { FieldType, type BaseFieldInfo } from "types/field.types";
+import { type BaseFieldInfo,FieldType } from "@/types/field.types";
 
 // SINGLE FIELDS FOR LOGIN
 export const EMAIL_LOGIN_BASE: BaseFieldInfo = {

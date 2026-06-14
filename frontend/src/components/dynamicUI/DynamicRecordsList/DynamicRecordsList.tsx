@@ -1,18 +1,19 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { Table, Form, Row, Col } from "react-bootstrap";
+import { Col,Form, Row, Table } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
-import { RecordListStructure } from "types/list.types";
+import { RecordListStructure } from "@/types/list.types";
+import { NUM_RECORD_TO_SHOW, PATH_DATABASE } from "@/config/K";
+import { useLabels } from "@/context/Label/Label";
+import MissingPage from "@/components/MissingPage/MissingPage";
+import PaginationControl from "@/components/PaginationControl/PaginationControl";
+import { isBlank } from "@/utils/string";
+
 import type {
   DynamicRecordsListProps,
   FormatValueFunction,
   RecordCellProps,
 } from "./DynamicRecordsList.types";
-import { NUM_RECORD_TO_SHOW, PATH_DATABASE } from "config/K";
-import { useLabels } from "context/Label/Label";
-import MissingPage from "components/MissingPage/MissingPage";
-import PaginationControl from "components/PaginationControl/PaginationControl";
-import { isBlank } from "utils/string";
 
 //Dinamic construction of the body entry
 const RecordCell = ({

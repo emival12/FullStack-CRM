@@ -2,15 +2,16 @@ import { useState } from "react";
 import { Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
+import { ApiError, CRUDResult } from "@/api/types";
+import { useLabels } from "@/context/Label/Label";
+import { useApiMutation } from "@/hooks/useApiMutation";
+import { useFeedback } from "@/hooks/useFeedback";
+import ModalScreen from "@/components/ModalScreen/ModalScreen";
+
 import type {
   DynamicRecordActionsProps,
   ModalConfig,
 } from "./DynamicRecordActions.types";
-import { ApiError, CRUDResult } from "api/types";
-import { useLabels } from "context/Label/Label";
-import { useFeedback } from "hooks/useFeedback";
-import { useApiMutation } from "hooks/useApiMutation";
-import ModalScreen from "components/ModalScreen/ModalScreen";
 
 /**
  * Shows an Action bar with buttons (based on the configuration)

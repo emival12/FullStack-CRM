@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
-import { Form, FloatingLabel, ListGroup } from "react-bootstrap";
+import { FloatingLabel, Form, ListGroup } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 
+import { Sections } from "@/types/routing.types";
+import { ENDPOINTS } from "@/api/endpoints";
+import { PATH_SETUP } from "@/config/K";
+import { useLabels } from "@/context/Label/Label";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useFeedback } from "@/hooks/useFeedback";
+import LoadingScreen from "@/components/LoadingScreen/LoadingScreen";
+import ScreenAdaptiveSidebar from "@/components/ScreenAdaptiveSidebar/ScreenAdaptiveSidebar";
+
 import { PlainSidebarStructure, SetupSidebarProps } from "./SetupSidebar.types";
-import { Sections } from "types/routing.types";
-import { PATH_SETUP } from "config/K";
-import { ENDPOINTS } from "api/endpoints";
-import { useLabels } from "context/Label/Label";
-import { useFeedback } from "hooks/useFeedback";
-import { useApiQuery } from "hooks/useApiQuery";
-import LoadingScreen from "components/LoadingScreen/LoadingScreen";
-import ScreenAdaptiveSidebar from "components/ScreenAdaptiveSidebar/ScreenAdaptiveSidebar";
 
 /**
  * Shows a list of options, each option is a tables

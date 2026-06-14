@@ -1,5 +1,6 @@
+import { useLabels } from "@/context/Label/Label";
+
 import type { MissingPageProps } from "./MissingPage.types";
-import { useLabels } from "context/Label/Label";
 
 /**
  * Displays error messages or a 'data missing' notification.

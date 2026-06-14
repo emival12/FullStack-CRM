@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Container, Row, Col } from "react-bootstrap";
+import { Col,Container, Row } from "react-bootstrap";
 import { Outlet, useParams } from "react-router-dom";
 
-import { Sections } from "types/routing.types";
-import SetupSidebar from "features/Setup/SetupSidebar/SetupSidebar";
+import { Sections } from "@/types/routing.types";
+import SetupSidebar from "@/features/Setup/SetupSidebar/SetupSidebar";
 
 export default function SetupMainPage(): React.ReactElement {
   const { tableKey, sectionKey, recordId } = useParams();

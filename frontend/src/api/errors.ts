@@ -1,5 +1,6 @@
 import axios from "axios";
-import { ERROR_KINDS, type ApiError } from "./types";
+
+import { type ApiError,ERROR_KINDS } from "./types";
 
 export const parseApiError = (err: unknown): ApiError => {
   if (!axios.isAxiosError(err)) {

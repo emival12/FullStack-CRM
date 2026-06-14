@@ -1,4 +1,5 @@
 import { Toast } from "react-bootstrap";
+
 import { ToastProp, ToastVariant } from "./Toast.types";
 
 const variantToBg: Record<ToastVariant, string> = {

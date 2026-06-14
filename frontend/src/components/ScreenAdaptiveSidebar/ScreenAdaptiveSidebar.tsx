@@ -1,8 +1,9 @@
-import { Col, Button, Offcanvas } from "react-bootstrap";
+import { Button, Col, Offcanvas } from "react-bootstrap";
+
 import type {
-  ScreenAdaptiveSidebarProps,
   DesktopSidebarProps,
   ScreenAdaptiveSidebarProps as PhoneSidebarProps,
+  ScreenAdaptiveSidebarProps,
 } from "./ScreenAdaptiveSidebar.types";
 
 const PhoneSidebar = ({

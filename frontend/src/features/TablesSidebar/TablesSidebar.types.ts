@@ -1,4 +1,4 @@
-import { ObjectDefinitionItem } from "types/object.types";
+import { ObjectDefinitionItem } from "@/types/object.types";
 
 export interface TablesSidebarProps {
   /** Table currently selected */

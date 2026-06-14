@@ -1,15 +1,15 @@
 import { useState } from "react";
+import { Button,Col, Container, Row } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { Container, Row, Col, Button } from "react-bootstrap";
 
-import { ApiError } from "api/types";
-import { LOGIN_FIELD_STRUCTURE, PATH_DATABASE } from "config/K";
-import { useLabels } from "context/Label/Label";
-import { useAuth } from "context/Auth/Auth";
-import { useFeedback } from "hooks/useFeedback";
-import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
-import LoadingScreen from "components/LoadingScreen/LoadingScreen";
+import { ApiError } from "@/api/types";
+import { LOGIN_FIELD_STRUCTURE, PATH_DATABASE } from "@/config/K";
+import { useAuth } from "@/context/Auth/Auth";
+import { useLabels } from "@/context/Label/Label";
+import { useFeedback } from "@/hooks/useFeedback";
+import DynamicForm from "@/components/dynamicUI/DynamicForm/DynamicForm";
+import LoadingScreen from "@/components/LoadingScreen/LoadingScreen";
 
 export default function LoginPage(): React.ReactElement {
   const { getLabel } = useLabels();

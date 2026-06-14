@@ -1,22 +1,23 @@
 import {
   createContext,
-  useContext,
-  useState,
-  useEffect,
   useCallback,
+  useContext,
+  useEffect,
   useMemo,
+  useState,
 } from "react";
+
+import client from "@/api/client";
+import { ENDPOINTS } from "@/api/endpoints";
+import { useApiMutation } from "@/hooks/useApiMutation";
 
 import type {
   AuthContextType,
   AuthProviderProps,
-  UserData,
-  LoginFunc,
   LoginBody,
+  LoginFunc,
+  UserData,
 } from "./Auth.types";
-import { ENDPOINTS } from "api/endpoints";
-import { useApiMutation } from "hooks/useApiMutation";
-import client from "api/client";
 
 //Creation of context (place where i can save things and avoid the props)
 const AuthContext = createContext<AuthContextType | null>(null);

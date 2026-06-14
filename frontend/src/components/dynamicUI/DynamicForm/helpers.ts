@@ -1,4 +1,5 @@
-import { BaseFieldInfo } from "types/field.types";
+import { BaseFieldInfo } from "@/types/field.types";
+
 import { Editability } from "./DynamicForm.types";
 
 export const isDisabled = (

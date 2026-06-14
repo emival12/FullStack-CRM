@@ -1,27 +1,28 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { useOutletContext, useNavigate } from "react-router-dom";
 import { Tab, Tabs } from "react-bootstrap";
+import { useForm } from "react-hook-form";
+import { useNavigate,useOutletContext } from "react-router-dom";
 
-import { DataRecordStructure } from "./RecordDetail.types";
-import { DatabaseOutletContext } from "types/routing.types";
-import { ApiError, CRUDResult } from "api/types";
+import { DatabaseOutletContext } from "@/types/routing.types";
+import { ENDPOINTS } from "@/api/endpoints";
+import { ApiError, CRUDResult } from "@/api/types";
 import {
   ERROR_MISSING_RECORD,
   ERROR_MISSING_TABLE,
   PATH_DATABASE,
-} from "config/K";
-import { ENDPOINTS } from "api/endpoints";
-import { useLabels } from "context/Label/Label";
-import { useFeedback } from "hooks/useFeedback";
-import { useAuth } from "context/Auth/Auth";
-import { useApiQuery } from "hooks/useApiQuery";
-import { useApiMutation } from "hooks/useApiMutation";
-import MissingPage from "components/MissingPage/MissingPage";
-import LoadingScreen from "components/LoadingScreen/LoadingScreen";
-import DynamicRecordActions from "components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
-import DynamicRecordsList from "components/dynamicUI/DynamicRecordsList/DynamicRecordsList";
-import DynamicForm from "components/dynamicUI/DynamicForm/DynamicForm";
+} from "@/config/K";
+import { useAuth } from "@/context/Auth/Auth";
+import { useLabels } from "@/context/Label/Label";
+import { useApiMutation } from "@/hooks/useApiMutation";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useFeedback } from "@/hooks/useFeedback";
+import DynamicForm from "@/components/dynamicUI/DynamicForm/DynamicForm";
+import DynamicRecordActions from "@/components/dynamicUI/DynamicRecordActions/DynamicRecordActions";
+import DynamicRecordsList from "@/components/dynamicUI/DynamicRecordsList/DynamicRecordsList";
+import LoadingScreen from "@/components/LoadingScreen/LoadingScreen";
+import MissingPage from "@/components/MissingPage/MissingPage";
+
+import { DataRecordStructure } from "./RecordDetail.types";
 
 const PREFIX = "RECORD_DETAIL";
 

@@ -1,5 +1,24 @@
 import { useCallback, useEffect, useMemo } from "react";
 
+import { FieldOptionLookup, FieldOptionRadio } from "@/types/field.types";
+import { ENDPOINTS } from "@/api/endpoints";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { useFeedback } from "@/hooks/useFeedback";
+import {
+  FULL_AUTO_NUMBER_FIELD_STRUCTURE,
+  NEW_CHECKBOX_FIELD_OBJECT_STRUCTURE as NEW_CHECKBOX_FIELDS,
+  NEW_DATE_FIELD_OBJECT_STRUCTURE,
+  NEW_FIELD_OBJECT_STRUCTURE as NEW_FIELDS,
+  NEW_FORMULA_FIELD_STRUCTURE,
+  NEW_IMG_FIELD_OBJECT_STRUCTURE,
+  NEW_LOOKUP_FIELD_OBJECT_STRUCTURE as NEW_LOOKUP_FIELDS,
+  NEW_NUMBER_FIELD_OBJECT_STRUCTURE as NEW_NUMBER_FIELDS,
+  NEW_PICKLIST_FIELD_OBJECT_STRUCTURE as NEW_PICKLIST_FIELDS,
+  NEW_RADIO_FIELD_OBJECT_STRUCTURE as NEW_RADIO_FIELDS,
+  NEW_ROLLUP_FIELD_OBJECT_STRUCTURE as NEW_ROLLUP_FIELDS,
+  NEW_TEXT_FIELD_OBJECT_STRUCTURE as NEW_TEXT_FIELDS,
+} from "@/features/Setup/K_SetupFormsStructure";
+
 import {
   CloneAndAddOptionsFunc,
   ComputeDependentFormFunc,
@@ -12,24 +31,6 @@ import {
   NormalizeInputOptionsFunc,
   SortDictFunc,
 } from "./useFieldTypes.types";
-import { FieldOptionLookup, FieldOptionRadio } from "types/field.types";
-import {
-  NEW_FIELD_OBJECT_STRUCTURE as NEW_FIELDS,
-  NEW_TEXT_FIELD_OBJECT_STRUCTURE as NEW_TEXT_FIELDS,
-  NEW_NUMBER_FIELD_OBJECT_STRUCTURE as NEW_NUMBER_FIELDS,
-  NEW_LOOKUP_FIELD_OBJECT_STRUCTURE as NEW_LOOKUP_FIELDS,
-  NEW_PICKLIST_FIELD_OBJECT_STRUCTURE as NEW_PICKLIST_FIELDS,
-  NEW_ROLLUP_FIELD_OBJECT_STRUCTURE as NEW_ROLLUP_FIELDS,
-  NEW_RADIO_FIELD_OBJECT_STRUCTURE as NEW_RADIO_FIELDS,
-  NEW_CHECKBOX_FIELD_OBJECT_STRUCTURE as NEW_CHECKBOX_FIELDS,
-  FULL_AUTO_NUMBER_FIELD_STRUCTURE,
-  NEW_DATE_FIELD_OBJECT_STRUCTURE,
-  NEW_IMG_FIELD_OBJECT_STRUCTURE,
-  NEW_FORMULA_FIELD_STRUCTURE,
-} from "features/Setup/K_SetupFormsStructure";
-import { ENDPOINTS } from "api/endpoints";
-import { useFeedback } from "hooks/useFeedback";
-import { useApiQuery } from "hooks/useApiQuery";
 
 // Receive an array with some values and convert them into an array of object with the format of Form options
 const generateOptions: GenerateOptionsFunc = (

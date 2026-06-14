@@ -1,4 +1,4 @@
-import { Sections } from "types/routing.types";
+import { Sections } from "@/types/routing.types";
 
 export interface SetupSectionBaseProps {
   /** Key of the table selected: table_name */

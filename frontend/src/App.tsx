@@ -1,22 +1,23 @@
-import "./App.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
-import { useLabels } from "./context/Label/Label";
-import { useAuth } from "./context/Auth/Auth";
-import { PATH_DATABASE, PATH_IMPORT, PATH_LOGIN, PATH_SETUP } from "./config/K";
-import DatabaseMainPage from "./features/MainScreen/DatabaseMainPage";
-import RecordsListView from "./features/TableRecords/RecordsListView";
-import RecordDetail from "./features/TableRecordDetails/RecordDetail";
-import MassiveImport from "./features/MassiveImport/MassiveImport";
-import SetupMainPage from "./features/MainScreen/SetupMainPage";
-import SetupNewObject from "./features/Setup/SetupFeatures/SetupNewObject";
-import SetupSections from "./features/Setup/SetupFeatures/SetupSections/SetupSections";
-import MissingPage from "./components/MissingPage/MissingPage";
-import LoginPage from "./features/Login/LoginPage";
-import LoadingScreen from "./components/LoadingScreen/LoadingScreen";
-import NavBar from "./components/NavBar/NavBar";
-import ErrorBoundary from "components/ErrorBoundary/ErrorBoundary";
+import { PATH_DATABASE, PATH_IMPORT, PATH_LOGIN, PATH_SETUP } from "@/config/K";
+import { useAuth } from "@/context/Auth/Auth";
+import { useLabels } from "@/context/Label/Label";
+import ErrorBoundary from "@/components/ErrorBoundary/ErrorBoundary";
+import LoadingScreen from "@/components/LoadingScreen/LoadingScreen";
+import MissingPage from "@/components/MissingPage/MissingPage";
+import NavBar from "@/components/NavBar/NavBar";
+import LoginPage from "@/features/Login/LoginPage";
+import DatabaseMainPage from "@/features/MainScreen/DatabaseMainPage";
+import SetupMainPage from "@/features/MainScreen/SetupMainPage";
+import MassiveImport from "@/features/MassiveImport/MassiveImport";
+import SetupNewObject from "@/features/Setup/SetupFeatures/SetupNewObject";
+import SetupSections from "@/features/Setup/SetupFeatures/SetupSections/SetupSections";
+import RecordDetail from "@/features/TableRecordDetails/RecordDetail";
+import RecordsListView from "@/features/TableRecords/RecordsListView";
+
+import "bootstrap-icons/font/bootstrap-icons.css";
+import "./App.css";
 
 function App() {
   const { getLabel, loading: loadingLabels } = useLabels();

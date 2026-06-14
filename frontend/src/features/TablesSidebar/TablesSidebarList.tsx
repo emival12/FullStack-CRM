@@ -1,8 +1,9 @@
 import { ListGroup } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
+import { PATH_DATABASE } from "@/config/K";
+
 import type { TablesSidebarListProps } from "./TablesSidebar.types";
-import { PATH_DATABASE } from "config/K";
 
 /**
  * Shows a list of options, each option is a tables

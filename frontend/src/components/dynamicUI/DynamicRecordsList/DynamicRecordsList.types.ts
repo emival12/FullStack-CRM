@@ -1,4 +1,4 @@
-import { FieldDefinition, RecordListStructure } from "types/list.types";
+import { FieldDefinition, RecordListStructure } from "@/types/list.types";
 
 export interface DynamicRecordsListProps {
   /** Data structure of the record retrieved on the DB */

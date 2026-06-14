@@ -1,5 +1,5 @@
-import { Sections } from "types/routing.types";
-import { ObjectDefinitionItem } from "types/object.types";
+import { ObjectDefinitionItem } from "@/types/object.types";
+import { Sections } from "@/types/routing.types";
 
 export interface SetupSidebarProps {
   /** Key of the table selected */

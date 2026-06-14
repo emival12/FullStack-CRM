@@ -1,17 +1,18 @@
-import { useState, useEffect } from "react";
+import { useEffect,useState } from "react";
 import {
-  Form,
-  FloatingLabel,
-  Container,
-  Row,
   Col,
+  Container,
+  FloatingLabel,
+  Form,
   Image,
+  Row,
 } from "react-bootstrap";
 
+import { FieldType } from "@/types/field.types";
+import { DIRECT_ENDPOINTS } from "@/api/endpoints";
+import { useLabels } from "@/context/Label/Label";
+
 import type { DynamicImageProps } from "./DynamicForm.types";
-import { FieldType } from "types/field.types";
-import { useLabels } from "context/Label/Label";
-import { DIRECT_ENDPOINTS } from "api/endpoints";
 import { isDisabled } from "./helpers";
 
 /**

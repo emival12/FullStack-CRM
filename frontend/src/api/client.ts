@@ -1,4 +1,5 @@
 import axios from "axios";
+
 import { parseApiError } from "./errors";
 
 const client = axios.create({ baseURL: "/api" });
