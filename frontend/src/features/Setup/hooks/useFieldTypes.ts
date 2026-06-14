@@ -74,7 +74,7 @@ const cloneAndAddOptions: CloneAndAddOptionsFunc = (
   fieldName,
   options,
 ) => {
-  let clone = structuredClone(structureObject);
+  const clone = structuredClone(structureObject);
   clone[fieldName].options = options;
   return clone;
 };
@@ -134,7 +134,7 @@ const computeDependentForm: ComputeDependentFormFunc = (
 
   const options = generateLookupOptions(sourceOptions?.[referenceObject]);
   if (target?.[fieldName]) {
-    let clonedTarget = structuredClone(target);
+    const clonedTarget = structuredClone(target);
     clonedTarget[fieldName].options = options;
     return clonedTarget;
   }

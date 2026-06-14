@@ -77,13 +77,14 @@ const formatValue: FormatValueFunction = (
 
   switch (fieldType) {
     case "date":
-    case "datetime-local":
+    case "datetime-local": {
       const formatter = formatterDate[fieldType];
       const date =
         fieldType === "date"
           ? new Date(fieldValue + "T00:00:00")
           : new Date(fieldValue);
       return formatter.format(date);
+    }
     case "checkbox":
       return fieldValue ? true : false;
     default:

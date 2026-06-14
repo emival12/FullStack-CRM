@@ -70,7 +70,7 @@ export default function SetupSectionHome({
   const onSubmit = async (data: Record<string, any>) => {
     if (!objectData || !tableKey || !sectionKey) return;
 
-    let modified_data: Record<string, any> = {};
+    const modified_data: Record<string, any> = {};
     for (const [key, value] of Object.entries(data)) {
       if (
         objectData[key.toLowerCase() as keyof ObjectDefinitionItem] !== value

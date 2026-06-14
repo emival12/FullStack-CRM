@@ -77,7 +77,7 @@ export default function RecordDetail(): React.ReactElement | null {
   const onSubmit = async (data: Record<string, any>) => {
     if (!fields) return;
 
-    let modified_data: Record<string, any> = {};
+    const modified_data: Record<string, any> = {};
     let new_PK = null;
     for (const [key, info] of Object.entries(fields.field_structure)) {
       if (info?.value !== data[key]) {

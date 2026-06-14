@@ -108,7 +108,7 @@ export default function SetupSectionFieldsEdit({
   ]);
 
   const onSubmit = (data: Record<string, any>) => {
-    console.log("TODO submit"); // TODO when we work on the setup implementations
+    console.log("TODO submit", data); // TODO when we work on the setup implementations
   };
 
   if (isMissingRecord) {

@@ -5,8 +5,6 @@ setup_logging() # Inizialize the logging of the app
 import os
 import logging
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from core.exceptions import log_event
 from routers import auth, assets, records, setup, import_
@@ -26,10 +24,8 @@ app.include_router(records.router)
 ###############################################
 # PRODUCTION
 ###############################################
-BUILD_DIR = get_correct_path("build", dev_folder_path="frontend")
+BUILD_DIR = get_correct_path("dist", dev_folder_path="frontend")
 BUILD_DIR_REAL = os.path.realpath(BUILD_DIR)
-
-app.mount("/static", StaticFiles(directory=os.path.join(BUILD_DIR, "static")), name="static")
 
 @app.get("/{catchall:path}")
 async def serve_react_app(request: Request, catchall: str):
