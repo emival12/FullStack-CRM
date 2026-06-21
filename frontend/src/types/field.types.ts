@@ -46,7 +46,7 @@ export interface BaseFieldInfo {
   min_limit_value?: string | number;
 
   order?: number;
-  is_textarea?: boolean; //used only in the setup
+  is_textarea?: 0 | 1; //used only in the setup
   label?: string; //used only in the setup
 }
 

@@ -1,4 +1,4 @@
-import { FloatingLabel,Form } from "react-bootstrap";
+import { FloatingLabel, Form } from "react-bootstrap";
 import TextareaAutosize from "react-textarea-autosize";
 
 import {
@@ -226,10 +226,8 @@ export default function DynamicForm({
         <Form.Control.Feedback type="invalid">
           {errors[key]?.message?.toString()}
         </Form.Control.Feedback>
-        {info?.is_textarea ? (
+        {Boolean(info?.is_textarea) && (
           <div>{getLabel("FORM.TEXT_AREA_HELP")}</div>
-        ) : (
-          <></>
         )}
       </>
     );

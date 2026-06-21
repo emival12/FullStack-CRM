@@ -1,4 +1,4 @@
-import { type BaseFieldInfo,FieldType } from "@/types/field.types";
+import { type BaseFieldInfo, FieldType } from "@/types/field.types";
 
 // SINGLE FIELDS FOR LOGIN
 export const EMAIL_LOGIN_BASE: BaseFieldInfo = {
@@ -272,7 +272,7 @@ export const AGGREGATION_FUNCTION_BASE: BaseFieldInfo = {
 export const OPTION_VALUES_BASE: BaseFieldInfo = {
   field_name: "options_values",
   field_type: FieldType.TEXT,
-  is_textarea: true,
+  is_textarea: 1,
   length: 1000,
   is_editable: 1,
   is_required: 1,

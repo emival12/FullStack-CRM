@@ -1,4 +1,4 @@
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Col,
   Container,
@@ -33,7 +33,7 @@ export default function DynamicImage({
   }, [info?.value]);
 
   const renderImage = () => {
-    if (!info?.value) return <></>;
+    if (!info?.value) return null;
     if (imgError) return <div>{getLabel("FORM.IMAGE_NOT_FOUND")}</div>;
 
     return (
