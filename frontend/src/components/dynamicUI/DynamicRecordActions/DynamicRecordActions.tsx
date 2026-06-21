@@ -123,6 +123,7 @@ export default function DynamicRecordActions({
         titleText={modalConfig.title}
         bodyText={modalConfig.body}
         loading={loading}
+        destructive={true}
       />
     </div>
   );

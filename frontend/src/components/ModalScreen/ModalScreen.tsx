@@ -14,6 +14,7 @@ export default function ModalScreen({
   titleText,
   bodyText,
   loading,
+  destructive = false,
 }: ModalScreenProps): React.ReactElement {
   const { getLabel } = useLabels();
 
@@ -40,7 +41,7 @@ export default function ModalScreen({
         </Button>
         <Button
           disabled={loading}
-          variant="primary"
+          variant={destructive ? "danger" : "primary"}
           onClick={() => successFunction()}
         >
           {loading ? <Spinner size="sm" /> : getLabel("BUTTONS.CONFIRM")}

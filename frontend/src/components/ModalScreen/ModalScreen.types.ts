@@ -16,4 +16,7 @@ export interface ModalScreenProps {
 
   /** Boolean used to block the UI */
   loading: boolean;
+
+  /** Boolean to render the confirm button in the danger style */
+  destructive?: boolean;
 }
