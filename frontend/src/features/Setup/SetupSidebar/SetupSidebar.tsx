@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { Sections } from "@/types/routing.types";
 import { ENDPOINTS } from "@/api/endpoints";
-import { PATH_SETUP } from "@/config/K";
+import { ROUTES } from "@/config/routes";
 import { useLabels } from "@/context/Label/Label";
 import { useApiQuery } from "@/hooks/useApiQuery";
 import { useFeedback } from "@/hooks/useFeedback";
@@ -60,7 +60,9 @@ export default function SetupSidebar({
               toggleSidebar(); //useful only for the mobile
 
               const value = e.target.value || null;
-              const path = value ? `${PATH_SETUP}/${value}` : PATH_SETUP;
+              const path = value
+                ? ROUTES.setup.table(value)
+                : ROUTES.setup.root;
               navigate(path);
             }}
           >
@@ -79,7 +81,7 @@ export default function SetupSidebar({
               <ListGroup.Item
                 action
                 as={Link}
-                to={`${PATH_SETUP}/${tableKey}/${section}`}
+                to={ROUTES.setup.section(tableKey, section)}
                 key={section}
                 active={section === sectionKey}
                 onClick={() => {

@@ -1,9 +1,9 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { Col,Form, Row, Table } from "react-bootstrap";
+import { Col, Form, Row, Table } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import { RecordListStructure } from "@/types/list.types";
-import { NUM_RECORD_TO_SHOW, PATH_DATABASE } from "@/config/K";
+import { NUM_RECORD_TO_SHOW } from "@/config/K";
 import { useLabels } from "@/context/Label/Label";
 import MissingPage from "@/components/MissingPage/MissingPage";
 import PaginationControl from "@/components/PaginationControl/PaginationControl";
@@ -98,8 +98,7 @@ const formatValue: FormatValueFunction = (
  */
 export default function DynamicRecordsList({
   data,
-  redirectKey,
-  pathRedirect = PATH_DATABASE,
+  getRecordPath,
 }: DynamicRecordsListProps): React.ReactElement {
   const { getLabel, language } = useLabels();
   const navigate = useNavigate();
@@ -189,9 +188,7 @@ export default function DynamicRecordsList({
                   fieldValue={record[field.key]}
                   fieldType={field.field_type}
                   isPrimaryKey={field.key === primary_key_name}
-                  onNavigate={(val: string) =>
-                    navigate(`${pathRedirect}/${redirectKey}/${val}`)
-                  }
+                  onNavigate={(val: string) => navigate(getRecordPath(val))}
                   formatterDate={formatterDate}
                 />
               ))}

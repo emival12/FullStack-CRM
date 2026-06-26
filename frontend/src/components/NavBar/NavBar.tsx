@@ -1,7 +1,7 @@
-import { Container,Nav, Navbar } from "react-bootstrap";
+import { Container, Nav, Navbar } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
-import { PATH_DATABASE, PATH_IMPORT, PATH_SETUP } from "@/config/K";
+import { ROUTES } from "@/config/routes";
 import { useAuth } from "@/context/Auth/Auth";
 import { useLabels } from "@/context/Label/Label";
 
@@ -24,15 +24,15 @@ export default function NavBar(): React.ReactElement {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link as={Link} to={PATH_DATABASE}>
+            <Nav.Link as={Link} to={ROUTES.database.root}>
               {getLabel("NAVBAR.DATABASE")}
             </Nav.Link>
-            <Nav.Link as={Link} to={PATH_IMPORT}>
+            <Nav.Link as={Link} to={ROUTES.import.root}>
               {getLabel("NAVBAR.IMPORT")}
             </Nav.Link>
           </Nav>
           <Nav>
-            <Nav.Link as={Link} to={PATH_SETUP}>
+            <Nav.Link as={Link} to={ROUTES.setup.root}>
               <i className="bi bi-gear"></i>
             </Nav.Link>
           </Nav>

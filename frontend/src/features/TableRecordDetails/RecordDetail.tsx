@@ -1,16 +1,13 @@
 import { useEffect, useState } from "react";
 import { Tab, Tabs } from "react-bootstrap";
 import { useForm } from "react-hook-form";
-import { useNavigate,useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 
 import { DatabaseOutletContext } from "@/types/routing.types";
 import { ENDPOINTS } from "@/api/endpoints";
 import { ApiError, CRUDResult } from "@/api/types";
-import {
-  ERROR_MISSING_RECORD,
-  ERROR_MISSING_TABLE,
-  PATH_DATABASE,
-} from "@/config/K";
+import { ERROR_MISSING_RECORD, ERROR_MISSING_TABLE } from "@/config/K";
+import { ROUTES } from "@/config/routes";
 import { useAuth } from "@/context/Auth/Auth";
 import { useLabels } from "@/context/Label/Label";
 import { useApiMutation } from "@/hooks/useApiMutation";
@@ -102,7 +99,7 @@ export default function RecordDetail(): React.ReactElement | null {
         await mutate(payload);
         setIsEdit(false);
         if (new_PK !== null) {
-          navigate(PATH_DATABASE + "/" + tableKey + "/" + new_PK);
+          navigate(ROUTES.database.record(tableKey, new_PK));
         } else {
           refetch();
         }
@@ -140,7 +137,7 @@ export default function RecordDetail(): React.ReactElement | null {
               table: tableKey,
               id: recordId,
             }}
-            redirectAPI={PATH_DATABASE + "/" + tableKey}
+            redirectAPI={ROUTES.database.table(tableKey)}
           />
           <DynamicForm
             fields={fields.field_structure}
@@ -164,7 +161,9 @@ export default function RecordDetail(): React.ReactElement | null {
                 <div className="fw-bold mb-2">{related_list.label}</div>
                 <DynamicRecordsList
                   data={related_list}
-                  redirectKey={related_list.table.key}
+                  getRecordPath={(id) =>
+                    ROUTES.database.record(related_list.table.key, id)
+                  }
                 />
               </div>
             ))}

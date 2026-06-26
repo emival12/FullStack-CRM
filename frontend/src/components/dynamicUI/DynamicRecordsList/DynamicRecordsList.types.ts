@@ -4,11 +4,8 @@ export interface DynamicRecordsListProps {
   /** Data structure of the record retrieved on the DB */
   data: RecordListStructure;
 
-  /** Table currently selected */
-  redirectKey: string;
-
-  /** Path to use in case of redirect */
-  pathRedirect?: string;
+  /** Returns the navigation path for a record given its primary key */
+  getRecordPath: (id: string) => string;
 }
 
 export interface RecordCellProps {

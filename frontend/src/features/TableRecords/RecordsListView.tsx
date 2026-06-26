@@ -6,6 +6,7 @@ import { RecordListStructure } from "@/types/list.types";
 import { DatabaseOutletContext } from "@/types/routing.types";
 import { ENDPOINTS } from "@/api/endpoints";
 import { ERROR_MISSING_TABLE } from "@/config/K";
+import { ROUTES } from "@/config/routes";
 import { useLabels } from "@/context/Label/Label";
 import { useApiQuery } from "@/hooks/useApiQuery";
 import { useFeedback } from "@/hooks/useFeedback";
@@ -68,7 +69,10 @@ export default function RecordsListView(): React.ReactElement | null {
           {getLabel("BUTTONS.NEW")}
         </Button>
       </div>
-      <DynamicRecordsList data={records} redirectKey={tableKey} />
+      <DynamicRecordsList
+        data={records}
+        getRecordPath={(id) => ROUTES.database.record(tableKey, id)}
+      />
       <NewRecord
         tableKey={tableKey}
         showNewModal={showNewModal}

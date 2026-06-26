@@ -7,11 +7,6 @@ import {
   PASSWORD_LOGIN_BASE,
 } from "./K_FieldBaseStructure";
 
-export const PATH_LOGIN = "/login";
-export const PATH_DATABASE = "/database";
-export const PATH_IMPORT = "/import";
-export const PATH_SETUP = "/setup";
-
 export const ERROR_MISSING_TABLE = "INPUT_TABLE_NAME_NOT_FOUND";
 export const ERROR_MISSING_RECORD = "INPUT_RECORD_ID_NOT_FOUND";
 

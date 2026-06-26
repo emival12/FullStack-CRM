@@ -1,7 +1,7 @@
 import { ListGroup } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
-import { PATH_DATABASE } from "@/config/K";
+import { ROUTES } from "@/config/routes";
 
 import type { TablesSidebarListProps } from "./TablesSidebar.types";
 
@@ -19,7 +19,7 @@ export default function TablesSidebarList({
       <ListGroup.Item
         action
         as={Link}
-        to={`${PATH_DATABASE}/${tableItem.key}`}
+        to={ROUTES.database.table(tableItem.key)}
         key={tableItem.key}
         active={tableItem.key === tableKey}
         onClick={toggleSidebar}

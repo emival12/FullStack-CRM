@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Button,Col, Container, Row } from "react-bootstrap";
+import { Button, Col, Container, Row } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 
 import { ApiError } from "@/api/types";
-import { LOGIN_FIELD_STRUCTURE, PATH_DATABASE } from "@/config/K";
+import { LOGIN_FIELD_STRUCTURE } from "@/config/K";
+import { ROUTES } from "@/config/routes";
 import { useAuth } from "@/context/Auth/Auth";
 import { useLabels } from "@/context/Label/Label";
 import { useFeedback } from "@/hooks/useFeedback";
@@ -28,7 +29,7 @@ export default function LoginPage(): React.ReactElement {
     setLoading(true);
     try {
       await login(data["email"], data["password"]);
-      navigate(PATH_DATABASE);
+      navigate(ROUTES.database.root);
     } catch (err) {
       showErrorToast(err as ApiError, "LOGIN");
     } finally {

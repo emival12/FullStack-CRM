@@ -6,7 +6,7 @@ import { ObjectDefinitionItem } from "@/types/object.types";
 import { SetupOutletContext } from "@/types/routing.types";
 import { ENDPOINTS } from "@/api/endpoints";
 import { ApiError, CRUDResult } from "@/api/types";
-import { PATH_SETUP } from "@/config/K";
+import { ROUTES } from "@/config/routes";
 import { useLabels } from "@/context/Label/Label";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { useApiQuery } from "@/hooks/useApiQuery";
@@ -112,7 +112,7 @@ export default function SetupSectionHome({
         payloadAPI={{
           table: tableKey,
         }}
-        redirectAPI={PATH_SETUP}
+        redirectAPI={ROUTES.setup.root}
         extraActionOnDelete={() => {
           setRefreshSidebar(!refreshSidebar);
         }}

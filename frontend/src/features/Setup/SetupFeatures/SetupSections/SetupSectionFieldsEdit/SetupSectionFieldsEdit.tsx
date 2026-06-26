@@ -4,7 +4,8 @@ import { useForm } from "react-hook-form";
 import { FieldType } from "@/types/field.types";
 import { ENDPOINTS } from "@/api/endpoints";
 import { ApiError } from "@/api/types";
-import { ERROR_MISSING_RECORD, PATH_SETUP } from "@/config/K";
+import { ERROR_MISSING_RECORD } from "@/config/K";
+import { ROUTES } from "@/config/routes";
 import { useLabels } from "@/context/Label/Label";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { useFeedback } from "@/hooks/useFeedback";
@@ -134,7 +135,7 @@ export default function SetupSectionFieldsEdit({
           table: tableKey,
           fieldName: recordId,
         }}
-        redirectAPI={`${PATH_SETUP}/${tableKey}/${sectionKey}`}
+        redirectAPI={ROUTES.setup.section(tableKey!, sectionKey!)}
       />
       <DynamicForm
         fields={fields?.field_structure}

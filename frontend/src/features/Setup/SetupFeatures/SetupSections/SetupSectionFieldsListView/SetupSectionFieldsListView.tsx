@@ -3,7 +3,7 @@ import { Button } from "react-bootstrap";
 
 import { RecordListStructure } from "@/types/list.types";
 import { ENDPOINTS } from "@/api/endpoints";
-import { PATH_SETUP } from "@/config/K";
+import { ROUTES } from "@/config/routes";
 import { useLabels } from "@/context/Label/Label";
 import { useApiQuery } from "@/hooks/useApiQuery";
 import { useFeedback } from "@/hooks/useFeedback";
@@ -56,8 +56,7 @@ export default function SetupSectionFieldsListView({
       </div>
       <DynamicRecordsList
         data={records}
-        redirectKey={`${tableKey}/${sectionKey}`}
-        pathRedirect={PATH_SETUP}
+        getRecordPath={(id) => ROUTES.setup.record(tableKey!, sectionKey!, id)}
       />
       <NewFieldRecord
         tableKey={tableKey}
