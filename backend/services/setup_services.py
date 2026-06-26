@@ -25,7 +25,7 @@ from services.record_crud import (
 
 logger = logging.getLogger(__name__) 
 
-def check_table_existance(cursor, table_name: str):
+def check_table_existence(cursor, table_name: str):
     check_allowed_object(cursor, table_name)  
     return {"result": 1}
 

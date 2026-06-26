@@ -21,7 +21,7 @@ export default function SetupNewObject(): React.ReactElement {
   const { getLabel } = useLabels();
   const { showErrorToast } = useFeedback();
   const { mutate, loading } = useApiMutation<Record<string, any>, CRUDResult>(
-    ENDPOINTS.setup.object.new,
+    ENDPOINTS.setup.object.create,
     "post",
   );
   const {

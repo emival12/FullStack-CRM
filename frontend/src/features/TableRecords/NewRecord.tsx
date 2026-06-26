@@ -42,7 +42,7 @@ export default function NewRecord({
   const { mutate, loading: loadingSubmit } = useApiMutation<
     Record<string, any>,
     CRUDResult
-  >(ENDPOINTS.crud.insert, "post");
+  >(ENDPOINTS.crud.create, "post");
   const {
     register,
     handleSubmit,

@@ -3,7 +3,7 @@ from core.responses import EnvelopeResponse
 
 from config import get_cursor_readonly, get_cursor
 from services.setup_services import (
-    check_table_existance,
+    check_table_existence,
     get_field_creation_structure,
     get_object_definition,
     get_object_fields_record,
@@ -17,9 +17,9 @@ from services.setup_services import (
 
 router = APIRouter(prefix="/api/setup", tags=["setup"], default_response_class=EnvelopeResponse)
 
-@router.get("/check-table-existance")
-def endpoint_check_table_existance(table_name: str, cursor=Depends(get_cursor_readonly)):
-    result = check_table_existance(cursor, table_name)  # raise 500, 404-INPUT_TABLE_NAME_NOT_FOUND
+@router.get("/check-table-existence")
+def endpoint_check_table_existence(table_name: str, cursor=Depends(get_cursor_readonly)):
+    result = check_table_existence(cursor, table_name)  # raise 500, 404-INPUT_TABLE_NAME_NOT_FOUND
     return result 
 
 @router.post("/new-object")

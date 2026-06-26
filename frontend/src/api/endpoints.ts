@@ -9,7 +9,7 @@ export const ENDPOINTS = {
     translations: (lang: string) => `/translations/${lang}`,
   },
   crud: {
-    insert: "/insert",
+    create: "/insert",
     update: "/update",
     delete: "/delete",
   },
@@ -34,19 +34,19 @@ export const ENDPOINTS = {
   setup: {
     object: {
       exists: (tableKey: string) =>
-        `/setup/check-table-existance?${new URLSearchParams({ table_name: tableKey }).toString()}`,
-      new: "/setup/new-object",
+        `/setup/check-table-existence?${new URLSearchParams({ table_name: tableKey }).toString()}`,
+      create: "/setup/new-object",
       definition: (tableKey: string) => `/setup/${tableKey}`,
-      update: `/setup/home/update`,
-      delete: `/setup/home/delete`,
+      update: "/setup/home/update",
+      delete: "/setup/home/delete",
     },
     fields: {
       recordsList: (tableKey: string) => `/setup/${tableKey}/fields`,
-      newStructure: `/setup/field/new/structure`,
-      new: (tableKey: string) => `/setup/${tableKey}/field/new`,
+      newStructure: "/setup/field/new/structure",
+      create: (tableKey: string) => `/setup/${tableKey}/field/new`,
       record: (tableKey: string, recordId: string) =>
         `/setup/${tableKey}/fields/${recordId}`,
-      delete: `/setup/fields/delete`,
+      delete: "/setup/fields/delete",
     },
   },
 } as const;

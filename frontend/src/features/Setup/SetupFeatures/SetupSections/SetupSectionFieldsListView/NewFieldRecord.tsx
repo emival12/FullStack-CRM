@@ -28,7 +28,7 @@ export default function NewFieldRecord({
   const { mutate, loading: loadingSubmit } = useApiMutation<
     Record<string, any>,
     CRUDResult
-  >(ENDPOINTS.setup.fields.new(tableKey ?? ""), "post");
+  >(ENDPOINTS.setup.fields.create(tableKey ?? ""), "post");
   const {
     selectionForm,
     loading: loadingFieldType,
