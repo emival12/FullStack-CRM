@@ -17,7 +17,7 @@ from pystray import MenuItem as item
 
 def start_server():
     from main import app 
-    uvicorn.run(app, host="127.0.0.1", port=8000, log_config=None)
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_config=None)
 
 # 2. Open the browser with the url of the app
 def open_browser(icon, item):
