@@ -46,6 +46,7 @@ class SystemObjects(StrEnum):
     """
     USER_DEFINITION          = "user_definition"
     USER_PROFILE_DEFINITION  = "user_profile_definition"
+    USER_SESSION             = "user_session"
     OBJECT_DEFINITION        = "object_definition"
     RECORD_TYPE_DEFINITION   = "record_type_definition"
     FIELD_DEFINITION         = "field_definition"
@@ -153,4 +154,12 @@ class SystemFieldName_UD:
     PASSWORD    = "password"
     IS_ACTIVE   = "is_active"
 
-    
+class SystemFieldName_US:
+    """
+    String constants for column names of the user_session System Table
+    Use these when accessing row dictionaries returned by system table queries.
+    This class is not meant to be instantiated.
+    """
+    TOKEN         = "token"
+    USER_ID       = "user_id"
+    EXPIRES_AT    = "expires_at"

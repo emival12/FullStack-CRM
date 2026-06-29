@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Request
 from core.responses import EnvelopeResponse
 
 from config import get_cursor_readonly, get_cursor
+from core.dependencies import get_session_user
 from services.setup_services import (
     check_table_existence,
     get_field_creation_structure,
@@ -15,7 +16,7 @@ from services.setup_services import (
     get_field_info
 )
 
-router = APIRouter(prefix="/api/setup", tags=["setup"], default_response_class=EnvelopeResponse)
+router = APIRouter(prefix="/api/setup", tags=["setup"], default_response_class=EnvelopeResponse, dependencies=[Depends(get_session_user)])
 
 @router.get("/check-table-existence")
 def endpoint_check_table_existence(table_name: str, cursor=Depends(get_cursor_readonly)):

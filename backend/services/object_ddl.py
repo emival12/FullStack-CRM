@@ -1,8 +1,19 @@
 from __future__ import annotations
 import re
 import logging
+from datetime import datetime
 from fastapi import HTTPException
-from core.models import SystemObjects, SystemFieldName_OD, SystemFieldName_FD, SystemFieldName_ROLLD, SystemFieldName_RTD, FieldTypes, StandardObjectField, MASTER_RECORD_TYPE
+from core.models import (
+    SystemObjects, 
+    SystemFieldName_OD, 
+    SystemFieldName_FD, 
+    SystemFieldName_ROLLD, 
+    SystemFieldName_RTD, 
+    SystemFieldName_US, 
+    FieldTypes,
+    StandardObjectField, 
+    MASTER_RECORD_TYPE
+)
 from core.exceptions import raise_input_exception, raise_server_exception, log_event, ExceptionKind
 from db.db_queries import (
     make_table_key,
@@ -27,7 +38,21 @@ from db.query_builder import QueryBuilderLogicalOperator, build_delete_query
 logger = logging.getLogger(__name__) 
 
 ########## START - Base DML System objects ##########
-def insert_object_definition_record(cursor, params: list[tuple]) -> None:
+def insert_user_session(cursor, params: list[tuple]) -> None:
+    command = """
+    INSERT INTO user_session(token, user_id, expires_at)
+    VALUES (%s, %s, %s);
+    """
+    execute_query(cursor, get_caller_name(), command, params)
+
+def delete_expired_sessions(cursor):
+    where_filter = [f"{SystemFieldName_US.EXPIRES_AT} <= %s"]
+    params = [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+    query = build_delete_query(SystemObjects.USER_SESSION, where_filter)
+    execute_query(cursor, f'{get_caller_name()}: {SystemObjects.USER_SESSION}', query, [tuple(params)])
+
+
+def insert_object_definition(cursor, params: list[tuple]) -> None:
     command = """
     INSERT INTO object_definition(object_label, object_name, category, sort_order, is_system_object, is_single_record_type)
     VALUES (%s, %s, %s, %s, %s, %s);
@@ -514,7 +539,7 @@ def _build_system_metadata_params(
     }
 
 def _insert_object_system_metadata(cursor, sys_metadata_params: dict) -> None:
-    insert_object_definition_record(cursor, sys_metadata_params.get("object_definition"))
+    insert_object_definition(cursor, sys_metadata_params.get("object_definition"))
     insert_record_type_definition(cursor, sys_metadata_params.get("record_type_definition"))
     insert_field_definition(cursor, sys_metadata_params.get("field_definition"))
     insert_list_view_definition(cursor, sys_metadata_params.get("list_view_definition"))
@@ -638,7 +663,6 @@ def delete_field_ddl(cursor, table_name, field_name, current_field_type):
     query = build_delete_query(SystemObjects.FIELD_DEFINITION, where_filter)
     execute_query(cursor, f'{get_caller_name()}: {SystemObjects.FIELD_DEFINITION}', query, [tuple(params)])
     return {"result": 1}
-
 
 ########## END - Delete ##########
 

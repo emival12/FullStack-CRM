@@ -1,14 +1,19 @@
 import bcrypt
+import secrets
 import logging
+from datetime import datetime
 from core.exceptions import raise_input_exception, log_event
 from core.models import SystemFieldName_UD
-from db.db_queries import get_user_definition_record
+from db.db_queries import (
+    get_user_definition_record,
+    get_user_definition_record_by_token
+)
+from services.object_ddl import insert_user_session, delete_expired_sessions
 
 logger = logging.getLogger(__name__) 
 
-def login(cursor, db_name: str, email: str, password: str) -> dict:
+def login(cursor, email: str, password: str) -> dict:
     user = get_user_definition_record(cursor, email)
-
     try:
         is_password_valid = user and bcrypt.checkpw(password.encode("utf-8"), user[SystemFieldName_UD.PASSWORD].encode("utf-8"))
     except (ValueError, AttributeError, TypeError):
@@ -20,15 +25,22 @@ def login(cursor, db_name: str, email: str, password: str) -> dict:
         raise_input_exception(401, "INVALID_CREDENTIALS")
 
     user.pop(SystemFieldName_UD.PASSWORD)
-    user["db_name"] = db_name
     log_event(logging.INFO, logger, "User logged in", user_id=user[SystemFieldName_UD.ID], email=email)
+
+    delete_expired_sessions(cursor)
+
+    token = secrets.token_urlsafe(32)
+    now = datetime.now()
+    insert_user_session(cursor, [(token, user[SystemFieldName_UD.ID], datetime(now.year, now.month, now.day, 23, 59, 59))])
+    return {
+        "token": token, 
+        "user": user
+    }
+
+def get_current_user(cursor, token: str) -> dict:
+    user = get_user_definition_record_by_token(cursor, token)
+    if not user:
+        raise_input_exception(401, "INVALID_SESSION")
+
     return user
 
-def check_user_login(cursor, conf_db_name: str, db_name: str, email: str) -> None:
-    if conf_db_name != db_name:
-        log_event(logging.WARNING, logger, "Unexpected DB", conf_db_name=conf_db_name, db_name=db_name)
-        raise_input_exception(401, "DATABASE_CHANGED")
-
-    user_record = get_user_definition_record(cursor, email)
-    if not user_record:
-        raise_input_exception(401, "INVALID_SESSION")

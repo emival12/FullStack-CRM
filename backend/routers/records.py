@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Request
 from core.responses import EnvelopeResponse
 from config import get_cursor_readonly, get_cursor
+from core.dependencies import get_session_user
 from services.record_services import (
     validate_and_split_table_name,
     get_tables_plain,
@@ -14,7 +15,7 @@ from services.record_services import (
 )
 
 
-router = APIRouter(prefix="/api", tags=["data"], default_response_class=EnvelopeResponse)
+router = APIRouter(prefix="/api", tags=["data"], default_response_class=EnvelopeResponse, dependencies=[Depends(get_session_user)])
 
 @router.get("/plain_tables")
 def endpoint_get_tables_plain(cursor=Depends(get_cursor_readonly)):

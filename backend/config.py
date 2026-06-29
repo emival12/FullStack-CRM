@@ -41,12 +41,6 @@ def get_config() -> configparser.ConfigParser:
 def get_current_config() -> configparser.ConfigParser:
     return get_config()
 
-def get_config_db_name(config: configparser.ConfigParser) -> str:
-    try:
-        return config["database"]["database"]
-    except KeyError:
-        raise_server_exception(logger, "Missing database name in config")
-
 ########## END - Config file ##########
 
 

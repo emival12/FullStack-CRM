@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Form
 from core.responses import EnvelopeResponse
-
 from config import get_cursor_readonly, get_cursor
+from core.dependencies import get_session_user
 from core.exceptions import raise_input_exception
 from services.import_services import (
     get_list_of_importable_objects,
     elaborate_import_file
 )
 
-router = APIRouter(prefix="/api", tags=["massive_import"], default_response_class=EnvelopeResponse)
+router = APIRouter(prefix="/api", tags=["massive_import"], default_response_class=EnvelopeResponse, dependencies=[Depends(get_session_user)])
 
 
 @router.get("/import")

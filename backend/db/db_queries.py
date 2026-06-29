@@ -1,5 +1,6 @@
 from __future__ import annotations
 import logging
+from datetime import datetime
 from typing import Callable
 from core.exceptions import raise_input_exception, raise_server_exception, ExceptionKind
 from core.models import (
@@ -982,6 +983,60 @@ def get_user_definition_record(cursor, email: str | None = None, user_id: str | 
         raise_server_exception(logger, "DB query failed", query=query)
 
     return cursor.fetchone()
+
+def get_user_definition_record_by_token(cursor, token: str) -> dict:
+    """
+        Resolve a session token to its owner user, validating the session in the same query.
+        Joins user_session -> user_definition -> user_profile_definition and returns only the user's display fields. 
+        The lookup filters on a matching token AND a non-expired session (expires_at > now).
+
+        Args:
+            cursor (MySQLCursor): Database cursor used to execute SQL queries.
+            token (str): The opaque session token to resolve.
+
+        Returns:
+            dict: The user row (id, email, profile_name) when a valid, non-expired session matches the token
+
+        Raises:
+            HTTPException 500: On any database error.
+    """
+    us_table_name = "user_session"
+    us_table_alias = QueryBuilder.alias(us_table_name)
+
+    ud_table_name = "user_definition"
+    ud_table_alias = QueryBuilder.alias(ud_table_name)
+
+    upd_table_name = "user_profile_definition"
+    upd_table_alias = QueryBuilder.alias(upd_table_name)
+    select_fields = [
+        f"{ud_table_alias}.id",
+        f"{ud_table_alias}.email",
+        f"{upd_table_alias}.profile_name"
+    ]
+    join_conditions_ud = [
+        (f"{ud_table_alias}.id", f"{us_table_alias}.user_id"),
+    ]
+    join_conditions_upd = [
+        (f"{upd_table_alias}.id", f"{ud_table_alias}.profile_id")
+    ]
+
+    try:
+        query, params = (
+            QueryBuilder(us_table_name, select_fields)
+            .add_join(QueryBuilderJoinType.INNER, ud_table_name, join_conditions_ud)
+            .add_join(QueryBuilderJoinType.INNER, upd_table_name, join_conditions_upd)
+            .begin_filter()
+                .add(f"{us_table_alias}.token", QueryBuilderComparisonOperator.EQUAL, token)
+                .add(f"{us_table_alias}.expires_at", QueryBuilderComparisonOperator.GREATER_THAN, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            .end_filter()
+            .get_query()
+        )
+        cursor.execute(query, params)
+    except Exception as e:
+        raise_server_exception(logger, "DB query failed", query=query)
+
+    return cursor.fetchone()
+
 
 ########## END - Auth ##########
 

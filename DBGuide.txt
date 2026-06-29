@@ -26,6 +26,14 @@ INSERT INTO user_definition (email, password, profile_id, is_active)
 VALUES 
     ('admin@test.it', '$2b$12$PsFMsB9oKRQOwE0emOQnLuMV5Uh1RkEA3IC5KYUiAEL/fQZz9ti0q', 1, 1);
 
+
+CREATE TABLE user_session (
+    token VARCHAR(255) BINARY PRIMARY KEY,
+    user_id INT NOT NULL,
+    expires_at DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES user_definition(id) ON DELETE CASCADE
+);
+
 # Creazione Tabella object_definition
 #   La tabella contiene la definizione di tutti le tabelle del database con alcune informazioni chiave: 
 #   la categoria di appartenenza, l'rdinamento, se è una tabella di sistema o se possiede molteplici record type
