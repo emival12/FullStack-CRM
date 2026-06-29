@@ -17,6 +17,6 @@ async def endpoint_login(request: Request, cursor=Depends(get_cursor)):
     return result
 
 
-@router.post("/current_user")
+@router.get("/current_user")
 async def endpoint_get_current_user(user=Depends(get_session_user)):
     return user

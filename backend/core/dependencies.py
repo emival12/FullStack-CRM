@@ -13,6 +13,5 @@ def get_session_user(cursor=Depends(get_cursor_readonly), creds=Depends(HTTPBear
     """
     if not creds:
         raise_input_exception(401, "INVALID_SESSION")
-    
-    print(creds.credentials)
+
     return get_current_user(cursor, creds.credentials)

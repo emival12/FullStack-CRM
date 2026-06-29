@@ -7,14 +7,15 @@ import {
   useState,
 } from "react";
 
-import client from "@/api/client";
 import { ENDPOINTS } from "@/api/endpoints";
 import { useApiMutation } from "@/hooks/useApiMutation";
+import { useApiQuery } from "@/hooks/useApiQuery";
 
 import type {
   AuthContextType,
   AuthProviderProps,
   LoginBody,
+  LoginData,
   LoginFunc,
   UserData,
 } from "./Auth.types";
@@ -34,13 +35,20 @@ export const useAuth = () => {
 };
 
 export default function AuthProvider({ children }: AuthProviderProps) {
-  const { mutate } = useApiMutation<LoginBody, UserData>(
+  const [checkSession] = useState(() => !!localStorage.getItem("userToken"));
+  const [user, setUser] = useState<UserData | null>(null);
+
+  const { mutate } = useApiMutation<LoginBody, LoginData>(
     ENDPOINTS.auth.login,
     "post",
   );
-
-  const [user, setUser] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: userData,
+    loading,
+    error,
+  } = useApiQuery<UserData>(ENDPOINTS.auth.currentUser, {
+    enabled: checkSession,
+  });
 
   // localStorage is a internal dictionary of the browser
   const logout = useCallback(() => {
@@ -53,28 +61,20 @@ export default function AuthProvider({ children }: AuthProviderProps) {
       const payload: LoginBody = { email, password };
       const userData = await mutate(payload);
 
-      setUser(userData);
-      localStorage.setItem("userToken", JSON.stringify(userData));
+      localStorage.setItem("userToken", userData.token);
+      setUser(userData.user);
       return userData;
     },
     [mutate],
   );
 
-  //On start check if a user is already logged
   useEffect(() => {
-    const savedUser = localStorage.getItem("userToken");
-    if (savedUser) {
-      client
-        .post(ENDPOINTS.auth.checkConnection, savedUser)
-        .then(() => {
-          setUser(JSON.parse(savedUser) as UserData);
-        })
-        .catch(() => logout())
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
-  }, [logout]);
+    if (userData) setUser(userData);
+  }, [userData]);
+
+  useEffect(() => {
+    if (error) logout();
+  }, [error, logout]);
 
   // All the things passed in the values are available to all the components who read the context
   // children: are all the components inside the AuthProvider (in our case the entire App)

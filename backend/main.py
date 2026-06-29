@@ -13,7 +13,7 @@ import backup_manager
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
+app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 app.include_router(auth.router)
 app.include_router(assets.router)
 app.include_router(import_.router)

@@ -15,7 +15,7 @@ export const ENDPOINTS = {
   },
   auth: {
     login: "/login",
-    checkConnection: "/check_connection",
+    currentUser: "/current_user",
   },
   sidebar: {
     tables: "/tables",

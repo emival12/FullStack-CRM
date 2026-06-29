@@ -1,8 +1,12 @@
+export interface LoginData {
+  token: string;
+  user: UserData;
+}
+
 export interface UserData {
   id: number;
   email: string;
   profile_name: string;
-  db_name: string;
 }
 
 export type LoginBody = {
@@ -10,7 +14,7 @@ export type LoginBody = {
   password: string;
 };
 
-export type LoginFunc = (email: string, password: string) => Promise<UserData>;
+export type LoginFunc = (email: string, password: string) => Promise<LoginData>;
 
 export interface AuthContextType {
   user: UserData | null;
