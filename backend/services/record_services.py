@@ -317,6 +317,6 @@ def delete_record(cursor, table_name: str, record_type_name: str, record_id: str
     if impacted_parents:
         refresh_parents(cursor, impacted_parents, user_id)
         
-    log_event(logging.WARNING, logger, "Record deleted", object_name=table_name, record_type_name=record_type_name, record_id=record_id)
+    log_event(logging.WARNING, logger, "Record deleted", object_name=table_name, record_type_name=record_type_name, record_id=record_id, user_id=user_id)
     return result
 

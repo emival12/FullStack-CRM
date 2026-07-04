@@ -68,10 +68,6 @@ def elaborate_import_file(cursor, operation_type: str, object_name: str, user_id
     """
 
     check_allowed_object(cursor, object_name)
-    user = get_user_definition_record(cursor, user_id=user_id)
-    if not user:
-        raise_server_exception(logger, "Invalid user id", user_id=user_id)
-
     try:
         df = pd.read_csv(io.StringIO(file_decoded), delimiter=";", keep_default_na=False, na_values=[''], dtype=str)
     except Exception as err:

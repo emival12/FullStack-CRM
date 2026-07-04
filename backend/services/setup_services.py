@@ -29,25 +29,25 @@ def check_table_existence(cursor, table_name: str):
     check_allowed_object(cursor, table_name)  
     return {"result": 1}
 
-def create_object(cursor, object_data):
+def create_object(cursor, object_data, user_id: str):
     result = create_new_object(cursor, object_data)
-    log_event(logging.INFO, logger, "Object created", object_name=object_data[SystemFieldName_OD.OBJECT_NAME].lower())
+    log_event(logging.INFO, logger, "Object created", object_name=object_data[SystemFieldName_OD.OBJECT_NAME].lower(), user_id=user_id)
     return result
 
-def update_object(cursor, table_name: str, field_structure: dict) -> dict:
+def update_object(cursor, table_name: str, field_structure: dict, user_id: str) -> dict:
     check_allowed_object(cursor, table_name)
 
     result = update_record_by_id(cursor, "object_definition", None, field_structure, "object_name", table_name)
-    log_event(logging.INFO, logger, "Object updated", object_name=table_name)
+    log_event(logging.INFO, logger, "Object updated", object_name=table_name, user_id=user_id)
     return result
 
-def delete_object(cursor, table_name: str):
+def delete_object(cursor, table_name: str, user_id: str):
     check_allowed_object(cursor, table_name)
     result = delete_object_ddl(cursor, table_name)
-    log_event(logging.WARNING, logger, "Object deleted", object_name=table_name)
+    log_event(logging.WARNING, logger, "Object deleted", object_name=table_name, user_id=user_id)
     return result
 
-def delete_field(cursor, table_name: str, field_name: str) -> dict:
+def delete_field(cursor, table_name: str, field_name: str, user_id: str) -> dict:
     check_allowed_object(cursor, table_name)
 
     field_def= get_fields_definition(
@@ -62,7 +62,7 @@ def delete_field(cursor, table_name: str, field_name: str) -> dict:
 
     current_field_type = field_def[0]["field_type"]
     result = delete_field_ddl(cursor, table_name, field_name, current_field_type)
-    log_event(logging.WARNING, logger, "Field deleted", object_name=table_name, field_name=field_name)
+    log_event(logging.WARNING, logger, "Field deleted", object_name=table_name, field_name=field_name, user_id=user_id)
     return result
 
 def get_field_creation_structure(cursor) -> dict:
@@ -145,9 +145,9 @@ def get_object_fields_record(cursor, table_name: str) -> dict:
         "records": records
     }
 
-def create_field(cursor, table_name: str, field_data: dict):
+def create_field(cursor, table_name: str, field_data: dict, user_id: str):
     result = create_field_ddl(cursor, table_name, field_data)
-    log_event(logging.INFO, logger, "Field created", object_name=table_name, field_name=field_data[SystemFieldName_FD.FIELD_NAME].replace(" ", "_").lower())
+    log_event(logging.INFO, logger, "Field created", object_name=table_name, field_name=field_data[SystemFieldName_FD.FIELD_NAME].replace(" ", "_").lower(), user_id=user_id)
     return result
 
 def get_field_info(cursor, table_name: str, field_name: str, list_fields_by_type: dict) -> dict:
