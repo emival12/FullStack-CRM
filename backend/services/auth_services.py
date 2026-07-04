@@ -2,7 +2,7 @@ import bcrypt
 import secrets
 import logging
 from datetime import datetime
-from core.exceptions import raise_input_exception, log_event
+from core.exceptions import raise_input_exception, log_event, ExceptionKind
 from core.models import SystemFieldName_UD
 from db.db_queries import (
     get_user_definition_record,
@@ -40,7 +40,7 @@ def login(cursor, email: str, password: str) -> dict:
 def get_current_user(cursor, token: str) -> dict:
     user = get_user_definition_record_by_token(cursor, token)
     if not user:
-        raise_input_exception(401, "INVALID_SESSION")
+        raise_input_exception(401, "INVALID_SESSION", kind=ExceptionKind.BUSINESS_SHARED)
 
     return user
 

@@ -8,8 +8,11 @@ import {
 } from "react";
 
 import { ENDPOINTS } from "@/api/endpoints";
+import { ApiError } from "@/api/types";
+import { EVENT_EXPIRED_SESSION, USER_TOKEN_NAME } from "@/config/K";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { useApiQuery } from "@/hooks/useApiQuery";
+import { useFeedback } from "@/hooks/useFeedback";
 
 import type {
   AuthContextType,
@@ -35,7 +38,10 @@ export const useAuth = () => {
 };
 
 export default function AuthProvider({ children }: AuthProviderProps) {
-  const [checkSession] = useState(() => !!localStorage.getItem("userToken"));
+  const { showErrorToast } = useFeedback();
+  const [checkSession] = useState(
+    () => !!localStorage.getItem(USER_TOKEN_NAME),
+  );
   const [user, setUser] = useState<UserData | null>(null);
 
   const { mutate } = useApiMutation<LoginBody, LoginData>(
@@ -52,21 +58,36 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 
   // localStorage is a internal dictionary of the browser
   const logout = useCallback(() => {
-    localStorage.removeItem("userToken");
+    localStorage.removeItem(USER_TOKEN_NAME);
     setUser(null);
   }, []);
+
+  const logoutExpiredSession = useCallback(
+    (apiError: ApiError) => {
+      showErrorToast(apiError, "AUTH", { bypassErrorCodeFilter: true });
+      logout();
+    },
+    [logout, showErrorToast],
+  );
 
   const login: LoginFunc = useCallback(
     async (email, password) => {
       const payload: LoginBody = { email, password };
       const userData = await mutate(payload);
 
-      localStorage.setItem("userToken", userData.token);
+      localStorage.setItem(USER_TOKEN_NAME, userData.token);
       setUser(userData.user);
       return userData;
     },
     [mutate],
   );
+
+  useEffect(() => {
+    const handler = (e: Event) =>
+      logoutExpiredSession((e as CustomEvent<ApiError>).detail);
+    window.addEventListener(EVENT_EXPIRED_SESSION, handler);
+    return () => window.removeEventListener(EVENT_EXPIRED_SESSION, handler);
+  }, [logoutExpiredSession]);
 
   useEffect(() => {
     if (userData) setUser(userData);

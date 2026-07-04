@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 
 import { ApiError } from "@/api/types";
+import { ERROR_EXPIRED_SESSION } from "@/config/K";
 import { useLabels } from "@/context/Label/Label";
 import { useToast } from "@/context/Toast/Toast";
 
@@ -20,7 +21,13 @@ export const useFeedback = () => {
   );
 
   const showErrorToast = useCallback(
-    (apiErr: ApiError, featurePrefix: string) => {
+    (
+      apiErr: ApiError,
+      featurePrefix: string,
+      options?: { bypassErrorCodeFilter?: boolean },
+    ) => {
+      const bypassFilter = options?.bypassErrorCodeFilter ?? false;
+      if (!bypassFilter && apiErr.errorCode === ERROR_EXPIRED_SESSION) return;
       const errTitle = getLabel("TOAST.ERROR_TITLE");
       const errMessage = getErrorMessage(apiErr, featurePrefix);
 

@@ -7,6 +7,10 @@ import {
   PASSWORD_LOGIN_BASE,
 } from "./K_FieldBaseStructure";
 
+export const USER_TOKEN_NAME = "userToken";
+export const EVENT_EXPIRED_SESSION = "auth:session-expired";
+export const ERROR_EXPIRED_SESSION = "INVALID_SESSION";
+
 export const ERROR_MISSING_TABLE = "INPUT_TABLE_NAME_NOT_FOUND";
 export const ERROR_MISSING_RECORD = "INPUT_RECORD_ID_NOT_FOUND";
 

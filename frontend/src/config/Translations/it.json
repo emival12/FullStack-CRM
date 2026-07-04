@@ -4,6 +4,7 @@
     "UNKNOWN_ERROR": "Si è verificato un errore imprevisto. Contatta un admin",
     "RUNTIME_ERROR": "Si è verificato un errore imprevisto. Contatta un admin",
     "ADMIN_ERROR": "Si è verificato un errore imprevisto. Contatta un admin",
+    "INVALID_SESSION": "Sessione scaduta, è necessario rieffettuare il login",
     "INPUT_TABLE_NAME_NOT_FOUND": "La tabella indicata non esiste",
     "INPUT_RECORD_ID_NOT_FOUND": "Il record indicato non esiste",
     "BROKEN_FORMULA": "Si è verificato un errore nel calcolo della formula \"{{field_name}}\". Contatta un admin",
