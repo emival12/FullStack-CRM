@@ -46,9 +46,9 @@ async def endpoint_get_list_of_importable_objects(cursor=Depends(get_cursor_read
 async def import_records_from_csv(
     operation_type: str = Form(...),
     object_name: str = Form(...),
-    user_id: str = Form(...),
     file: UploadFile = File(...),
-    cursor=Depends(get_cursor)
+    cursor=Depends(get_cursor),
+    user=Depends(get_session_user)
 ):
     file_contents = await file.read()
     try:
@@ -56,6 +56,6 @@ async def import_records_from_csv(
     except Exception as err:
         raise_input_exception(400, "IMPORT_FILE_ENCODING_INVALID")
 
-    elaborate_import_file(cursor, operation_type, object_name, user_id, file_decoded)
+    elaborate_import_file(cursor, operation_type, object_name, user["id"], file_decoded)
     return {"result": 1}
 

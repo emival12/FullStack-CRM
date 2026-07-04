@@ -28,22 +28,20 @@ def endpoint_get_tables(cursor=Depends(get_cursor_readonly)):
     return result
 
 @router.post("/insert")
-async def endpoint_insert_record(request: Request, cursor=Depends(get_cursor)):
+async def endpoint_insert_record(request: Request, cursor=Depends(get_cursor), user=Depends(get_session_user)):
     data = await request.json()
     table_name = data.get("table")
     record = data.get("record")
-    user = data.get("user")
 
     (table_name, record_type_name) = validate_and_split_table_name(cursor, table_name)      # raise 500, 404-INPUT_TABLE_NAME_NOT_FOUND
     result = insert_record(cursor, table_name, record_type_name, record, user["id"])        # raise 500, 422-BROKEN_FORMULA
     return result
 
 @router.post("/update")
-async def endpoint_update_record(request: Request, cursor=Depends(get_cursor)):
+async def endpoint_update_record(request: Request, cursor=Depends(get_cursor), user=Depends(get_session_user)):
     data = await request.json()
     table_name = data.get("table")
     record_id = data.get("id")
-    user = data.get("user")
     field_structure = data.get("field")
 
     (table_name, record_type_name) = validate_and_split_table_name(cursor, table_name)                       # raise 500, 404-INPUT_TABLE_NAME_NOT_FOUND

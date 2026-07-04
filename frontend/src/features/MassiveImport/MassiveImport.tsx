@@ -1,12 +1,11 @@
 import { useEffect, useMemo } from "react";
-import { Button, Col,Container, Form, Row } from "react-bootstrap";
+import { Button, Col, Container, Form, Row } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 
 import { FieldOptionLookup } from "@/types/field.types";
 import { ENDPOINTS } from "@/api/endpoints";
 import { ApiError, CRUDResult } from "@/api/types";
 import { IMPORT_FIELD_STRUCTURE } from "@/config/K";
-import { useAuth } from "@/context/Auth/Auth";
 import { useLabels } from "@/context/Label/Label";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { useApiQuery } from "@/hooks/useApiQuery";
@@ -24,7 +23,6 @@ const FORM_VALUES = Object.fromEntries(
 
 export default function MassiveImport(): React.ReactElement | null {
   const { getLabel } = useLabels();
-  const { user } = useAuth();
   const { getErrorMessage, showErrorToast, showSuccessToast } = useFeedback();
   const {
     data: options,
@@ -60,7 +58,6 @@ export default function MassiveImport(): React.ReactElement | null {
     const payload = new FormData();
     payload.append("operation_type", data["operation_type"]);
     payload.append("object_name", data["object_name"]);
-    payload.append("user_id", String(user?.["id"]));
     payload.append("file", data["file"]?.[0]);
 
     try {

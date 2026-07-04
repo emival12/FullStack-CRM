@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { MetadataFieldStructure } from "@/types/field.types";
 import { ENDPOINTS } from "@/api/endpoints";
 import { ApiError, CRUDResult } from "@/api/types";
-import { useAuth } from "@/context/Auth/Auth";
 import { useLabels } from "@/context/Label/Label";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { useApiQuery } from "@/hooks/useApiQuery";
@@ -27,7 +26,6 @@ export default function NewRecord({
   refreshData,
 }: NewRecordProps): React.ReactElement {
   const { getLabel } = useLabels();
-  const { user } = useAuth();
   const { showErrorToast } = useFeedback();
   const {
     data: fields,
@@ -61,7 +59,6 @@ export default function NewRecord({
     const payload = {
       table: tableKey,
       record: data,
-      user: user,
     };
 
     try {

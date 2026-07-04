@@ -8,7 +8,6 @@ import { ENDPOINTS } from "@/api/endpoints";
 import { ApiError, CRUDResult } from "@/api/types";
 import { ERROR_MISSING_RECORD, ERROR_MISSING_TABLE } from "@/config/K";
 import { ROUTES } from "@/config/routes";
-import { useAuth } from "@/context/Auth/Auth";
 import { useLabels } from "@/context/Label/Label";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { useApiQuery } from "@/hooks/useApiQuery";
@@ -26,7 +25,6 @@ const PREFIX = "RECORD_DETAIL";
 export default function RecordDetail(): React.ReactElement | null {
   const { tableKey, recordId } = useOutletContext<DatabaseOutletContext>();
   const { getLabel } = useLabels();
-  const { user } = useAuth();
   const { showErrorToast } = useFeedback();
   const {
     data: fields,
@@ -91,7 +89,6 @@ export default function RecordDetail(): React.ReactElement | null {
       const payload = {
         table: tableKey,
         id: recordId,
-        user: user,
         field: modified_data,
       };
 
