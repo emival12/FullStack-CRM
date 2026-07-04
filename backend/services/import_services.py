@@ -11,7 +11,6 @@ from core.exceptions import raise_input_exception, raise_server_exception, log_e
 from core.models import MASTER_RECORD_TYPE, SystemFieldName_OD, SystemFieldName_RTD, SystemFieldName_FD, FieldTypes, StandardObjectField
 from db.db_queries import (
     check_allowed_object,
-    get_user_definition_record,
     make_table_key,
     make_options_key,
     make_basic_table_key,
@@ -54,16 +53,15 @@ def _raise_input_exception(error_code, error_data = None):
 def elaborate_import_file(cursor, operation_type: str, object_name: str, user_id: str, file_decoded: str) -> None:
     """
         Process an imported CSV file for a specified operation type (insert/update).
-        Validates that the object is importable and that the user_id corresponds to an
-        active user, then parses the CSV and routes to the appropriate handler.
+        Validates that the object is importable, then parses the CSV and routes to
+        the appropriate handler.
 
         Args:
             cursor (MySQLCursor): Cursor used to execute SQL queries
             operation_type (str): Type of operation
             object_name (str): Name of the target object
-            user_id (str): Id of the user who is performing the action; must match an active
-                user record. Failure raises a generic 500 (defensive: the value is set by the
-                frontend and never exposed to the end user, so an invalid id implies bypass).
+            user_id (str): Id of the authenticated user performing the action (resolved from
+                the session token), recorded in the audit log of the imported rows.
             file_decoded (str): CSV file content decoded as a string
     """
 
