@@ -49,13 +49,13 @@ async def endpoint_update_record(request: Request, cursor=Depends(get_cursor), u
     return result
 
 @router.post("/delete")
-async def endpoint_delete_record(request: Request, cursor=Depends(get_cursor)):
+async def endpoint_delete_record(request: Request, cursor=Depends(get_cursor), user=Depends(get_session_user)):
     data = await request.json()
     table_name = data.get("table")
     record_id = data.get("id")
 
     (table_name, record_type_name) = validate_and_split_table_name(cursor, table_name)   # raise 500, 404-INPUT_TABLE_NAME_NOT_FOUND
-    result = delete_record(cursor, table_name, record_type_name, record_id)              # raise 500
+    result = delete_record(cursor, table_name, record_type_name, record_id, user["id"])  # raise 500
     return result
 
 @router.get("/{table_name}")

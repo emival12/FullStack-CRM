@@ -296,11 +296,27 @@ def refresh_parents(cursor, impacted_parents: set, user_id: str, curr_depth: int
     for p_table, p_rt, p_id in impacted_parents:
         _ = update_record(cursor, p_table, p_rt, p_id, {}, user_id, map_object_primary_key_names, curr_depth+1)
 
-def delete_record(cursor, table_name: str, record_type_name: str, record_id: str) -> dict:
+def delete_record(cursor, table_name: str, record_type_name: str, record_id: str, user_id: str) -> dict:
     primary_key_field = get_primary_keys_from_multiple_objects(cursor, [table_name]).get(table_name)
     if primary_key_field is None:
         raise_server_exception(logger, "Empty primary key", object_name=table_name, record_type_name=record_type_name)
   
+    obj_key = make_table_key(table_name, record_type_name)
+    fields = get_fields_definition(cursor, [(table_name, record_type_name)], is_visible=0).get(obj_key, [])
+    if not fields:
+        raise_server_exception(logger, "No fields found", obj_key=obj_key)
+
+    table_alias = QueryBuilder.alias(table_name)
+    raw_filters = [f"{table_alias}.{primary_key_field} = %s"]
+    raw_params  = [record_id]
+    old_record = get_single_record(cursor, table_name, fields, raw_filters, raw_params)
     result = delete_record_by_id(cursor, table_name, record_type_name, primary_key_field, record_id)
+
+    # Propagate changes upward: refresh any parent rollup fields that depend on this record
+    impacted_parents = rollup_engine.get_impacted_parents(cursor, table_name, old_record)
+    if impacted_parents:
+        refresh_parents(cursor, impacted_parents, user_id)
+        
     log_event(logging.WARNING, logger, "Record deleted", object_name=table_name, record_type_name=record_type_name, record_id=record_id)
     return result
+
