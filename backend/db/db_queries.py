@@ -13,7 +13,9 @@ from core.models import (
     SystemFieldName_RLD,
     FieldTypes, 
     RldFilterConditions, 
-    FieldsByType
+    FieldsByType,
+    TriggerDefTiming,
+    TriggerDefEvent
 )
 from db.query_builder import QueryBuilder, QueryBuilderComparisonOperator, QueryBuilderLogicalOperator, QueryBuilderJoinType
 
@@ -375,13 +377,9 @@ def get_record_layout_definition_fields(
         if filter_condition == RldFilterConditions.VISIBLE:
             qfb = qfb.add(f"{fd_table_alias}.is_visible", QueryBuilderComparisonOperator.EQUAL, 1)
         elif filter_condition == RldFilterConditions.VISIBLE_AND_EDITABLE:
-            qfb = (qfb
-                .begin_or()
-                    .begin_and()
-                        .add(f"{fd_table_alias}.is_visible", QueryBuilderComparisonOperator.EQUAL, 1)
-                        .add(f"{fd_table_alias}.is_editable", QueryBuilderComparisonOperator.EQUAL, 1)
-                    .end()
-                .add(f"{fd_table_alias}.field_name", QueryBuilderComparisonOperator.EQUAL, "record_type_name")
+            qfb = (qfb.begin_and()
+                    .add(f"{fd_table_alias}.is_visible", QueryBuilderComparisonOperator.EQUAL, 1)
+                    .add(f"{fd_table_alias}.is_editable", QueryBuilderComparisonOperator.EQUAL, 1)
                 .end()
             )
 
@@ -479,6 +477,9 @@ def get_fields_definition_by_object_names(cursor, object_names: list[str], is_ac
             HTTPException 500: On any database error.
     """
 
+    if not object_names:
+        return []
+
     table_name = "field_definition"
     table_alias = QueryBuilder.alias(table_name)
     select_fields = [
@@ -570,9 +571,9 @@ def get_related_list_definition_fields(cursor, table_name: str, record_type_name
     select_fields = [
         f"{rld_table_alias}.master_object_name",
         f"{rld_table_alias}.master_record_type_name",
-        f"{rld_table_alias}.master_primary_key",
         f"{rld_table_alias}.child_object_name",
         f"{rld_table_alias}.child_record_type_name",
+        f"{rld_table_alias}.child_primary_key",
         f"{rld_table_alias}.child_join_key",
         f"{rld_table_alias}.label",
         f"{rld_table_alias}.sort_order",
@@ -600,15 +601,15 @@ def get_related_list_definition_fields(cursor, table_name: str, record_type_name
 
     return cursor.fetchall()
 
-def get_trigger_definition(cursor, object_name: str, timing: str, event: str) -> list[dict]:
+def get_trigger_definition(cursor, object_name: str, timing: TriggerDefTiming, event: TriggerDefEvent) -> list[dict]:
     """
         Returns active trigger definitions matching the given object, timing, and event.
 
         Args:
             cursor: DB cursor
             object_name (str): Name of the CRM object
-            timing (str): Trigger timing (e.g. BEFORE, AFTER)
-            event (str): Trigger event (e.g. INSERT, UPDATE)
+            timing (TriggerDefTiming): Trigger timing
+            event (TriggerDefEvent): Trigger event
 
         Returns:
             list[dict]: Matching rows from trigger_definition
@@ -642,7 +643,6 @@ def get_trigger_definition(cursor, object_name: str, timing: str, event: str) ->
 def get_rollup_definitions_by_detail_object(cursor, table_name: str) -> list[dict]:
     """
         Returns all active rollup definitions where the given table is the detail (child) object.
-
         Joins rollup_definition with field_definition to filter out inactive master fields.
 
         Args:

@@ -176,7 +176,7 @@ CREATE TABLE rollup_definition (
 CREATE TABLE related_list_definition (
     master_object_name VARCHAR(100),
     master_record_type_name VARCHAR(100),
-    master_primary_key VARCHAR(255),
+    child_primary_key VARCHAR(255),
     child_object_name VARCHAR(100) NOT NULL,
     child_record_type_name VARCHAR(100),
     child_join_key VARCHAR(255) NOT NULL,
@@ -380,7 +380,7 @@ VALUES
 
 
 
-INSERT INTO related_list_definition (master_object_name, master_record_type_name, master_primary_key, child_object_name, 
+INSERT INTO related_list_definition (master_object_name, master_record_type_name, child_primary_key, child_object_name, 
     child_record_type_name, child_join_key, label, sort_order, filter_condition, is_active)
 VALUES 
     ('account', 'Cliente',  'Id',   'contatto', 'master',   'account', 'lista contatti', 1, null, 1),

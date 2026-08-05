@@ -7,6 +7,9 @@ mkdir backend
 ## 3: Installare le estensioni
 cd backend
 
+## 3.0: Estensione pytest (serve a gestire i test in python) 
+pip install pytest              => pytest (per lanciare i test) o pytest --cov=. --cov-report=html (per lanciare i test con la coverage mostrata graficamente)
+
 ## 3.1: Estensione FastApi (serve a gestire le chiamate al middleware) 
 pip install fastapi 
 

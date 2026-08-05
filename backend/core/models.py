@@ -37,6 +37,15 @@ class RldFilterConditions(Enum):
     VISIBLE                  = auto()
     VISIBLE_AND_EDITABLE     = auto()
 
+class TriggerDefTiming(StrEnum):
+    BEFORE  = "BEFORE"
+    AFTER   = "AFTER"
+
+class TriggerDefEvent(StrEnum):
+    INSERT  = "INSERT"
+    UPDATE  = "UPDATE"
+    DELETE  = "DELETE"
+
 
 class SystemObjects(StrEnum):
     """
@@ -135,7 +144,7 @@ class SystemFieldName_RLD:
     """
     MASTER_OBJECT_NAME      = "master_object_name"
     MASTER_RECORD_TYPE_NAME = "master_record_type_name"
-    MASTER_PRIMARY_KEY      = "master_primary_key"
+    CHILD_PRIMARY_KEY      = "child_primary_key"
     CHILD_OBJECT_NAME       = "child_object_name"
     CHILD_RECORD_TYPE_NAME  = "child_record_type_name"
     CHILD_JOIN_KEY          = "child_join_key"

@@ -25,7 +25,6 @@ from db.db_queries import (
     get_primary_key_from_fields,
     get_single_record,
     get_next_sort_order,
-    get_record_layout_definition_fields,
     get_fields_definition,
     get_rollup_definition_by_master_field,
     get_lookup_field_definition,
@@ -127,7 +126,7 @@ def insert_related_list_definition(cursor, params: list[tuple]) -> None:
     INSERT INTO related_list_definition (
         master_object_name,
         master_record_type_name,
-        master_primary_key,
+        child_primary_key,
         child_object_name,
         child_record_type_name,
         child_join_key,

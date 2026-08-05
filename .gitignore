@@ -25,3 +25,5 @@ frontend/src/config/backups/*
 excelImport/*
 
 sqlDump/backup_dev.sql
+
+htmlcov/

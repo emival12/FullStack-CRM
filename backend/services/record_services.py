@@ -2,7 +2,7 @@ from __future__ import annotations
 import logging
 from config import get_triggers_folder
 from core.exceptions import raise_server_exception, log_event
-from core.models import FieldStructureMode, FieldTypes, SystemFieldName_FD, RldFilterConditions
+from core.models import FieldStructureMode, FieldTypes, SystemFieldName_FD, RldFilterConditions, TriggerDefTiming, TriggerDefEvent
 from db.db_queries import (
     SEPARATOR,
     check_allowed_table,
@@ -165,7 +165,7 @@ def insert_record(cursor, table_name: str, record_type_name: str, record: dict, 
     record = formula_engine.cast_record_types(record, fields)
 
     # Run BEFORE INSERT triggers, which may modify raw field values before formula evaluation
-    record = trigger_manager.run_triggers(cursor, get_triggers_folder(), table_name, "BEFORE", "INSERT", record)
+    record = trigger_manager.run_triggers(cursor, get_triggers_folder(), table_name, TriggerDefTiming.BEFORE, TriggerDefEvent.INSERT, record)
 
     # Evaluate formulas after the trigger so they see the final field values
     record = formula_engine.evaluate_all_formulas(cursor, fields, record, complex_formula)
@@ -179,7 +179,7 @@ def insert_record(cursor, table_name: str, record_type_name: str, record: dict, 
         refresh_parents(cursor, impacted_parents, user_id)
 
     # Run AFTER INSERT triggers. AFTER Triggers can only modify other records or make new DML operations
-    trigger_manager.run_triggers(cursor, get_triggers_folder(), table_name, "AFTER", "INSERT", record)
+    trigger_manager.run_triggers(cursor, get_triggers_folder(), table_name, TriggerDefTiming.AFTER, TriggerDefEvent.INSERT, record)
 
     log_event(logging.INFO, logger, "Record inserted", object_name=table_name, record_type_name=record_type_name, user_id=user_id)
     return result
@@ -255,7 +255,7 @@ def update_record(
     record = formula_engine.cast_record_types(record, fields)
 
     # Run BEFORE UPDATE triggers, which may modify raw field values before formula evaluation
-    record = trigger_manager.run_triggers(cursor, get_triggers_folder(), table_name, "BEFORE", "UPDATE", record)
+    record = trigger_manager.run_triggers(cursor, get_triggers_folder(), table_name, TriggerDefTiming.BEFORE, TriggerDefEvent.UPDATE, record)
 
     # Evaluate formulas after the trigger so they see the final field values
     record = formula_engine.evaluate_all_formulas(cursor, fields, record, complex_formula)
@@ -269,7 +269,7 @@ def update_record(
         refresh_parents(cursor, impacted_parents, user_id, curr_depth)
 
     # Run AFTER UPDATE triggers. AFTER Triggers can only modify other records or make new DML operations
-    trigger_manager.run_triggers(cursor, get_triggers_folder(), table_name, "AFTER", "UPDATE", record)
+    trigger_manager.run_triggers(cursor, get_triggers_folder(), table_name, TriggerDefTiming.AFTER, TriggerDefEvent.UPDATE, record)
 
     log_event(logging.INFO, logger, "Record updated", object_name=table_name, record_type_name=record_type_name, record_id=record_id, user_id=user_id)
     return result

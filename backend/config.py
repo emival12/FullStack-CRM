@@ -30,7 +30,7 @@ def get_config() -> configparser.ConfigParser:
 
     if not os.path.exists(CONFIG_PATH):
         with open(CONFIG_PATH, 'w') as f:
-            f.write("[database]\nuser=root\npassword=\ndatabase=\n")
+            f.write("[database]\nuser=root\npassword=\ndatabase=\n[test-database]\ndatabase=\n")
         raise_server_exception(logger, "Default config file created", path=CONFIG_PATH)
 
 

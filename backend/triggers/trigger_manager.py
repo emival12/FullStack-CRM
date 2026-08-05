@@ -2,6 +2,7 @@ import os
 import logging
 import importlib.util
 from core.exceptions import raise_server_exception, log_event
+from core.models import TriggerDefTiming, TriggerDefEvent
 from db.db_queries import get_trigger_definition
 
 logger = logging.getLogger(__name__) 
@@ -27,7 +28,7 @@ def _load_trigger_module(key: tuple[str, float]) -> object:
     except Exception:
         raise_server_exception(logger, "Fatal error in Module import", file_path=file_path)
 
-def run_triggers(cursor, triggers_dir: str, object_name: str, timing: str, event: str, record: dict) -> dict:
+def run_triggers(cursor, triggers_dir: str, object_name: str, timing: TriggerDefTiming, event: TriggerDefEvent, record: dict) -> dict:
     """
         Loads and executes the active trigger for the given object, timing, and event, if any.
 
@@ -38,8 +39,8 @@ def run_triggers(cursor, triggers_dir: str, object_name: str, timing: str, event
             cursor: Database cursor
             triggers_dir (str): Filesystem path to the triggers/ folder
             object_name (str): Name of the object triggering the event
-            timing (str): Trigger timing — "BEFORE" or "AFTER"
-            event (str): Trigger event — "INSERT", "UPDATE", or "DELETE"
+            timing (TriggerDefTiming): Trigger timing
+            event (TriggerDefEvent): Trigger event
             record (dict): The record being processed, passed to the trigger
 
         Returns:
