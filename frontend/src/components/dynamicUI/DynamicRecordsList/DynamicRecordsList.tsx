@@ -7,13 +7,12 @@ import { NUM_RECORD_TO_SHOW } from "@/config/K";
 import { useLabels } from "@/context/Label/Label";
 import MissingPage from "@/components/MissingPage/MissingPage";
 import PaginationControl from "@/components/PaginationControl/PaginationControl";
-import { isBlank } from "@/utils/string";
 
 import type {
   DynamicRecordsListProps,
-  FormatValueFunction,
   RecordCellProps,
 } from "./DynamicRecordsList.types";
+import { formatValue, getFormatterDate, getFormatterDateTime } from "./helpers";
 
 //Dinamic construction of the body entry
 const RecordCell = ({
@@ -49,48 +48,6 @@ const RecordCell = ({
   }
 
   return <td>{formattedValue}</td>;
-};
-
-const getFormatterDate = (language: string) => {
-  return new Intl.DateTimeFormat(language, {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-};
-
-const getFormatterDateTime = (language: string) => {
-  return new Intl.DateTimeFormat(language, {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
-const formatValue: FormatValueFunction = (
-  fieldValue,
-  fieldType,
-  formatterDate,
-) => {
-  if (isBlank(fieldValue)) return undefined;
-
-  switch (fieldType) {
-    case "date":
-    case "datetime-local": {
-      const formatter = formatterDate[fieldType];
-      const date =
-        fieldType === "date"
-          ? new Date(fieldValue + "T00:00:00")
-          : new Date(fieldValue);
-      return formatter.format(date);
-    }
-    case "checkbox":
-      return fieldValue ? true : false;
-    default:
-      return fieldValue;
-  }
 };
 
 /**
