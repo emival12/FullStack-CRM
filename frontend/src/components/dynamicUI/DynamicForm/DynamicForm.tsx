@@ -14,7 +14,12 @@ import {
   type FieldRenderFunction,
 } from "./DynamicForm.types";
 import DynamicImage from "./DynamicImage";
-import { isDisabled } from "./helpers";
+import {
+  calculateFieldLabel,
+  calculateLimit,
+  calculateStep,
+  isDisabled,
+} from "./helpers";
 
 const isLookupOptionArray = (
   arr: (FieldOptionRadio | FieldOptionLookup)[],
@@ -170,21 +175,9 @@ export default function DynamicForm({
           defaultValue={info?.value}
           disabled={isDisabled(editability, info)}
           isInvalid={!!errors[key]}
-          step={
-            info.numeric_scale
-              ? "0." + "1".padStart(info.numeric_scale, "0")
-              : "1"
-          }
-          min={
-            isBlank(info?.min_limit_value)
-              ? undefined
-              : Number(info.min_limit_value)
-          }
-          max={
-            isBlank(info?.max_limit_value)
-              ? undefined
-              : Number(info.max_limit_value)
-          }
+          step={calculateStep(info.numeric_scale)}
+          min={calculateLimit(info?.min_limit_value)}
+          max={calculateLimit(info?.max_limit_value)}
           {...register(key, {
             required: {
               value: Boolean(info.is_required),
@@ -249,7 +242,7 @@ export default function DynamicForm({
               }
             >
               <Form.Label className={disabled ? "text-secondary" : undefined}>
-                {key.replaceAll("_", " ") + (info.is_required ? " *" : "")}
+                {calculateFieldLabel(key, info.is_required)}
               </Form.Label>
               {renderField(key, info)}
             </Form.Group>
@@ -274,7 +267,7 @@ export default function DynamicForm({
           <FloatingLabel
             key={key}
             controlId={`floating-${key}`}
-            label={key.replaceAll("_", " ") + (info.is_required ? " *" : "")}
+            label={calculateFieldLabel(key, info.is_required)}
             className="mb-3"
           >
             {renderField(key, info)}

@@ -12,7 +12,12 @@ import type {
   DynamicRecordsListProps,
   RecordCellProps,
 } from "./DynamicRecordsList.types";
-import { formatValue, getFormatterDate, getFormatterDateTime } from "./helpers";
+import {
+  formatValue,
+  getFilteredData,
+  getFormatterDate,
+  getFormatterDateTime,
+} from "./helpers";
 
 //Dinamic construction of the body entry
 const RecordCell = ({
@@ -73,25 +78,7 @@ export default function DynamicRecordsList({
 
   // Calculate the data filtered by searchTerm
   const filteredData: RecordListStructure = useMemo(() => {
-    return deferredSearchTerm
-      ? {
-          ...data,
-          records: data?.records.filter((record) => {
-            const formattedFields = data?.fields.map((field) => {
-              const value = formatValue(
-                record[field.key],
-                field.field_type,
-                formatterDate,
-              );
-              return String(value ?? "").toLowerCase();
-            });
-
-            return formattedFields.some((element) =>
-              element.includes(deferredSearchTerm),
-            );
-          }),
-        }
-      : data;
+    return getFilteredData(deferredSearchTerm, data, formatterDate);
   }, [deferredSearchTerm, data, formatterDate]);
 
   // Calculate the slice of the data to show

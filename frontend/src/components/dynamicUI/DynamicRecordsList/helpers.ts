@@ -1,3 +1,4 @@
+import { RecordListStructure } from "@/types/list.types";
 import { isBlank } from "@/utils/string";
 
 import type { FormatValueFunction } from "./DynamicRecordsList.types";
@@ -42,4 +43,30 @@ export const formatValue: FormatValueFunction = (
     default:
       return fieldValue;
   }
+};
+
+export const getFilteredData = (
+  searchTerm: string,
+  data: RecordListStructure,
+  formatterDate: Record<string, Intl.DateTimeFormat>,
+): RecordListStructure => {
+  return searchTerm
+    ? {
+        ...data,
+        records: data.records.filter((record) => {
+          const formattedFields = data.fields.map((field) => {
+            const value = formatValue(
+              record[field.key],
+              field.field_type,
+              formatterDate,
+            );
+            return String(value ?? "").toLowerCase();
+          });
+
+          return formattedFields.some((element) =>
+            element.includes(searchTerm.toLowerCase()),
+          );
+        }),
+      }
+    : data;
 };

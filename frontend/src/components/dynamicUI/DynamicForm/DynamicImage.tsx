@@ -13,7 +13,7 @@ import { DIRECT_ENDPOINTS } from "@/api/endpoints";
 import { useLabels } from "@/context/Label/Label";
 
 import type { DynamicImageProps } from "./DynamicForm.types";
-import { isDisabled } from "./helpers";
+import { calculateFieldLabel, isDisabled } from "./helpers";
 
 /**
  * Shows an image with his name
@@ -56,9 +56,7 @@ export default function DynamicImage({
         <Col>
           <FloatingLabel
             controlId={`floating-${fieldKey}`}
-            label={
-              fieldKey.replaceAll("_", " ") + (info.is_required ? " *" : "")
-            }
+            label={calculateFieldLabel(fieldKey, info.is_required)}
           >
             <Form.Control
               type={FieldType.TEXT}
