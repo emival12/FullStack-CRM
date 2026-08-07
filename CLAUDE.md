@@ -145,7 +145,7 @@ backend/
   config.py            lettura config.ini, path resolution dev vs production
   backup_manager.py    backup automatici DB allo startup
   core/
-    models.py          modelli Pydantic condivisi
+    models.py          vocabolario condiviso del dominio: Enum/StrEnum (tipi campo, oggetti e colonne di sistema) e dataclass
     exceptions.py      logging strutturato e gestione eccezioni
   routers/             livello HTTP — un file per area (auth, assets, records, setup, import_)
   services/            logica di business — chiamati dai router, non parlano direttamente con FastAPI
@@ -303,6 +303,34 @@ Pattern canonico React per ogni nuovo context (rispettato in `context/Auth/`):
    - Componente `FooProvider({ children })` che tiene lo state e ritorna `<FooContext.Provider value={...}>{children}</FooContext.Provider>`.
 2. File `Foo.types.ts` accanto con `FooContextType`, `FooProviderProps` e gli eventuali tipi dei dati gestiti.
 3. **Suffisso `Provider` sempre** — non `Manager`, non `Container`. Anche se gestisce stato complesso, il pattern React lo chiama Provider.
+
+## Test
+
+### Criterio: si testa ciò che *calcola*, non ciò che *trasporta*
+
+Un componente che prende `is_required` e lo mette in `required={true}` trasporta: se sbaglia lo vedi al primo avvio. Una funzione che da `numeric_scale=2` produce `step="0.01"` calcola: se sbaglia non lo vedi, e continua a sbagliare in silenzio su un solo tipo di campo di un solo oggetto.
+
+Conseguenza operativa: **quando un calcolo sta dentro un componente, si estrae in un `helpers.ts` accanto al `.tsx` e si testa lì, senza DOM.** Non si monta un componente per testare un'aritmetica. Precedenti: `DynamicForm/helpers.ts`, `DynamicRecordsList/helpers.ts`.
+
+Metro di giudizio di ogni singolo assert: **"quale modifica al codice di produzione lo farebbe fallire?"**. Se la risposta è "nessuna", l'assert è decorativo. La forma mascherata più comune è la fotocopia: ricalcolare l'atteso dall'input invece di scriverlo a mano.
+
+### Backend
+
+- `pytest`, test in `backend/tests/`, un file per modulo.
+- **DB di test reale**, non mock del cursor: `auto_test_db`, sezione `[test-database]` di `config.ini`. Isolamento via rollback nella fixture `cursor` di `conftest.py`.
+- Si testa **ogni file**. Riferimento: `backend/tests/test_db_queries.py`.
+- Comando: `py -3.12 -m pytest` (con coverage: `--cov=. --cov-report=html`).
+
+### Frontend
+
+- **Vitest**, test **colocati** accanto al file testato (`errors.ts` → `errors.test.ts`). Import espliciti da `vitest`, niente `globals: true`.
+- Due categorie, ognuna col suo file di riferimento:
+  1. **Funzioni pure** → `src/api/errors.test.ts`. Girano in ambiente `node`.
+  2. **Hook e context** → `src/hooks/useApiQuery.test.ts`. Richiedono `// @vitest-environment jsdom` in cima al file (per-file, **non** nel config globale: i test puri devono continuare a girare senza DOM).
+- **Pagine e layout sono fuori perimetro** (cambiano per ragioni estetiche, i test marcirebbero). Nessun E2E: non c'è CI e l'app è un `.exe` locale.
+- Per gli hook: mock del modulo con `vi.mock("@/api/client", ...)` — non `spyOn`, che eseguirebbe gli interceptor veri. Pulizia in `afterEach`: `cleanup()` poi `vi.resetAllMocks()`.
+- `waitFor` serve ad aspettare che qualcosa **diventi** vero; su un'asserzione negativa passa al primo tentativo senza aver aspettato nulla.
+- Comando: `npm test` (watch) o `npx vitest run`.
 
 ## TODO e debito tecnico
 
