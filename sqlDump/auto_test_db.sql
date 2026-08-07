@@ -32,7 +32,7 @@ CREATE TABLE `account` (
   `tot_contacts` decimal(16,2) DEFAULT NULL,
   `inactive_rollup` decimal(16,2) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -41,7 +41,7 @@ CREATE TABLE `account` (
 
 LOCK TABLES `account` WRITE;
 /*!40000 ALTER TABLE `account` DISABLE KEYS */;
-INSERT INTO `account` VALUES (1,'account','cliente','2026-08-03 11:46:44','2026-08-03 12:25:45','1',1.00,NULL);
+INSERT INTO `account` VALUES (1,'account','cliente','2026-08-03 11:46:44','2026-08-03 12:25:45','1',1.00,NULL),(3,'account','cliente','2026-08-05 18:18:28','2026-08-05 18:18:28','1',0.00,NULL);
 /*!40000 ALTER TABLE `account` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -85,6 +85,7 @@ CREATE TABLE `contact` (
   `account` int DEFAULT NULL,
   `counter` varchar(255) DEFAULT NULL,
   `priority` varchar(255) DEFAULT NULL,
+  `inactive_field` varchar(10) DEFAULT NULL,
   PRIMARY KEY (`telefono`),
   KEY `fk_contact_account` (`account`),
   CONSTRAINT `fk_contact_account` FOREIGN KEY (`account`) REFERENCES `account` (`id`) ON DELETE SET NULL
@@ -97,7 +98,7 @@ CREATE TABLE `contact` (
 
 LOCK TABLES `contact` WRITE;
 /*!40000 ALTER TABLE `contact` DISABLE KEYS */;
-INSERT INTO `contact` VALUES ('1234','contact','master','2026-08-03 11:46:51','2026-08-03 12:25:45','1',1,'1',NULL);
+INSERT INTO `contact` VALUES ('1234','contact','master','2026-08-03 11:46:51','2026-08-03 12:25:45','1',1,'1',NULL,NULL);
 /*!40000 ALTER TABLE `contact` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -137,7 +138,7 @@ CREATE TABLE `field_definition` (
 
 LOCK TABLES `field_definition` WRITE;
 /*!40000 ALTER TABLE `field_definition` DISABLE KEYS */;
-INSERT INTO `field_definition` VALUES ('account','cliente','create_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('account','cliente','id','auto_number',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,1),('account','cliente','inactive_rollup','rollup',NULL,NULL,NULL,'contact','counter',NULL,NULL,0,1,1,0,0),('account','cliente','last_modified_by','lookup',255,NULL,NULL,'user_definition','email',NULL,NULL,1,1,0,0,0),('account','cliente','last_modified_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('account','cliente','record_type_name','text',255,NULL,NULL,NULL,NULL,NULL,NULL,1,0,0,1,0),('account','cliente','tot_contacts','rollup',NULL,NULL,NULL,'contact','counter',NULL,NULL,1,1,1,0,0),('account','fornitore','create_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('account','fornitore','id','auto_number',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,1),('account','fornitore','inactive_rollup','rollup',NULL,NULL,NULL,'contact','counter',NULL,NULL,0,1,1,0,0),('account','fornitore','last_modified_by','lookup',255,NULL,NULL,'user_definition','email',NULL,NULL,1,1,0,0,0),('account','fornitore','last_modified_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('account','fornitore','record_type_name','text',255,NULL,NULL,NULL,NULL,NULL,NULL,1,0,0,1,0),('account','fornitore','tot_contacts','rollup',NULL,NULL,NULL,'contact','counter',NULL,NULL,1,1,1,0,0),('account','master','create_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,1,0,0,0),('account','master','id','auto_number',NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,1,0,0,1),('account','master','inactive_rollup','rollup',NULL,NULL,NULL,'contact','counter',NULL,NULL,0,1,1,0,0),('account','master','last_modified_by','lookup',255,NULL,NULL,'user_definition','email',NULL,NULL,0,1,0,0,0),('account','master','last_modified_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,1,0,0,0),('account','master','record_type_name','text',255,NULL,NULL,NULL,NULL,NULL,NULL,0,0,0,1,0),('account','master','tot_contacts','rollup',NULL,NULL,NULL,'contact','counter',NULL,NULL,0,1,1,0,0),('contact','master','account','lookup',NULL,NULL,NULL,'account','id','',NULL,1,1,1,1,0),('contact','master','counter','formula',255,NULL,NULL,NULL,NULL,NULL,'1',1,0,0,0,0),('contact','master','create_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('contact','master','last_modified_by','lookup',255,NULL,NULL,'user_definition','email',NULL,NULL,1,1,0,0,0),('contact','master','last_modified_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('contact','master','priority','radio',255,NULL,NULL,NULL,NULL,NULL,NULL,1,1,1,0,0),('contact','master','record_type_name','text',255,NULL,NULL,NULL,NULL,NULL,NULL,1,0,0,1,0),('contact','master','telefono','text',255,NULL,NULL,NULL,NULL,NULL,NULL,1,1,1,1,1),('product','master','create_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('product','master','id','auto_number',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,1),('product','master','last_modified_by','lookup',255,NULL,NULL,'user_definition','email',NULL,NULL,1,1,0,0,0),('product','master','last_modified_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('product','master','record_type_name','text',255,NULL,NULL,NULL,NULL,NULL,NULL,1,0,0,1,0),('user_definition','master','email','text',255,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('user_definition','master','id','auto_number',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,1);
+INSERT INTO `field_definition` VALUES ('account','cliente','create_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('account','cliente','id','auto_number',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,1),('account','cliente','inactive_rollup','rollup',NULL,NULL,NULL,'contact','counter',NULL,NULL,0,1,1,0,0),('account','cliente','last_modified_by','lookup',255,NULL,NULL,'user_definition','email',NULL,NULL,1,1,0,0,0),('account','cliente','last_modified_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('account','cliente','record_type_name','text',255,NULL,NULL,NULL,NULL,NULL,NULL,1,0,0,1,0),('account','cliente','tot_contacts','rollup',NULL,NULL,NULL,'contact','counter',NULL,NULL,1,1,1,0,0),('account','fornitore','create_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('account','fornitore','id','auto_number',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,1),('account','fornitore','inactive_rollup','rollup',NULL,NULL,NULL,'contact','counter',NULL,NULL,0,1,1,0,0),('account','fornitore','last_modified_by','lookup',255,NULL,NULL,'user_definition','email',NULL,NULL,1,1,0,0,0),('account','fornitore','last_modified_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('account','fornitore','record_type_name','text',255,NULL,NULL,NULL,NULL,NULL,NULL,1,0,0,1,0),('account','fornitore','tot_contacts','rollup',NULL,NULL,NULL,'contact','counter',NULL,NULL,1,1,1,0,0),('account','master','create_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,1,0,0,0),('account','master','id','auto_number',NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,1,0,0,1),('account','master','inactive_rollup','rollup',NULL,NULL,NULL,'contact','counter',NULL,NULL,0,1,1,0,0),('account','master','last_modified_by','lookup',255,NULL,NULL,'user_definition','email',NULL,NULL,0,1,0,0,0),('account','master','last_modified_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,1,0,0,0),('account','master','record_type_name','text',255,NULL,NULL,NULL,NULL,NULL,NULL,0,0,0,1,0),('account','master','tot_contacts','rollup',NULL,NULL,NULL,'contact','counter',NULL,NULL,0,1,1,0,0),('contact','master','account','lookup',NULL,NULL,NULL,'account','id','',NULL,1,1,1,1,0),('contact','master','counter','formula',255,NULL,NULL,NULL,NULL,NULL,'1',1,0,0,0,0),('contact','master','create_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('contact','master','inactive_field','text',10,NULL,NULL,NULL,NULL,NULL,NULL,0,1,1,0,0),('contact','master','last_modified_by','lookup',255,NULL,NULL,'user_definition','email',NULL,NULL,1,1,0,0,0),('contact','master','last_modified_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('contact','master','priority','radio',255,NULL,NULL,NULL,NULL,NULL,NULL,1,1,1,0,0),('contact','master','record_type_name','text',255,NULL,NULL,NULL,NULL,NULL,NULL,1,0,0,1,0),('contact','master','telefono','text',255,NULL,NULL,NULL,NULL,NULL,NULL,1,1,1,1,1),('product','master','create_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('product','master','id','auto_number',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,1),('product','master','last_modified_by','lookup',255,NULL,NULL,'user_definition','email',NULL,NULL,1,1,0,0,0),('product','master','last_modified_date','datetime-local',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('product','master','record_type_name','text',255,NULL,NULL,NULL,NULL,NULL,NULL,1,0,0,1,0),('user_definition','master','email','text',255,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,0),('user_definition','master','id','auto_number',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,1);
 /*!40000 ALTER TABLE `field_definition` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -278,7 +279,7 @@ CREATE TABLE `record_layout_definition` (
 
 LOCK TABLES `record_layout_definition` WRITE;
 /*!40000 ALTER TABLE `record_layout_definition` DISABLE KEYS */;
-INSERT INTO `record_layout_definition` VALUES ('account','cliente','create_date',2),('account','cliente','id',1),('account','cliente','inactive_rollup',6),('account','cliente','last_modified_by',4),('account','cliente','last_modified_date',3),('account','cliente','tot_contacts',5),('account','fornitore','create_date',2),('account','fornitore','id',1),('account','fornitore','inactive_rollup',6),('account','fornitore','last_modified_by',4),('account','fornitore','last_modified_date',3),('account','fornitore','tot_contacts',5),('account','master','create_date',2),('account','master','id',1),('account','master','inactive_rollup',6),('account','master','last_modified_by',4),('account','master','last_modified_date',3),('account','master','tot_contacts',5),('contact','master','account',5),('contact','master','counter',6),('contact','master','create_date',2),('contact','master','last_modified_by',4),('contact','master','last_modified_date',3),('contact','master','priority',7),('contact','master','telefono',1),('product','master','create_date',2),('product','master','id',1),('product','master','last_modified_by',4),('product','master','last_modified_date',3);
+INSERT INTO `record_layout_definition` VALUES ('account','cliente','create_date',2),('account','cliente','id',1),('account','cliente','inactive_rollup',6),('account','cliente','last_modified_by',4),('account','cliente','last_modified_date',3),('account','cliente','tot_contacts',5),('account','fornitore','create_date',2),('account','fornitore','id',1),('account','fornitore','inactive_rollup',6),('account','fornitore','last_modified_by',4),('account','fornitore','last_modified_date',3),('account','fornitore','tot_contacts',5),('account','master','create_date',2),('account','master','id',1),('account','master','inactive_rollup',6),('account','master','last_modified_by',4),('account','master','last_modified_date',3),('account','master','tot_contacts',5),('contact','master','account',5),('contact','master','counter',6),('contact','master','create_date',2),('contact','master','inactive_field',8),('contact','master','last_modified_by',4),('contact','master','last_modified_date',3),('contact','master','priority',7),('contact','master','telefono',1),('product','master','create_date',2),('product','master','id',1),('product','master','last_modified_by',4),('product','master','last_modified_date',3);
 /*!40000 ALTER TABLE `record_layout_definition` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -481,7 +482,7 @@ CREATE TABLE `user_session` (
 
 LOCK TABLES `user_session` WRITE;
 /*!40000 ALTER TABLE `user_session` DISABLE KEYS */;
-INSERT INTO `user_session` VALUES ('aAlTe8C0ivQv3ml23zWImx9pGSxqhx9E4YoHOISxuvM',1,'2026-08-05 23:59:59');
+INSERT INTO `user_session` VALUES ('M5X2Mv_dMZvmkiTtVc_AXrkCGaxlfBpZMKQL2mvRsJE',1,'2026-08-06 23:59:59');
 /*!40000 ALTER TABLE `user_session` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -494,4 +495,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-08-05 13:00:35
+-- Dump completed on 2026-08-07 16:00:42
