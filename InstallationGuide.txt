@@ -67,6 +67,12 @@ npm install react-textarea-autosize
 ## 2.7: Istallazione libreria axios in locale (Libreria React per fare richiest HTTP e comunicazione con API)
 npm install axios
 
+## 2.8: Istallazione libreria per i test puri
+npm install -D vitest    => npm test (per lanciare i test)
+
+## 2.9: Istallazione libreria per i test di hook
+npm install -D jsdom @testing-library/react @testing-library/dom
+
 ##: Comando per lanciare il Server Fronted in sviluppo
 npm start
 
