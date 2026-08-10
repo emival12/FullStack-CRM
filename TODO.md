@@ -10,10 +10,6 @@ Registro delle cose da fare e del debito tecnico.
   Riproduzione: Apri un record qualsiasi -> refresha la pagina
   Bug: invece di rimanere sulla stessa pagina vieni reindirizzato sulla home del database
 
-- **B-002**
-  Riproduzione: Crea un oggetto con multipli record type -> Apri setup -> Fields
-  Bug: invece di vedere tutti i campi, si vedono tutti i campi di tutti i record type (quindi ci sono 3 id, 3 create date, etc..)
-
 ## Next step (NEXT INDEX: 5)
 
 - **NS-001 — Profili e segregazione dei dati** — _agosto 2026_
