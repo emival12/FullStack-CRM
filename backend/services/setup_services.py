@@ -1,5 +1,5 @@
 import logging
-from core.models import SystemObjects, SystemFieldName_OD, SystemFieldName_FD, FieldTypes
+from core.models import SystemObjects, SystemFieldName_OD, SystemFieldName_FD, SystemFieldName_RTD, FieldTypes, MASTER_RECORD_TYPE
 from core.exceptions import raise_server_exception, log_event
 from db.db_queries import (
     check_allowed_object,
@@ -10,7 +10,8 @@ from db.db_queries import (
     get_fields_with_label,
     get_fields_definition,
     get_primary_keys_from_multiple_objects,
-    get_primary_key_from_fields
+    get_primary_key_from_fields,
+    get_object_definition_records_join_rt
 )
 from services.object_ddl import (
     create_new_object,
@@ -69,8 +70,8 @@ def get_field_creation_structure(cursor) -> dict:
     """
         Build the data structure needed to render the field creation form.
 
-        Retrieves all objects and their field definitions, then groups field names,
-        record type names, and rollup-eligible fields by object name.
+        Retrieves all objects, their active record types and their field definitions,
+        then groups record type names, field names and rollup-eligible fields by object name.
 
         Args:
             cursor: Database cursor used to execute SQL queries.
@@ -86,20 +87,25 @@ def get_field_creation_structure(cursor) -> dict:
 
     # Retrieve all the fields for all the objects
     tables = get_object_definition_records(cursor)
-    fields = get_fields_definition_by_object_names(cursor, [ t[SystemFieldName_OD.OBJECT_NAME] for t in tables])
+    object_names = [ t[SystemFieldName_OD.OBJECT_NAME] for t in tables]
+    fields = get_fields_definition_by_object_names(cursor, object_names)
+    tables_rt = get_object_definition_records_join_rt(cursor, object_names)
+    
+    rt_grouped_by_object = {}
+    for row in tables_rt:
+        object_name = row[SystemFieldName_OD.OBJECT_NAME]
+        rt_name = row[SystemFieldName_RTD.RECORD_TYPE_NAME]
+        rt_grouped_by_object.setdefault(object_name, set()).add(rt_name)
 
     # Divide the fields into multiple set, to show them in the field creation form
     fields_grouped_by_object = {}
-    rt_grouped_by_object = {}
     field_options_rollup = {}
     for row in fields:
         object_name = row[SystemFieldName_FD.OBJECT_NAME]
-        rt_name = row[SystemFieldName_FD.RECORD_TYPE_NAME]
         field_name = row[SystemFieldName_FD.FIELD_NAME]
         field_type = row[SystemFieldName_FD.FIELD_TYPE]
 
         fields_grouped_by_object.setdefault(object_name, set()).add(field_name)
-        rt_grouped_by_object.setdefault(object_name, set()).add(rt_name)
         if field_type in (FieldTypes.NUMBER.value, FieldTypes.FORMULA.value):
             field_options_rollup.setdefault(object_name, set()).add(field_name)
 
@@ -137,7 +143,7 @@ def get_object_fields_record(cursor, table_name: str) -> dict:
                 - records: all field_definition records for the object (including inactive)
     """
     check_allowed_object(cursor, table_name)
-    records = get_fields_definition_by_object_names(cursor, [table_name], is_active=0)
+    records = get_fields_definition_by_object_names(cursor, [table_name], is_active=0, record_type_name=MASTER_RECORD_TYPE)
 
     return {
         "fields": get_fields_with_label(_OBJECT_FIELDS_COLUMNS),

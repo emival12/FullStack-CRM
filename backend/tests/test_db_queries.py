@@ -1,7 +1,7 @@
 import pytest
 from fastapi import HTTPException
 from datetime import datetime, timedelta
-from core.models import TriggerDefTiming, TriggerDefEvent, RldFilterConditions
+from core.models import TriggerDefTiming, TriggerDefEvent, RldFilterConditions, MASTER_RECORD_TYPE
 from db.db_queries import (
     make_table_key,
     make_options_key,
@@ -499,15 +499,18 @@ def test_get_fields_definition_by_object_names(cursor):
         }
     ]
 
-@pytest.mark.parametrize("object_names, is_active, expected", [
-    (None,                      1, []),
-    ([],                        1, []),
-    (["contact"],               1, ["account", "counter", "create_date", "last_modified_by", "last_modified_date", "priority", "telefono"]),
-    (["contact"],               0, ["account", "counter", "create_date", "inactive_field", "last_modified_by", "last_modified_date", "priority", "telefono"]),
-    (["contact", "product"],    1, ["account", "counter", "create_date", "create_date", "id", "last_modified_by", "last_modified_by", "last_modified_date", "last_modified_date", "priority", "telefono"]),
-], ids=["no_filter", "empty_input", "active_fields", "all_fields", "multiple_objects"])
-def test_get_fields_definition_by_object_names_filtered(cursor, object_names, is_active, expected):
-    tables = get_fields_definition_by_object_names(cursor, object_names, is_active)
+@pytest.mark.parametrize("object_names, is_active, record_type_name, expected", [
+    (None,                      1, None,                []),
+    ([],                        1, None,                []),
+    (["contact"],               1, None,                ["account", "counter", "create_date", "last_modified_by", "last_modified_date", "priority", "telefono"]),
+    (["contact"],               1, MASTER_RECORD_TYPE,  ["account", "counter", "create_date", "last_modified_by", "last_modified_date", "priority", "telefono"]),
+    (["contact"],               0, None,                ["account", "counter", "create_date", "inactive_field", "last_modified_by", "last_modified_date", "priority", "telefono"]),
+    (["account"],               1, None,                ['create_date', 'create_date', 'id', 'id', 'last_modified_by', 'last_modified_by', 'last_modified_date', 'last_modified_date', 'tot_contacts', 'tot_contacts']),
+    (["account"],               0, MASTER_RECORD_TYPE,  ['create_date', 'id', 'inactive_rollup', 'last_modified_by', 'last_modified_date','tot_contacts']),
+    (["contact", "product"],    1, None,                ["account", "counter", "create_date", "create_date", "id", "last_modified_by", "last_modified_by", "last_modified_date", "last_modified_date", "priority", "telefono"]),
+], ids=["no_filter", "empty_input", "active_fields", "active_fields_master_rt", "all_fields", "multi_rt_object", "multi_rt_object_master_rt", "multiple_objects"])
+def test_get_fields_definition_by_object_names_filtered(cursor, object_names, is_active, record_type_name, expected):
+    tables = get_fields_definition_by_object_names(cursor, object_names, is_active, record_type_name)
     assert [row["field_name"] for row in tables] == expected
 
 @pytest.mark.parametrize("object_names, expected", [

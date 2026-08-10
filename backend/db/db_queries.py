@@ -460,14 +460,19 @@ def get_fields_definition(cursor, list_params: list[tuple[str, str]], is_visible
 
     return result
 
-def get_fields_definition_by_object_names(cursor, object_names: list[str], is_active: int = 1) -> list[dict]:
+def get_fields_definition_by_object_names(cursor, object_names: list[str], is_active: int = 1, record_type_name: str | None = None) -> list[dict]:
     """
         Retrieve field definitions for a list of object names.
+
+        A field is a single physical column, but field_definition holds one row per record type, so without record_type_name the same column comes back once per record type: 
+        it is up to the caller to collapse those rows. 
+        Pass MASTER_RECORD_TYPE to get one row per column instead, the master being the baseline definition of the object.
 
         Args:
             cursor (MySQLCursor): Database cursor used to execute SQL queries.
             object_names (list[str]): List of object names to retrieve field definitions for.
             is_active (int): If 1, filters only active fields. If 0, returns all fields regardless of active status. Defaults to 1.
+            record_type_name (str | None): If provided, restricts results to that record type. Defaults to None (all record types).
 
         Returns:
             list[dict]: Flat list of field definition rows, each containing object_name,
@@ -499,6 +504,7 @@ def get_fields_definition_by_object_names(cursor, object_names: list[str], is_ac
             .begin_filter()
                 .add(f"{table_alias}.object_name", QueryBuilderComparisonOperator.IN, object_names)
                 .add(f"{table_alias}.field_name", QueryBuilderComparisonOperator.NOT_EQUAL, "record_type_name")
+                .add_if(record_type_name, f"{table_alias}.record_type_name", QueryBuilderComparisonOperator.EQUAL, record_type_name)
                 .add_if(is_active, f"{table_alias}.is_active", QueryBuilderComparisonOperator.EQUAL, is_active)
             .end_filter()
             .order_by(order_by)

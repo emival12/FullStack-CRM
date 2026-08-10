@@ -4,7 +4,17 @@ Registro delle cose da fare e del debito tecnico.
 
 ---
 
-## Next step
+## Bug (NEXT INDEX: 3)
+
+- **B-001**
+  Riproduzione: Apri un record qualsiasi -> refresha la pagina
+  Bug: invece di rimanere sulla stessa pagina vieni reindirizzato sulla home del database
+
+- **B-002**
+  Riproduzione: Crea un oggetto con multipli record type -> Apri setup -> Fields
+  Bug: invece di vedere tutti i campi, si vedono tutti i campi di tutti i record type (quindi ci sono 3 id, 3 create date, etc..)
+
+## Next step (NEXT INDEX: 5)
 
 - **NS-001 — Profili e segregazione dei dati** — _agosto 2026_
   Profili utente con visibilità/permessi differenziati. Ancora da definire cosa si segrega (oggetti, record, campi, azioni) e con quale granularità.
@@ -20,7 +30,7 @@ Registro delle cose da fare e del debito tecnico.
 
 ---
 
-## Backlog
+## Backlog (NEXT INDEX: 8)
 
 - **BL-001 — Test**
   **Backend** — si testa ogni file. Riferimento: `backend/tests/test_db_queries.py`.
@@ -35,11 +45,14 @@ Registro delle cose da fare e del debito tecnico.
 - **BL-003 — Completare il setup**
   Le sezioni Layout, Record Types e Related Lists sono placeholder `<p>TODO</p>` (`SetupSections.tsx:39-41`) ma già raggiungibili dalla sidebar. Il salvataggio della modifica di un campo è uno stub: `onSubmit` è un `console.log` (`SetupSectionFieldsEdit.tsx:113`), mentre creazione e cancellazione funzionano.
 
-- **BL-004 — Artefatti runtime del backend in `frontend/src/config/`**
+- **BL-004 — Completare l'import**
+  L'import massivo accetta solo file per Insert. Se si selezione Update viene mostrato un messaggio: "Funzionalità non implementata"
+
+- **BL-005 — Artefatti runtime del backend in `frontend/src/config/`**
   `backup_manager.py:7` e `core/log_manager.py:6` scrivono `backups/` e `logs/` dentro il sorgente frontend quando in dev. Vanno sotto `backend/`.
 
-- **BL-005 — Portare `K_SetupFormsStructure` in Python**
+- **BL-006 — Portare `K_SetupFormsStructure` in Python**
   Oggi `get_field_info` (`setup_services.py:153-185`) riceve la struttura dei form dal client, quindi `POST /setup/{table}/fields/{field}` è una READ con body. Portando le costanti nel backend l'endpoint diventa GET e `SetupSectionFieldsEdit` torna su `useApiQuery`.
 
-- **BL-006 — Cancellazione setup non atomica**
+- **BL-007 — Cancellazione setup non atomica**
   Il `DROP TABLE` fa implicit commit non rollbackabile: se fallisce dopo la DELETE dei metadati, resta config persa e tabella intatta. Fix proposto: soft-delete + routine di reconciliation. Priorità bassa su `.exe` monoutente.
