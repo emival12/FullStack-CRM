@@ -6,10 +6,6 @@ Registro delle cose da fare e del debito tecnico.
 
 ## Bug (NEXT INDEX: 3)
 
-- **B-001**
-  Riproduzione: Apri un record qualsiasi -> refresha la pagina
-  Bug: invece di rimanere sulla stessa pagina vieni reindirizzato sulla home del database
-
 ## Next step (NEXT INDEX: 5)
 
 - **NS-001 — Profili e segregazione dei dati** — _agosto 2026_

@@ -7,11 +7,11 @@ import {
   useState,
 } from "react";
 
+import client from "@/api/client";
 import { ENDPOINTS } from "@/api/endpoints";
 import { ApiError } from "@/api/types";
 import { EVENT_EXPIRED_SESSION, USER_TOKEN_NAME } from "@/config/K";
 import { useApiMutation } from "@/hooks/useApiMutation";
-import { useApiQuery } from "@/hooks/useApiQuery";
 import { useFeedback } from "@/hooks/useFeedback";
 
 import type {
@@ -39,22 +39,13 @@ export const useAuth = () => {
 
 export default function AuthProvider({ children }: AuthProviderProps) {
   const { showErrorToast } = useFeedback();
-  const [checkSession] = useState(
-    () => !!localStorage.getItem(USER_TOKEN_NAME),
-  );
   const [user, setUser] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const { mutate } = useApiMutation<LoginBody, LoginData>(
     ENDPOINTS.auth.login,
     "post",
   );
-  const {
-    data: userData,
-    loading,
-    error,
-  } = useApiQuery<UserData>(ENDPOINTS.auth.currentUser, {
-    enabled: checkSession,
-  });
 
   // localStorage is a internal dictionary of the browser
   const logout = useCallback(() => {
@@ -90,12 +81,20 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   }, [logoutExpiredSession]);
 
   useEffect(() => {
-    if (userData) setUser(userData);
-  }, [userData]);
+    const checkSession = localStorage.getItem(USER_TOKEN_NAME);
+    if (!checkSession) {
+      setLoading(false);
+      return;
+    }
 
-  useEffect(() => {
-    if (error) logout();
-  }, [error, logout]);
+    client
+      .get<UserData>(ENDPOINTS.auth.currentUser)
+      .then((res) => {
+        setUser(res.data);
+      })
+      .catch(() => logout())
+      .finally(() => setLoading(false));
+  }, [logout]);
 
   // All the things passed in the values are available to all the components who read the context
   // children: are all the components inside the AuthProvider (in our case the entire App)
