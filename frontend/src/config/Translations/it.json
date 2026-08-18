@@ -10,6 +10,7 @@
     "BROKEN_FORMULA": "Si è verificato un errore nel calcolo della formula \"{{field_name}}\". Contatta un admin",
     "DUPLICATE_PK": "Esiste già un record con questa chiave",
     "OBJECT_REFERENCED_BY_LOOKUP": "Conflitti trovati, per poter eliminare la tabella è necessario eliminare prima i seguenti campi:\n[ {{fields}} ]",
+    "OBJECT_REFERENCED_BY_CHILDREN_LOOKUP": "Conflitti trovati, per poter eliminare la tabella è necessario eliminare prima i seguenti record:\n[ {{fields}} ]",
     "ROLLUP_DETAIL_NO_LOOKUP": "Conflitto trovato, per poter creare una rollup è necessario che esista una lookup da {{reference_object}} a {{object_name}}"
   },
   "TOAST": {

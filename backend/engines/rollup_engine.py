@@ -98,7 +98,7 @@ def get_impacted_children(cursor, table_name: str, new_record: dict) -> set:
         obj_pk_name = get_primary_key_from_fields(fields.get(obj_key))
         try:
             query, params = (
-                QueryBuilder(lookup_obj_name, [StandardObjectField.RECORD_TYPE_NAME, f"{table_alias}.{obj_pk_name}"])
+                QueryBuilder(lookup_obj_name, [f"{table_alias}.{StandardObjectField.RECORD_TYPE_NAME}", f"{table_alias}.{obj_pk_name}"])
                 .begin_filter()
                     .add(f"{table_alias}.{lookup_field_name}", QueryBuilderComparisonOperator.EQUAL, new_record.get(map_object_primary_key_names.get(table_name)))
                 .end_filter()
@@ -114,7 +114,6 @@ def get_impacted_children(cursor, table_name: str, new_record: dict) -> set:
             raise_server_exception(logger, "DB query failed", query=query)
 
     return impacted
-
 
 def calculate_record_rollups(cursor, table_name: str, primary_key_field: str, record_id: str, rollup_fields: list[dict], rollup_map: dict) -> dict:
     """

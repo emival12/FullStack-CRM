@@ -1,7 +1,7 @@
 from __future__ import annotations
 import logging
 from config import get_triggers_folder
-from core.exceptions import raise_server_exception, log_event
+from core.exceptions import raise_input_exception, raise_server_exception, log_event, ExceptionKind
 from core.models import FieldStructureMode, FieldTypes, SystemFieldName_FD, RldFilterConditions, TriggerDefTiming, TriggerDefEvent
 from db.db_queries import (
     SEPARATOR,
@@ -21,8 +21,9 @@ from db.db_queries import (
     get_primary_keys_from_multiple_objects,
     get_single_record,
     get_rollup_definition,
+    get_fields_referencing_object,
 )
-from db.query_builder import QueryBuilder
+from db.query_builder import QueryBuilder, QueryBuilderComparisonOperator
 from services.record_crud import (
     get_field_structure,
     get_related_list_records,
@@ -384,6 +385,11 @@ def refresh_records(cursor, impacted_records: set, user_id: str, curr_depth: int
         _ = update_record(cursor, p_table, p_rt, p_id, {}, user_id, map_object_primary_key_names, curr_depth+1, upward_refresh_to_skip)
 
 def delete_record(cursor, table_name: str, record_type_name: str, record_id: str, user_id: str) -> dict:
+    count_records_by_object = count_child_records_by_object(cursor, table_name, record_id)
+    if count_records_by_object:
+        constraint_fields = [ f"{count} {obj}" for obj, count in count_records_by_object.items()]
+        raise_input_exception(409, "OBJECT_REFERENCED_BY_CHILDREN_LOOKUP", {"fields": ", ".join(constraint_fields)}, kind=ExceptionKind.BUSINESS_SHARED)
+
     primary_key_field = get_primary_keys_from_multiple_objects(cursor, [table_name]).get(table_name)
     if primary_key_field is None:
         raise_server_exception(logger, "Empty primary key", object_name=table_name, record_type_name=record_type_name)
@@ -402,8 +408,45 @@ def delete_record(cursor, table_name: str, record_type_name: str, record_id: str
     # Propagate changes upward: refresh any parent rollup fields that depend on this record
     impacted_parents = rollup_engine.get_impacted_parents(cursor, table_name, old_record)
     if impacted_parents:
-        refresh_parents(cursor, impacted_parents, user_id)
+        refresh_records(cursor, impacted_parents, user_id)
         
     log_event(logging.WARNING, logger, "Record deleted", object_name=table_name, record_type_name=record_type_name, record_id=record_id, user_id=user_id)
     return result
 
+def count_child_records_by_object(cursor, table_name: str, record_id: str) -> dict:
+    """
+        Count, per referencing object, how many records point at the given record through a lookup.
+        Pre-check for the deletion of a record: a non-empty result means the record is still referenced and the delete must be refused.
+
+        Args:
+            cursor (MySQLCursor): Database cursor used to execute SQL queries.
+            table_name (str): Name of the object the record belongs to.
+            record_id (str): Primary key value of the record being checked.
+
+        Returns:
+            dict: Mapping of referencing object name → number of records pointing at this one.
+    """
+
+    lookup_definition = get_fields_referencing_object(cursor, table_name)
+    lookups = {(l[SystemFieldName_FD.OBJECT_NAME], l[SystemFieldName_FD.FIELD_NAME]) for l in lookup_definition}
+
+    count_records = {}
+    for object_name, field_name in lookups:
+        table_alias = QueryBuilder.alias(object_name)
+        try:
+            query, params = (
+                QueryBuilder(object_name, ["COUNT(*) AS total"])
+                .begin_filter()
+                    .add(f"{table_alias}.{field_name}", QueryBuilderComparisonOperator.EQUAL, record_id)
+                .end_filter()
+                .get_query()
+            )
+            cursor.execute(query, params)
+
+            total = cursor.fetchone()["total"]
+            if total > 0:
+                count_records[object_name] = count_records.get(object_name, 0) + total
+        except Exception as e:
+            raise_server_exception(logger, "DB query failed", query=query)
+
+    return count_records
