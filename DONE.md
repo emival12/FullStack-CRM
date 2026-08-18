@@ -1,5 +1,11 @@
 ## TODO Risolti
 
+- **18/08/2026 B-003**
+  Riproduzione: Crea una tabella A -> Crea una tabella B -> In A crea un campo numerico X -> In B crea un field lookup che punta a A e un formula field che punta a X -> Crea 2 record -> Alla creazione il campo formula in B viene valorizzato correttamento, ma se viene modificato X il cambio non viene rispecchiato nella formula
+  Bug: I campi fanno ripartire i calcoli delle rollup presenti nei padri, ma non c'è nulla che scende nei figli
+  Risoluzione: aggiunta `get_impacted_children` (un figlio conta solo se una sua formula legge il padre via `field.<lookup>__obj.`) e `update_record` riordinato in scrivi → rinfresca i figli → riscrivi → risali.
+  La seconda scrittura del padre serve perché i suoi rollup erano stati calcolati sui figli ancora vecchi; i figli in risalita escludono il solo padre chiamante, non l'intera direzione.
+
 - **10/08/2026 B-001**
   Riproduzione: Apri un record qualsiasi -> refresha la pagina
   Bug: invece di rimanere sulla stessa pagina vieni reindirizzato sulla home del database

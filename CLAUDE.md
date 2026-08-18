@@ -38,7 +38,7 @@ Quando dico "analizziamo [nomeTask]" (o sinonimi):
 1. **Leggi il task** e capisci che problema descrive.
 2. **Verifica lo stato attuale dei file** (codice = verità, punto 2) e stabilisci se il problema è ancora persistente o se è già stato risolto da altri cambi nel frattempo.
 3. A seconda dell'esito:
-   - **3.a — Già risolto**: fammi un sunto dell'analisi (cosa hai controllato, perché concludi che è risolto) ed **elimina il task dal TODO** (voce attiva). NON aggiungerlo al changelog storico: non abbiamo fatto nulla, era un refuso già fixato da altro lavoro.
+   - **3.a — Già risolto**: fammi un sunto dell'analisi (cosa hai controllato, perché concludi che è risolto) ed **elimina il task dal TODO** (voce attiva). NON aggiungerlo a `DONE.md`: non abbiamo fatto nulla, era un refuso già fixato da altro lavoro.
    - **3.b — Ancora presente**: descrivi il problema in dettaglio (cosa non va e perché), elenca le possibili soluzioni con vantaggi/svantaggi, e fornisci tutte le informazioni esaustive e chiare per comprendere e iniziare ad affrontare la problematica. Poi **fermati** (punto 1): l'analisi è completa sul _problema e le soluzioni_, ma l'implementazione la decido ed eseguo io. Quando si passa alla review del codice che scrivo, riparte la disciplina "un punto alla volta" (punto 7).
 
 ## Lingua
@@ -336,3 +336,20 @@ Metro di giudizio di ogni singolo assert: **"quale modifica al codice di produzi
 
 Le decisioni rinviate, le migrazioni in sospeso e gli interventi futuri sono tracciati in `TODO.md` nella root del progetto.
 Quando proponi una modifica che incrocia uno di quei punti, segnalalo prima di toccarlo.
+
+### Chiusura di una voce → `DONE.md`
+
+Quando una voce di `TODO.md` viene chiusa, **si sposta** in `DONE.md` (root): esce dal TODO, non resta in entrambi.
+La voce conserva ID e testo originale, preceduti dalla data di chiusura, e aggiunge:
+
+- **`Risoluzione:` — obbligatoria.** Cosa è stato fatto. Non ricapitola il problema.
+- **`Motivazione Bug:` — opzionale.** Solo quando la causa è tecnica e non deducibile dal sintomo (ordine di esecuzione, race, comportamento del framework, invariante nascosta). Se il difetto stava in una funzionalità nostra e la causa si legge dal sintomo, si omette.
+
+Stile, sempre:
+
+- **Massimo 2 righe per campo.** Asciutto ma parlante.
+- **Niente contesto ridondante**: sopra c'è già `Bug:`/la descrizione originale. Non ripeterla e non anteporre spiegazioni della causa alla `Risoluzione`.
+- **Tieni l'inciso non ovvio** (il caso limite, la condizione strana, il vincolo che ne deriva): è la parte che fra sei mesi non si ricostruisce.
+- Registro in italiano. I commit restano in inglese e spiegano il singolo diff; `DONE.md` spiega il task.
+
+Non va in `DONE.md`: ciò che hai scoperto ma non fatto (va in `TODO.md`) e i task cancellati perché già risolti da altro lavoro (vedi "Analisi di un task", punto 3.a).

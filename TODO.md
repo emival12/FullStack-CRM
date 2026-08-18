@@ -4,9 +4,9 @@ Registro delle cose da fare e del debito tecnico.
 
 ---
 
-## Bug (NEXT INDEX: 3)
+## Bug (NEXT INDEX: 4)
 
-## Next step (NEXT INDEX: 5)
+## Milestone (NEXT INDEX: 5)
 
 - **NS-001 — Profili e segregazione dei dati** — _agosto 2026_
   Profili utente con visibilità/permessi differenziati. Ancora da definire cosa si segrega (oggetti, record, campi, azioni) e con quale granularità.
@@ -19,6 +19,11 @@ Registro delle cose da fare e del debito tecnico.
 
 - **NS-004 — App React Native** — _da definire_
   Porzione mobile che interagisce con l'app desktop
+
+## Improvments (NEXT INDEX: 2)
+
+- **I-001 — Redirect Looup**
+  Le picklist e le lookup al click reinderizzano sul record linkato
 
 ---
 
