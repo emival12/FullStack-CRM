@@ -7,12 +7,16 @@ class ExceptionKind(StrEnum):
     SYSTEM              = "system"
     BUSINESS_SHARED     = "business_shared"
     BUSINESS_FEATURE    = "business_feature"
+    BUSINESS_TRIGGER    = "business_trigger"
 
 def raise_input_exception(status_code: int, error_code: str, error_data=None, kind: ExceptionKind = ExceptionKind.BUSINESS_FEATURE) -> None:
     raise HTTPException(
         status_code=status_code,
         detail={"error_code": error_code, "error_data": error_data, "kind": kind}
     )
+
+def raise_trigger_exception(status_code: int, error_code: str, error_data=None) -> None:
+    raise_input_exception(status_code, error_code, error_data, kind=ExceptionKind.BUSINESS_TRIGGER)
 
 def raise_server_exception(logger: logging.Logger, msg: str, **context) -> None:
     logger.exception(msg, extra={"context": context}, stacklevel=2)

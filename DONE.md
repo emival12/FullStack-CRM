@@ -1,5 +1,9 @@
 ## TODO Risolti
 
+- **19/08/2026 BL-002 — Convenzione trigger custom**
+  Contenuto: Definizione convenzione dei trigger: naming file, firma della funzione, comportamento su eccezione, etc..
+  Risoluzione: fissata scrivendo il primo trigger reale: file `{object}_{TIMING}_{EVENT}.py` + riga in `trigger_definition`, `execute(cursor, record)`, `raise_trigger_exception` per rifiutare la scrittura, ogni altra eccezione è un bug e diventa 500.
+
 - **18/08/2026 B-003**
   Riproduzione: Crea una tabella A -> Crea una tabella B -> In A crea un campo numerico X -> In B crea un field lookup che punta a A e un formula field che punta a X -> Crea 2 record -> Alla creazione il campo formula in B viene valorizzato correttamento, ma se viene modificato X il cambio non viene rispecchiato nella formula
   Bug: I campi fanno ripartire i calcoli delle rollup presenti nei padri, ma non c'è nulla che scende nei figli

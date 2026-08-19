@@ -6,6 +6,7 @@ export const ERROR_KINDS = [
   "system",
   "business_shared",
   "business_feature",
+  "business_trigger",
 ] as const;
 type ErrorKind = (typeof ERROR_KINDS)[number];
 export type ApiError = {

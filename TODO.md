@@ -36,9 +36,6 @@ Registro delle cose da fare e del debito tecnico.
   1. _Funzioni pure_ — `utils/string.ts`, `DynamicForm/helpers.ts`, i puri di `useFieldTypes.ts`, `endpoints.ts`, `routes.ts`. Riferimento: `src/api/errors.test.ts`.
   2. _Hook e context_ — `api/client.ts`, `useApiMutation`, `Toast`, `Label`, `useFeedback`, `Auth`. Riferimento: `src/hooks/useApiQuery.test.ts`.
 
-- **BL-002 — Convenzione trigger custom**
-  Da fissare al primo trigger reale: naming file, firma della funzione, comportamento su eccezione, discovery vs registro. Oggi `dettaglio_documento_BEFORE_INSERT.py` è un placeholder.
-
 - **BL-003 — Completare il setup**
   Le sezioni Layout, Record Types e Related Lists sono placeholder `<p>TODO</p>` (`SetupSections.tsx:39-41`) ma già raggiungibili dalla sidebar. Il salvataggio della modifica di un campo è uno stub: `onSubmit` è un `console.log` (`SetupSectionFieldsEdit.tsx:113`), mentre creazione e cancellazione funzionano.
 

@@ -1,6 +1,7 @@
 import os
 import logging
 import importlib.util
+from fastapi import HTTPException
 from core.exceptions import raise_server_exception, log_event
 from core.models import TriggerDefTiming, TriggerDefEvent
 from db.db_queries import get_trigger_definition
@@ -45,6 +46,11 @@ def run_triggers(cursor, triggers_dir: str, object_name: str, timing: TriggerDef
 
         Returns:
             dict: The record, potentially modified by the trigger
+
+        Raises:
+            HTTPException: Propagated unchanged when the trigger deliberately rejects the write,
+                so its domain-specific error code reaches the client instead of a generic 500.
+            HTTPException 500: If the trigger fails unexpectedly, or if the module cannot be imported.
     """
 
     # trigger_definition PK is (object_name, trigger_event, trigger_timing) — at most 1 trigger per object
@@ -63,6 +69,8 @@ def run_triggers(cursor, triggers_dir: str, object_name: str, timing: TriggerDef
         result = module.execute(cursor, record)
         if result is not None:
             record = result
+    except HTTPException:
+        raise
     except Exception:
         raise_server_exception(logger, "Fatal error in Trigger execution", file_name=file_name)
 

@@ -13,6 +13,10 @@
     "OBJECT_REFERENCED_BY_CHILDREN_LOOKUP": "Conflitti trovati, per poter eliminare la tabella è necessario eliminare prima i seguenti record:\n[ {{fields}} ]",
     "ROLLUP_DETAIL_NO_LOOKUP": "Conflitto trovato, per poter creare una rollup è necessario che esista una lookup da {{reference_object}} a {{object_name}}"
   },
+  "TRIGGER_ERRORS": {
+    "DETTAGLIO_DOCUMENTO_BEFORE_INSERT_DOCUMENTO_NOT_FOUND": "Il documento \"{{id_documento}}\" non esiste, impossibile determinare il listino da applicare.\nContatta un admin",
+    "DETTAGLIO_DOCUMENTO_BEFORE_INSERT_VOCE_LISTINO_NOT_FOUND": "Non esiste una \"Voce listino\" per l'articolo \"{{id_articolo}}\" nel listino \"{{id_listino}}\".\nCreala prima di inserire l'articolo nel documento"
+  },
   "TOAST": {
     "ERROR_TITLE": "Errore",
     "SUCCESS_TITLE": "Successo",

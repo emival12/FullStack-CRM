@@ -1070,6 +1070,33 @@ def get_single_record(cursor, table_name: str, fields: list[dict], raw_filters: 
             HTTPException 500: On any database error.
     """
 
+    record = get_single_record_or_none(cursor, table_name, fields, raw_filters, raw_params)
+    if not record:
+        raise_input_exception(404, "INPUT_RECORD_ID_NOT_FOUND", kind=ExceptionKind.BUSINESS_SHARED)
+    
+    return record
+
+def get_single_record_or_none(cursor, table_name: str, fields: list[dict], raw_filters: list[str], raw_params: list) -> dict | None:
+    """
+        Return a single CRM object record matching the given filter conditions, or None if there is no match.
+
+        Leaves the missing-record policy to the caller: use it when the absence is not an error,
+        or when the caller wants to raise its own domain-specific one.
+
+        Args:
+            cursor (MySQLCursor): Database cursor used to execute SQL queries.
+            table_name (str): Name of the CRM object table to query.
+            fields (list[dict]): Field metadata used to build the SELECT clause.
+            raw_filters (list[str]): Raw SQL condition strings for the WHERE clause.
+            raw_params (list): Bound parameters corresponding to raw_filters.
+
+        Returns:
+            dict | None: The matching record, or None if no record matches the given filters.
+
+        Raises:
+            HTTPException 500: On any database error.
+    """
+
     table_alias = QueryBuilder.alias(table_name)
     select_fields = [ f"{table_alias}.{row[SystemFieldName_FD.FIELD_NAME]}" for row in fields ]
 
@@ -1084,12 +1111,7 @@ def get_single_record(cursor, table_name: str, fields: list[dict], raw_filters: 
         cursor.execute(query, params)
     except Exception as e:
         raise_server_exception(logger, "DB query failed", query=query)
-
-    record = cursor.fetchone()
-    if not record:
-        raise_input_exception(404, "INPUT_RECORD_ID_NOT_FOUND", kind=ExceptionKind.BUSINESS_SHARED)
-    
-    return record
+    return cursor.fetchone()
 
 def get_records_from_table(cursor, table_name: str, record_type_name: str, fields: list[dict]) -> list[dict]:
     """

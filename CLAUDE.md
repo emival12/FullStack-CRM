@@ -245,6 +245,36 @@ except Exception:
 Il sistema genera tabelle e colonne dinamicamente da input utente. Ogni query che include nomi di tabella o
 campo da metadati DEVE essere sanitizzata — mai concatenazione diretta di stringhe in SQL.
 
+### Trigger
+
+Logica di business agganciata alla scrittura di un oggetto. Fissata dal primo trigger reale
+(`triggers/dettaglio_documento_BEFORE_INSERT.py`), da raffinare quando arriveranno casi che non ci rientrano.
+
+**Attivazione — registro + file, servono entrambi.** Una riga in `trigger_definition` (`object_name`,
+`trigger_timing`, `trigger_event`, `is_active`) e un file su disco. La PK composita implica **al massimo un
+trigger per combinazione**. Senza la riga il file non viene mai eseguito; con la riga ma senza file la
+scrittura prosegue silenziosamente e viene loggato un `ERROR`.
+
+**Naming del file:** `{object_name}_{TIMING}_{EVENT}.py` in `backend/triggers/`. Il nome non è descrittivo,
+è **calcolato** da `trigger_manager.run_triggers()`: se non combacia, il trigger non parte.
+
+**Firma:** `execute(cursor, record) -> dict | None`.
+
+- `BEFORE` — modifica `record` e **restituiscilo**: il valore di ritorno sostituisce il record che verrà scritto.
+- `AFTER` — il valore di ritorno è ignorato dal chiamante; mutare `record` non ha alcun effetto sulla riga già scritta.
+
+**Letture:** `get_single_record_or_none()` seguita da una guardia esplicita. Mai `get_single_record()`: il suo
+404 `INPUT_RECORD_ID_NOT_FOUND` è generico e non dice all'utente _cosa_ manca, che è tutto il punto di un trigger.
+
+**Errori:** `raise_trigger_exception(status_code, error_code, error_data)` — ha `ExceptionKind.BUSINESS_TRIGGER`
+cablato, non passarlo. Rifiuta la scrittura e attraversa `run_triggers()` intatta. Qualunque **altra** eccezione è
+un bug del trigger: diventa 500 `ADMIN_ERROR` con traceback nel log.
+
+**Error code:** `{OBJECT}_{TIMING}_{EVENT}_{CAUSA}`. Il prefisso è l'identità del file, quindi garantisce
+l'unicità senza tenere un registro centrale delle chiavi. Traduzione sotto `TRIGGER_ERRORS` in
+`config/translations/it.json` — **non** in `COMMON_API_ERRORS`, che è vocabolario di prodotto e vale in ogni
+installazione, mentre i codici dei trigger vivono e muoiono con gli oggetti di un singolo cliente.
+
 ### Naming Python (backend)
 
 - **Classi:** `PascalCase`
@@ -306,7 +336,7 @@ Pattern canonico React per ogni nuovo context (rispettato in `context/Auth/`):
 
 ## Test
 
-### Criterio: si testa ciò che *calcola*, non ciò che *trasporta*
+### Criterio: si testa ciò che _calcola_, non ciò che _trasporta_
 
 Un componente che prende `is_required` e lo mette in `required={true}` trasporta: se sbaglia lo vedi al primo avvio. Una funzione che da `numeric_scale=2` produce `step="0.01"` calcola: se sbaglia non lo vedi, e continua a sbagliare in silenzio su un solo tipo di campo di un solo oggetto.
 
