@@ -105,21 +105,150 @@ pyinstaller --onefile start_servers.py
 https://realfavicongenerator.net/ -> Per creare FavIvoc
 
 
-SOLUZIONE TEMPORANEA PER GESTIRE RECORD LAYOUT:
+Per generare il grafo delle dipendenze lanciare questo da dentro backend: 
+pydeps main.py --max-bacon 0 -x os fastapi sys configparser mysql.connector mysql pandas re io bcrypt dateutil --cluster --max-cluster-size=1000 --rmprefix core. db. engines. routers. services. triggers.  --rankdir LR
+
+
+
+
+
+MULTI_RECORD_TYPE temporary solution:
+##################################################################################
+ACCOUNT 
+##################################################################################
+UPDATE object_definition
+SET is_single_record_type = 0 
+WHERE object_name = 'account';
+
+
+UPDATE record_type_definition
+SET is_active = 0
+WHERE object_name = 'account' AND record_type_name = 'master';
+
+INSERT INTO record_type_definition(object_name, record_type_name, is_active)
+VALUES 
+    ('account',     'fornitore',        1),
+    ('account',     'cliente',          1);
+
+
+UPDATE field_definition
+SET is_active = 0
+WHERE object_name = 'account' AND record_type_name = 'master';
+
+
+INSERT INTO field_definition(object_name, record_type_name, field_name, field_type, length, numeric_precision, 
+    numeric_scale, reference_object, reference_field, lookup_filter, formula_definition, is_active, is_visible, is_editable, is_required, is_primary_key)
+VALUES   
+('account', 'cliente',      'id',                 'auto_number',    NULL, NULL, NULL, NULL,              NULL,       NULL, NULL, 1, 1, 0, 0, 1),
+('account', 'cliente',      'last_modified_by',   'lookup',          255, NULL, NULL, 'user_definition', 'email',    NULL, NULL, 1, 1, 0, 0, 0),
+('account', 'cliente',      'last_modified_date', 'datetime-local', NULL, NULL, NULL, NULL,              NULL,       NULL, NULL, 1, 1, 0, 0, 0),
+('account', 'cliente',      'create_date',        'datetime-local', NULL, NULL, NULL, NULL,              NULL,       NULL, NULL, 1, 1, 0, 0, 0),
+('account', 'cliente',      'record_type_name',   'text',            255, NULL, NULL, NULL,              NULL,       NULL, NULL, 1, 0, 0, 1, 0),
+('account', 'fornitore',    'id',                 'auto_number',    NULL, NULL, NULL, NULL,              NULL,       NULL, NULL, 1, 1, 0, 0, 1),
+('account', 'fornitore',    'last_modified_by',   'lookup',          255, NULL, NULL, 'user_definition', 'email',    NULL, NULL, 1, 1, 0, 0, 0),
+('account', 'fornitore',    'last_modified_date', 'datetime-local', NULL, NULL, NULL, NULL,              NULL,       NULL, NULL, 1, 1, 0, 0, 0),
+('account', 'fornitore',    'create_date',        'datetime-local', NULL, NULL, NULL, NULL,              NULL,       NULL, NULL, 1, 1, 0, 0, 0),
+('account', 'fornitore',    'record_type_name',   'text',            255, NULL, NULL, NULL,              NULL,       NULL, NULL, 1, 0, 0, 1, 0);
+
+
+INSERT INTO list_view_definition(object_name, record_type_name, field_name, sort_order)
+VALUES 
+('account',     'cliente',      'id',   1),
+('account',     'fornitore',    'id',   1);
+
+
+INSERT INTO record_layout_definition(object_name, record_type_name, field_name, sort_order)
+VALUES 
+('account',     'cliente',       'id',                           1),
+('account',     'cliente',       'create_date',                  2),
+('account',     'cliente',       'last_modified_date',           3),
+('account',     'cliente',       'last_modified_by',             4),
+('account',     'fornitore',     'id',                           1),
+('account',     'fornitore',     'create_date',                  2),
+('account',     'fornitore',     'last_modified_date',           3),
+('account',     'fornitore',     'last_modified_by',             4);
+
+
+
+
+
+##################################################################################
+DOCUMENTO 
+##################################################################################
+UPDATE object_definition
+SET is_single_record_type = 0 
+WHERE object_name = 'documento';
+
+
+UPDATE record_type_definition
+SET is_active = 0
+WHERE object_name = 'documento' AND record_type_name = 'master';
+
+INSERT INTO record_type_definition(object_name, record_type_name, is_active)
+VALUES 
+    ('documento',     'vendita',        1),
+    ('documento',     'acquisto',       1);
+
+
+UPDATE field_definition
+SET is_active = 0
+WHERE object_name = 'documento' AND record_type_name = 'master';
+
+
+INSERT INTO field_definition(object_name, record_type_name, field_name, field_type, length, numeric_precision, 
+    numeric_scale, reference_object, reference_field, lookup_filter, formula_definition, is_active, is_visible, is_editable, is_required, is_primary_key)
+VALUES   
+('documento', 'vendita',      'id',                 'auto_number',    NULL, NULL, NULL, NULL,              NULL,       NULL, NULL, 1, 1, 0, 0, 1),
+('documento', 'vendita',      'last_modified_by',   'lookup',          255, NULL, NULL, 'user_definition', 'email',    NULL, NULL, 1, 1, 0, 0, 0),
+('documento', 'vendita',      'last_modified_date', 'datetime-local', NULL, NULL, NULL, NULL,              NULL,       NULL, NULL, 1, 1, 0, 0, 0),
+('documento', 'vendita',      'create_date',        'datetime-local', NULL, NULL, NULL, NULL,              NULL,       NULL, NULL, 1, 1, 0, 0, 0),
+('documento', 'vendita',      'record_type_name',   'text',            255, NULL, NULL, NULL,              NULL,       NULL, NULL, 1, 0, 0, 1, 0),
+('documento', 'acquisto',    'id',                 'auto_number',    NULL, NULL, NULL, NULL,              NULL,       NULL, NULL, 1, 1, 0, 0, 1),
+('documento', 'acquisto',    'last_modified_by',   'lookup',          255, NULL, NULL, 'user_definition', 'email',    NULL, NULL, 1, 1, 0, 0, 0),
+('documento', 'acquisto',    'last_modified_date', 'datetime-local', NULL, NULL, NULL, NULL,              NULL,       NULL, NULL, 1, 1, 0, 0, 0),
+('documento', 'acquisto',    'create_date',        'datetime-local', NULL, NULL, NULL, NULL,              NULL,       NULL, NULL, 1, 1, 0, 0, 0),
+('documento', 'acquisto',    'record_type_name',   'text',            255, NULL, NULL, NULL,              NULL,       NULL, NULL, 1, 0, 0, 1, 0);
+
+
+INSERT INTO list_view_definition(object_name, record_type_name, field_name, sort_order)
+VALUES 
+('documento',     'vendita',      'id',   1),
+('documento',     'acquisto',    'id',   1);
+
+
+INSERT INTO record_layout_definition(object_name, record_type_name, field_name, sort_order)
+VALUES 
+('documento',     'vendita',       'id',                           1),
+('documento',     'vendita',       'create_date',                  2),
+('documento',     'vendita',       'last_modified_date',           3),
+('documento',     'vendita',       'last_modified_by',             4),
+('documento',     'acquisto',     'id',                           1),
+('documento',     'acquisto',     'create_date',                  2),
+('documento',     'acquisto',     'last_modified_date',           3),
+('documento',     'acquisto',     'last_modified_by',             4);
+
+
+
+REORDER_FIELD temporary solution:
+SELECT * FROM record_layout_definition WHERE object_name = 'tipologia_documento' AND record_type_name = 'master' ORDER BY sort_order;
+
 UPDATE record_layout_definition 
 SET sort_order = CASE field_name
-    WHEN 'id' THEN 1
-    WHEN 'name' THEN 2
-    WHEN 'stock' THEN 3
-	WHEN 'foto' THEN 4
-    WHEN 'priority' THEN 5
-	WHEN 'active' THEN 6
-	WHEN 'owner' THEN 7
-    WHEN 'create_date' THEN 8
-    WHEN 'last_modified_date' THEN 9
-	WHEN 'last_modified_by' THEN 10
+    WHEN 'id'                           THEN 1 
+    WHEN 'descrizione'                  THEN 2 
+    WHEN 'descrizione_tipo_documento'   THEN 3
+    WHEN 'create_date'                  THEN 4
+    WHEN 'last_modified_date'           THEN 5
+    WHEN 'last_modified_by'             THEN 6
 END
-WHERE object_name = 'product' AND record_type_name = 'master';
+WHERE object_name = 'tipologia_documento' AND record_type_name = 'master';
+
+
+LIST_VIEW_FIELD temporary solution:
+INSERT INTO list_view_definition(object_name, record_type_name, field_name, sort_order)
+VALUES 
+    ('tipologia_documento',  'master',   'descrizione_tipo_documento',       3);
+
 
 
 
