@@ -2,6 +2,7 @@ import os
 import logging
 import importlib.util
 from fastapi import HTTPException
+from config import get_triggers_folder
 from core.exceptions import raise_server_exception, log_event
 from core.models import TriggerDefTiming, TriggerDefEvent
 from db.db_queries import get_trigger_definition
@@ -10,9 +11,22 @@ logger = logging.getLogger(__name__)
 
 _trigger_module_cache: dict[tuple[str, float], object] = {}
 
+def load_module(file_name: str) -> object:
+    """
+        Returns the module named file_name (extension included) from the triggers folder.
+
+        Entry point for trigger files that need a shared helper: call it inside execute(),
+        never at module level, so the helper is re-resolved on every run instead of being
+        frozen into the cached trigger module.
+    """
+
+    triggers_dir = get_triggers_folder()
+    file_path = os.path.join(triggers_dir, file_name)
+    return _load_trigger_module((file_path, os.path.getmtime(file_path)))
+
 def _load_trigger_module(key: tuple[str, float]) -> object:
     """
-        Returns the trigger module at file_path, loading it from disk only when the file's mtime is newer than the cached version.
+        Returns the module at file_path, loading it from disk only when the file's mtime is newer than the cached version.
     """
 
     if key in _trigger_module_cache:
@@ -29,16 +43,15 @@ def _load_trigger_module(key: tuple[str, float]) -> object:
     except Exception:
         raise_server_exception(logger, "Fatal error in Module import", file_path=file_path)
 
-def run_triggers(cursor, triggers_dir: str, object_name: str, timing: TriggerDefTiming, event: TriggerDefEvent, record: dict) -> dict:
+def run_triggers(cursor, object_name: str, timing: TriggerDefTiming, event: TriggerDefEvent, record: dict) -> dict:
     """
         Loads and executes the active trigger for the given object, timing, and event, if any.
 
-        Queries trigger_definition for an active trigger, dynamically imports the corresponding .py file from triggers_dir, and calls its execute(cursor, record) function.
+        Queries trigger_definition for an active trigger, dynamically imports the corresponding .py file from the triggers folder, and calls its execute(cursor, record) function.
         If the trigger returns a non-None value, it replaces the record.
 
         Args:
             cursor: Database cursor
-            triggers_dir (str): Filesystem path to the triggers/ folder
             object_name (str): Name of the object triggering the event
             timing (TriggerDefTiming): Trigger timing
             event (TriggerDefEvent): Trigger event
@@ -52,6 +65,7 @@ def run_triggers(cursor, triggers_dir: str, object_name: str, timing: TriggerDef
                 so its domain-specific error code reaches the client instead of a generic 500.
             HTTPException 500: If the trigger fails unexpectedly, or if the module cannot be imported.
     """
+    triggers_dir = get_triggers_folder()
 
     # trigger_definition PK is (object_name, trigger_event, trigger_timing) — at most 1 trigger per object
     active_triggers = get_trigger_definition(cursor, object_name, timing, event)

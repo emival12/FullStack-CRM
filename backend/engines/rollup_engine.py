@@ -1,6 +1,6 @@
 from __future__ import annotations
 import logging
-from core.exceptions import raise_server_exception
+from core.exceptions import raise_server_exception, raise_input_exception, ExceptionKind
 from core.models import SystemFieldName_FD, SystemFieldName_ROLLD, StandardObjectField
 from db.query_builder import QueryBuilder, QueryBuilderComparisonOperator
 from db.db_queries import (
@@ -10,7 +10,7 @@ from db.db_queries import (
     get_fields_definition,
     make_table_key_from_row,
     get_primary_keys_from_multiple_objects,
-    get_primary_key_from_fields
+    get_primary_key_from_fields,
 )
 
 logger = logging.getLogger(__name__) 
@@ -21,6 +21,12 @@ def get_impacted_parents(cursor, table_name: str, new_record: dict, old_record: 
 
         A parent is impacted if the child's join key value points to it (new_val),
         or if the join key changed and the old parent (old_val) also needs recalculation.
+
+        The record type is read from the parent row itself, not from the rollup definition: the same rollup is
+        defined once per record type of the master, so taking it from the definition would yield one tuple per
+        record type for a single physical parent, and the caller's upward_refresh_to_skip would only cancel one
+        of them. The new parent must exist, since the child's foreign key was just written; the old one may have
+        been deleted, and is skipped when missing.
 
         Args:
             cursor (MySQLCursor): Database cursor used to execute the SQL query.
@@ -34,10 +40,46 @@ def get_impacted_parents(cursor, table_name: str, new_record: dict, old_record: 
     # fetch all rollup definitions where this table is the child
     rollup_definitions = get_rollup_definitions_by_detail_object(cursor, table_name)
 
+    ids_to_retrieve = {}
+    for agg in rollup_definitions:
+        parent_table = agg[SystemFieldName_ROLLD.MASTER_OBJECT_NAME]
+        parent_pk = agg[SystemFieldName_ROLLD.MASTER_PRIMARY_KEY]
+        join_key = agg[SystemFieldName_ROLLD.DETAIL_JOIN_KEY] 
+        new_val = new_record.get(join_key, None)
+        old_val = old_record.get(join_key, None) if old_record else None
+
+        ids_to_retrieve.setdefault(parent_table, {"parent_pk": parent_pk, "new_vals": set(), "old_vals": set()})
+        if new_val is not None:
+            ids_to_retrieve[parent_table]["new_vals"].add(new_val)
+
+        if old_val is not None and old_val != new_val:
+            ids_to_retrieve[parent_table]["old_vals"].add(old_val)
+
+    parent_records = {}
+    for table, elem in ids_to_retrieve.items():
+        parent_pk = elem["parent_pk"]
+        ids = elem["new_vals"].union(elem["old_vals"])
+        if ids:
+            try:
+                table_alias = QueryBuilder.alias(table)
+                query, params = (
+                    QueryBuilder(table, [f"{table_alias}.{parent_pk}", f"{table_alias}.{StandardObjectField.RECORD_TYPE_NAME}"])
+                    .begin_filter()
+                        .add(f"{table_alias}.{parent_pk}", QueryBuilderComparisonOperator.IN, ids)
+                    .end_filter()
+                    .get_query()
+                )
+                cursor.execute(query, params)
+                records = cursor.fetchall()
+                for r in records:
+                    parent_records[(table, str(r[parent_pk]))] = r[StandardObjectField.RECORD_TYPE_NAME]
+
+            except Exception as e:
+                raise_server_exception(logger, "DB query failed", query=query)
+
     impacted = set()
     for agg in rollup_definitions:
         parent_table = agg[SystemFieldName_ROLLD.MASTER_OBJECT_NAME]
-        parent_record_type = agg[SystemFieldName_ROLLD.MASTER_RECORD_TYPE_NAME]
         join_key = agg[SystemFieldName_ROLLD.DETAIL_JOIN_KEY] 
 
         new_val = new_record.get(join_key, None)
@@ -45,11 +87,19 @@ def get_impacted_parents(cursor, table_name: str, new_record: dict, old_record: 
 
         # the new parent needs recalculation
         if new_val is not None:
-            impacted.add((parent_table, parent_record_type, str(new_val)))
+            str_val = str(new_val)
+            parent_record_type = parent_records.get((parent_table, str_val), None)
+            if not parent_record_type:
+                raise_input_exception(404, "INPUT_RECORD_ID_NOT_FOUND", kind=ExceptionKind.BUSINESS_SHARED)
+
+            impacted.add((parent_table, parent_record_type, str_val))
 
         # if the FK is changed, the old parent also needs recalculation
         if old_val is not None and old_val != new_val:
-            impacted.add((parent_table, parent_record_type, str(old_val)))
+            str_val = str(old_val)
+            parent_record_type = parent_records.get((parent_table, str_val), None)
+            if parent_record_type:
+                impacted.add((parent_table, parent_record_type, str_val))
 
     return impacted
 

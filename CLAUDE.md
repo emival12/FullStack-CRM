@@ -266,12 +266,34 @@ scrittura prosegue silenziosamente e viene loggato un `ERROR`.
 **Letture:** `get_single_record_or_none()` seguita da una guardia esplicita. Mai `get_single_record()`: il suo
 404 `INPUT_RECORD_ID_NOT_FOUND` è generico e non dice all'utente _cosa_ manca, che è tutto il punto di un trigger.
 
+**Helper condivisi.** Le letture di un oggetto servono uguali ai suoi trigger di timing diversi (`get_voce_listino`
+vale per il BEFORE INSERT come per il BEFORE UPDATE), quindi vivono in un file a parte: `{object_name}_helper.py`,
+accanto ai trigger.
+
+L'helper **contiene la guardia e solleva lui**: la protezione è garantita per costruzione invece che per disciplina
+del singolo trigger, che potrebbe dimenticarla e schiantarsi più avanti su un `None` con un errore che non dice
+niente all'utente.
+
+**Caricare un helper:** `trigger_manager.load_module("{nome}.py")` — estensione inclusa, e la chiamata sta **dentro
+`execute()`**, mai a livello di modulo. Due ragioni, entrambe load-bearing:
+
+- **Non puoi importarlo.** In produzione i trigger stanno in una cartella accanto all'exe (`config.get_triggers_folder()`,
+  `is_external=True`) e vengono eseguiti con `spec_from_file_location`, non importati come package: un `import` dal
+  trigger cercherebbe il modulo dentro l'exe, dove l'helper del cliente non c'è. Nota la differenza con
+  `trigger_manager` stesso, che è codice dell'app, finisce nel bundle e si importa normalmente.
+- **`import` lega a load-time.** I moduli sono cachati per mtime: se il trigger importasse l'helper, resterebbe legato
+  alla versione presente al momento del suo caricamento e non vedrebbe mai un helper aggiornato sul disco. La chiamata
+  dentro `execute()` risolve il modulo a ogni esecuzione.
+
 **Errori:** `raise_trigger_exception(status_code, error_code, error_data)` — ha `ExceptionKind.BUSINESS_TRIGGER`
 cablato, non passarlo. Rifiuta la scrittura e attraversa `run_triggers()` intatta. Qualunque **altra** eccezione è
 un bug del trigger: diventa 500 `ADMIN_ERROR` con traceback nel log.
 
-**Error code:** `{OBJECT}_{TIMING}_{EVENT}_{CAUSA}`. Il prefisso è l'identità del file, quindi garantisce
-l'unicità senza tenere un registro centrale delle chiavi. Traduzione sotto `TRIGGER_ERRORS` in
+**Error code:** il prefisso è **il nome del file che solleva**, la causa il suffisso — quindi
+`{OBJECT}_{TIMING}_{EVENT}_{CAUSA}` da un trigger, `{OBJECT}_HELPER_{CAUSA}` da un helper. Questo garantisce
+l'unicità senza tenere un registro centrale delle chiavi, e fa sì che il codice dica dove guardare: un helper
+condiviso che dichiarasse il timing di uno solo dei suoi chiamanti mentirebbe a tutti gli altri.
+Traduzione sotto `TRIGGER_ERRORS` in
 `config/translations/it.json` — **non** in `COMMON_API_ERRORS`, che è vocabolario di prodotto e vale in ogni
 installazione, mentre i codici dei trigger vivono e muoiono con gli oggetti di un singolo cliente.
 

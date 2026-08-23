@@ -666,6 +666,7 @@ def get_rollup_definitions_by_detail_object(cursor, table_name: str) -> list[dic
     select_fields = [
         f"{rd_table_alias}.master_object_name",
         f"{rd_table_alias}.master_record_type_name",
+        f"{rd_table_alias}.master_primary_key",
         f"{rd_table_alias}.detail_join_key",
     ]
     join_conditions = [

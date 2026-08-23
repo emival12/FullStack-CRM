@@ -4,7 +4,7 @@ Registro delle cose da fare e del debito tecnico.
 
 ---
 
-## Bug (NEXT INDEX: 4)
+## Bug (NEXT INDEX: 5)
 
 ## Milestone (NEXT INDEX: 5)
 

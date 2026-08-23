@@ -1,5 +1,11 @@
 ## TODO Risolti
 
+- **23/08/2026 B-004**
+  Riproduzione: Crea una tabella A -> Crea più record Type -> Crea unat tabella B -> Crea una lookup da B ad A -> Crea un record nella tabella A -> Crea un record nella tabella B che punta al record creato precedentemente
+  Bug: l'insert fallisce con 500 `Max recursion depth reached`
+  Motivazione Bug: il record type del padre veniva preso da `rollup_definition`, che ripete la rollup per ogni record type: un padre diventava N padri, e lo skip ne toglieva uno
+  Risoluzione: record type letto dalla riga del padre, con una query per tabella invece di due per rollup
+
 - **19/08/2026 BL-002 — Convenzione trigger custom**
   Contenuto: Definizione convenzione dei trigger: naming file, firma della funzione, comportamento su eccezione, etc..
   Risoluzione: fissata scrivendo il primo trigger reale: file `{object}_{TIMING}_{EVENT}.py` + riga in `trigger_definition`, `execute(cursor, record)`, `raise_trigger_exception` per rifiutare la scrittura, ogni altra eccezione è un bug e diventa 500.
