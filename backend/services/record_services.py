@@ -168,6 +168,7 @@ def insert_record(cursor, table_name: str, record_type_name: str, record: dict, 
     record = trigger_manager.run_triggers(cursor, table_name, TriggerDefTiming.BEFORE, TriggerDefEvent.INSERT, record)
 
     # Evaluate formulas after the trigger so they see the final field values
+    record = formula_engine.set_default_values(record, fields)
     record = formula_engine.evaluate_all_formulas(cursor, fields, record, complex_formula)
 
     # Actual insert on the DB
@@ -352,6 +353,7 @@ def execute_record_update(
         record = trigger_manager.run_triggers(cursor, table_name, TriggerDefTiming.BEFORE, TriggerDefEvent.UPDATE, record)
 
     # Evaluate formulas after the trigger so they see the final field values
+    record = formula_engine.set_default_values(record, fields)
     record = formula_engine.evaluate_all_formulas(cursor, fields, record, complex_formula)
 
     # Actual Update on the DB

@@ -79,8 +79,10 @@ def cast_record_types(record: dict, fields_definition: list[dict]) -> dict:
     """
         Casts number, rollup, and date field values to their correct Python types.
 
-        Mutates and returns the record dict in-place.
-        - NUMBER / ROLLUP: blank/NULL → Decimal(0). Non-numeric strings raise a server exception.
+        Mutates and returns the record dict in-place. Empty values are left untouched, so that the
+        BEFORE triggers can tell an unset field from one the user filled in: defaulting them is the
+        job of set_default_values, which runs later.
+        - NUMBER / ROLLUP: blank/NULL → skipped. Non-numeric strings raise a server exception.
         - DATE / DATE_TIME: blank/NULL/non-string → skipped. Unparseable strings raise a server exception.
 
         Args:
@@ -97,9 +99,7 @@ def cast_record_types(record: dict, fields_definition: list[dict]) -> dict:
         f_type = type_map.get(key)
         if f_type in (FieldTypes.NUMBER.value, FieldTypes.ROLLUP.value):
             # Blank and NULL are valid states for an empty numeric field
-            if not value or value == 'NULL':
-                record[key] = Decimal(0)
-            else:
+            if value and not value == 'NULL':
                 try:
                     record[key] = Decimal(value)
                 except Exception:
@@ -112,6 +112,33 @@ def cast_record_types(record: dict, fields_definition: list[dict]) -> dict:
                     record[key] = parser.parse(value)
                 except Exception:
                     raise_server_exception(logger, "Cast failed", key=key, value=value, type=f_type)
+
+    return record
+
+def set_default_values(record: dict, fields_definition: list[dict]) -> dict:
+    """
+        Fills empty NUMBER and ROLLUP fields with Decimal(0).
+
+        Mutates and returns the record dict in-place. Runs after the BEFORE triggers and before
+        formula evaluation: the triggers need to tell an empty field from a field the user set to
+        zero, while the formulas need every numeric operand to be a number.
+
+        Args:
+            record (dict): The record to fill (mutated in-place).
+            fields_definition (list[dict]): Field metadata rows from field_definition.
+
+        Returns:
+            dict: The same record with its empty numeric fields defaulted to Decimal(0).
+    """
+    # Build a field_name → field_type lookup to avoid repeated scans of fields_definition
+    type_map = {f[SystemFieldName_FD.FIELD_NAME]: f[SystemFieldName_FD.FIELD_TYPE] for f in fields_definition}
+
+    for key, value in record.items():
+        f_type = type_map.get(key)
+        if f_type in (FieldTypes.NUMBER.value, FieldTypes.ROLLUP.value):
+            # Blank and NULL are valid states for an empty numeric field
+            if not value or value == 'NULL':
+                record[key] = Decimal(0)
 
     return record
 

@@ -15,7 +15,10 @@
   },
   "TRIGGER_ERRORS": {
     "DETTAGLIO_DOCUMENTO_HELPER_DOCUMENTO_NOT_FOUND": "Il documento \"{{id_documento}}\" non esiste, impossibile determinare il listino da applicare.\nContatta un admin",
-    "DETTAGLIO_DOCUMENTO_HELPER_VOCE_LISTINO_NOT_FOUND": "Non esiste una \"Voce listino\" per l'articolo \"{{id_articolo}}\" nel listino \"{{id_listino}}\".\nCreala prima di inserire l'articolo nel documento"
+    "DETTAGLIO_DOCUMENTO_HELPER_VOCE_LISTINO_NOT_FOUND": "Non esiste una \"Voce listino\" per l'articolo \"{{id_articolo}}\" nel listino \"{{id_listino}}\".\nCreala prima di inserire l'articolo nel documento",
+    "DETTAGLIO_DOCUMENTO_HELPER_ARTICOLO_NOT_FOUND": "L'articolo \"{{id_articolo}}\" non esiste, impossibile determinare l'aliquota IVA da applicare.\nContatta un admin",
+    "DETTAGLIO_DOCUMENTO_HELPER_MAPPING_IVA_NOT_FOUND": "Il tipo di documento \"{{record_type_documento}}\" non ha un'aliquota IVA associata, impossibile compilare il regime IVA della riga.\nContatta un admin",
+    "DETTAGLIO_DOCUMENTO_HELPER_MAGAZZINO_NOT_FOUND": "Nessun magazzino è impostato come predefinito, impossibile assegnare il magazzino alla riga"
   },
   "TOAST": {
     "ERROR_TITLE": "Errore",

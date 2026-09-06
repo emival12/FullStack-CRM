@@ -1,5 +1,4 @@
 from triggers.trigger_manager import load_module
-from core.exceptions import raise_trigger_exception
 
 def execute(cursor, record):
     helper = load_module("dettaglio_documento_helper.py")
@@ -7,11 +6,14 @@ def execute(cursor, record):
     articolo = record["articolo"]
     documento = record["documento"]
 
-    record_documento = helper.get_documento(cursor, documento)
-    listino = record_documento["listino"]
+    input_prezzo = record["prezzo"]
+    if input_prezzo is None:
+        record["prezzo"] = helper.get_prezzo_articolo_from_documento(cursor, articolo, documento)
 
-    # Retrieve the voce_listino associated to the pair (articolo, listino)
-    record_voce_listino = helper.get_voce_listino(cursor, articolo, listino)
-    
-    record["prezzo"] = record_voce_listino["prezzo"]
+    input_regime_iva = record["regime_iva"]
+    if input_regime_iva is None:
+        record["regime_iva"] = helper.get_iva_from_articolo(cursor, documento, articolo)
+
+    record["unita_di_misura"] = helper.get_unita_di_misura_from_articolo(cursor, articolo)
+    record["magazzino"] = helper.get_magazzino_id(cursor)
     return record
