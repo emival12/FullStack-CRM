@@ -1,6 +1,7 @@
 import os
 import logging
 import importlib.util
+from types import MappingProxyType
 from fastapi import HTTPException
 from config import get_triggers_folder
 from core.exceptions import raise_server_exception, log_event
@@ -43,11 +44,11 @@ def _load_trigger_module(key: tuple[str, float]) -> object:
     except Exception:
         raise_server_exception(logger, "Fatal error in Module import", file_path=file_path)
 
-def run_triggers(cursor, object_name: str, timing: TriggerDefTiming, event: TriggerDefEvent, record: dict) -> dict:
+def run_triggers(cursor, object_name: str, timing: TriggerDefTiming, event: TriggerDefEvent, record: dict, old_record: dict = None) -> dict:
     """
         Loads and executes the active trigger for the given object, timing, and event, if any.
 
-        Queries trigger_definition for an active trigger, dynamically imports the corresponding .py file from the triggers folder, and calls its execute(cursor, record) function.
+        Queries trigger_definition for an active trigger, dynamically imports the corresponding .py file from the triggers folder, and calls its execute(cursor, record, old_record) function.
         If the trigger returns a non-None value, it replaces the record.
 
         Args:
@@ -56,6 +57,9 @@ def run_triggers(cursor, object_name: str, timing: TriggerDefTiming, event: Trig
             timing (TriggerDefTiming): Trigger timing
             event (TriggerDefEvent): Trigger event
             record (dict): The record being processed, passed to the trigger
+            old_record (dict | None): The record as stored before the write. Required for every event
+                except INSERT, where it is None. Handed to the trigger as a read-only view: the caller
+                keeps using it after the trigger runs, so a trigger must not be able to alter it.
 
         Returns:
             dict: The record, potentially modified by the trigger
@@ -65,6 +69,10 @@ def run_triggers(cursor, object_name: str, timing: TriggerDefTiming, event: Trig
                 so its domain-specific error code reaches the client instead of a generic 500.
             HTTPException 500: If the trigger fails unexpectedly, or if the module cannot be imported.
     """
+
+    if event != TriggerDefEvent.INSERT and old_record is None:
+        raise_server_exception(logger, "Update trigger without old_record", object_name=object_name, timing=timing, event=event)
+
     triggers_dir = get_triggers_folder()
 
     # trigger_definition PK is (object_name, trigger_event, trigger_timing) — at most 1 trigger per object
@@ -79,8 +87,9 @@ def run_triggers(cursor, object_name: str, timing: TriggerDefTiming, event: Trig
         return record
 
     module = _load_trigger_module((file_path, os.path.getmtime(file_path)))
+    read_only_old_record = MappingProxyType(old_record) if old_record is not None else None
     try:
-        result = module.execute(cursor, record)
+        result = module.execute(cursor, record, read_only_old_record)
         if result is not None:
             record = result
     except HTTPException:

@@ -178,6 +178,7 @@ export default function DynamicForm({
           step={calculateStep(info.numeric_scale)}
           min={calculateLimit(info?.min_limit_value)}
           max={calculateLimit(info?.max_limit_value)}
+          onWheel={(e) => e.currentTarget.blur()}
           {...register(key, {
             required: {
               value: Boolean(info.is_required),

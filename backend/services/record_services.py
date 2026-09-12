@@ -293,7 +293,7 @@ def update_record(
         refresh_records(cursor, impacted_parents, user_id, curr_depth)
 
     # Run AFTER UPDATE triggers. AFTER Triggers can only modify other records or make new DML operations
-    trigger_manager.run_triggers(cursor, table_name, TriggerDefTiming.AFTER, TriggerDefEvent.UPDATE, record)
+    trigger_manager.run_triggers(cursor, table_name, TriggerDefTiming.AFTER, TriggerDefEvent.UPDATE, record, old_record)
 
     log_event(logging.INFO, logger, "Record updated", object_name=table_name, record_type_name=record_type_name, record_id=record_id, user_id=user_id)
     return result
@@ -350,7 +350,7 @@ def execute_record_update(
 
     # Run BEFORE UPDATE triggers, which may modify raw field values before formula evaluation
     if run_trigger:
-        record = trigger_manager.run_triggers(cursor, table_name, TriggerDefTiming.BEFORE, TriggerDefEvent.UPDATE, record)
+        record = trigger_manager.run_triggers(cursor, table_name, TriggerDefTiming.BEFORE, TriggerDefEvent.UPDATE, record, old_record)
 
     # Evaluate formulas after the trigger so they see the final field values
     record = formula_engine.set_default_values(record, fields)

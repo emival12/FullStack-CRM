@@ -99,6 +99,7 @@ export default function RecordDetail(): React.ReactElement | null {
           navigate(ROUTES.database.record(tableKey, new_PK));
         } else {
           refetch();
+          reset();
         }
       } catch (err) {
         showErrorToast(err as ApiError, PREFIX);

@@ -1,6 +1,6 @@
 from triggers.trigger_manager import load_module
 
-def execute(cursor, record):
+def execute(cursor, record, old_record):
     helper = load_module("dettaglio_documento_helper.py")
 
     articolo = record["articolo"]
