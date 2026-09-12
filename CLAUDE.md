@@ -258,10 +258,17 @@ scrittura prosegue silenziosamente e viene loggato un `ERROR`.
 **Naming del file:** `{object_name}_{TIMING}_{EVENT}.py` in `backend/triggers/`. Il nome non è descrittivo,
 è **calcolato** da `trigger_manager.run_triggers()`: se non combacia, il trigger non parte.
 
-**Firma:** `execute(cursor, record) -> dict | None`.
+**Firma:** `execute(cursor, record, old_record) -> dict | None` — **uguale per ogni evento**, anche quando
+`old_record` non serve (es. BEFORE INSERT).
 
 - `BEFORE` — modifica `record` e **restituiscilo**: il valore di ritorno sostituisce il record che verrà scritto.
 - `AFTER` — il valore di ritorno è ignorato dal chiamante; mutare `record` non ha alcun effetto sulla riga già scritta.
+- `old_record` — la riga com'era sul DB prima della scrittura; `None` in INSERT. In UPDATE `record` è già la fusione
+  vecchio+form, quindi "il campo è cambiato?" si chiede solo confrontando con `old_record`
+  Arriva **in sola lettura** (`MappingProxyType`, applicato da `run_triggers`): il chiamante lo riusa dopo il trigger quindi scriverci sopra solleva `TypeError` → 500 invece di corrompere le rollup.
+- **Il BEFORE UPDATE scatta anche nei refresh a cascata** (`refresh_records` → `update_record` con `new_record={}`):
+  un trigger che ricalcola sempre, senza confrontare con `old_record`, riscrive righe che nessuno ha toccato.
+- **Confronto delle lookup:** una lookup verso una PK `auto_number` arriva `int` dal DB e stringa dal form se il campo è stato toccato. Confronta con `str(a) != str(b)`.
 
 **Letture:** `get_single_record_or_none()` seguita da una guardia esplicita. Mai `get_single_record()`: il suo
 404 `INPUT_RECORD_ID_NOT_FOUND` è generico e non dice all'utente _cosa_ manca, che è tutto il punto di un trigger.
