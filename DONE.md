@@ -1,5 +1,11 @@
 ## TODO Risolti
 
+- **13/09/2026 B-005**
+  Riproduzione: Crea una tabella A -> Crea una lookup `a1` verso `account` -> Crea una seconda lookup `a2` verso `account`
+  Bug: la creazione di `a2` fallisce con 409 `DUPLICATE_PK`
+  Motivazione Bug: la PK di `related_list_definition` chiudeva su `label`, che vale sempre la label dell'oggetto figlio: due lookup dallo stesso figlio verso lo stesso padre producevano la stessa chiave
+  Risoluzione: Modificata la PK di `related_list_definition` sostituendo `label` con `child_join_key`
+
 - **23/08/2026 B-004**
   Riproduzione: Crea una tabella A -> Crea più record Type -> Crea unat tabella B -> Crea una lookup da B ad A -> Crea un record nella tabella A -> Crea un record nella tabella B che punta al record creato precedentemente
   Bug: l'insert fallisce con 500 `Max recursion depth reached`

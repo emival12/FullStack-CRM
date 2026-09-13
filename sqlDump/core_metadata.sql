@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.43, for Win64 (x86_64)
 --
--- Host: localhost    Database: refactoring_test
+-- Host: localhost    Database: core_metadata
 -- ------------------------------------------------------
 -- Server version	8.0.43
 
@@ -232,7 +232,7 @@ CREATE TABLE `related_list_definition` (
   `sort_order` smallint DEFAULT NULL,
   `filter_condition` varchar(1000) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT '1',
-  PRIMARY KEY (`master_object_name`,`master_record_type_name`,`child_object_name`,`child_record_type_name`,`label`),
+  PRIMARY KEY (`master_object_name`,`master_record_type_name`,`child_object_name`,`child_record_type_name`,`child_join_key`),
   KEY `child_object_name` (`child_object_name`,`child_record_type_name`,`child_join_key`),
   CONSTRAINT `related_list_definition_ibfk_1` FOREIGN KEY (`child_object_name`, `child_record_type_name`, `child_join_key`) REFERENCES `field_definition` (`object_name`, `record_type_name`, `field_name`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -396,4 +396,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-20 14:44:01
+-- Dump completed on 2026-09-13 12:25:49

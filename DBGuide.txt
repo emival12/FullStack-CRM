@@ -184,7 +184,7 @@ CREATE TABLE related_list_definition (
     sort_order SMALLINT,
     filter_condition VARCHAR(1000),
     is_active BOOL DEFAULT 1,
-    PRIMARY KEY (master_object_name, master_record_type_name, child_object_name, child_record_type_name, label),
+    PRIMARY KEY (master_object_name, master_record_type_name, child_object_name, child_record_type_name, child_join_key),
     FOREIGN KEY (child_object_name, child_record_type_name, child_join_key) 
         REFERENCES field_definition(object_name, record_type_name, field_name) ON DELETE CASCADE
 );
@@ -200,7 +200,6 @@ CREATE TABLE trigger_definition (
     PRIMARY KEY (object_name, trigger_event, trigger_timing),
     FOREIGN KEY (object_name) REFERENCES object_definition(object_name) ON DELETE CASCADE
 );
-
 
 
 
